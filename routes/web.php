@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\SupplierSelectionReportController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Route;
@@ -22,4 +23,7 @@ Route::group(['middleware'=>'auth:web'], function() {
     //User routes
     Route::post('users/bulkDelete', [UserController::class, 'bulkDelete']);
     Route::resource('users', UserController::class);
+
+    //SupplierSelectionReport routes
+    Route::resource('supplier_selection_reports', SupplierSelectionReportController::class);
 });

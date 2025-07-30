@@ -9,6 +9,10 @@ const model = ref([
         items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' }]
     },
     {
+        label: 'BCLCNCC',
+        items: [{ label: 'BCLCNCC', icon: 'pi pi-fw pi-report', to: '/supplier_selection_reports' }]
+    },
+    {
         label: 'HỆ THỐNG',
         items: [
             { label: 'Người dùng', icon: 'pi pi-fw pi-users', to: '/users' },
