@@ -121,7 +121,6 @@ class SupplierSelectionReportController extends Controller
      */
     public function update(UpdateSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
-        Log::error($request->all());
         $this->authorize('update', $supplierSelectionReport);
 
         try {

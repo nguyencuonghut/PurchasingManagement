@@ -67,7 +67,6 @@
 
 
         <Dialog v-model:visible="reportDialog" :style="{ width: '450px' }" header="Chi tiết BCLCNCC" :modal="true">
-            {{ form.code }}
             <form @submit.prevent="saveReport">
                 <div class="flex flex-col gap-6">
                     <div>
@@ -435,7 +434,6 @@ const saveReport = async () => {
         });
     } else { // Logic CẬP NHẬT
         if (selectedReportId.value) {
-            console.log('Dữ liệu form trước khi PUT:', form.data()); // Log 9 - Hiển thị dữ liệu form sẽ được gửi
             form.put(`/supplier_selection_reports/${selectedReportId.value}`, {
                 onSuccess: () => {
                     form.reset();
