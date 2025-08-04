@@ -4,7 +4,7 @@
     </Head>
 
     <div class="card">
-        <Toolbar  v-if="can.create_user || can.delete_user || can.import_user || can.export_user" class="mb-6">
+        <Toolbar v-if="can.create_user || can.delete_user || can.import_user || can.export_user" class="mb-6">
             <template #start>
                 <Button v-if="can.create_user" label="New" icon="pi pi-plus" class="mr-2" @click="openNew" />
                 <Button v-if="can.delete_user" label="Delete" icon="pi pi-trash" severity="danger" outlined @click="confirmDeleteSelected" :disabled="!selectedUsers || !selectedUsers.length" />
@@ -71,7 +71,7 @@
                     </Select>
                 </template>
             </Column>
-            <Column  v-if="can.update_user || can.delete_user" :exportable="false" style="min-width: 12rem">
+            <Column v-if="can.update_user || can.delete_user" :exportable="false" style="min-width: 12rem">
                 <template #body="slotProps">
                     <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editUser(slotProps.data)" />
                     <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteUser(slotProps.data)" />
@@ -81,58 +81,65 @@
 
 
         <Dialog v-model:visible="userDialog" :style="{ width: '450px' }" header="Chi tiết người dùng" :modal="true">
-            <div class="flex flex-col gap-6">
-                <div>
-                    <label for="name" class="block font-bold mb-3 required-field">Tên</label>
-                    <InputText id="name" v-model="form.name" @change="form.validate('name')" autofocus :invalid="submitted && !form.name" fluid />
-                    <small v-if="form.invalid('name')" class="text-red-500">{{ form.errors.name }}</small>
-                </div>
-                <div>
-                    <label for="email" class="block font-bold mb-3 required-field">Email</label>
-                    <InputText id="email" v-model.trim="form.email" @change="form.validate('email')" autofocus :invalid="submitted && !form.email" fluid />
-                    <small v-if="form.invalid('email')" class="text-red-500">{{ form.errors.email }}</small>
-                </div>
-                <div v-if="isAddUser">
-                    <label for="password" class="block font-bold mb-3 required-field">Mật khẩu</label>
-                    <Password id="password" v-model.trim="form.password" @change="form.validate('password')" autocomplete="off" autofocus :invalid="submitted && !form.password" fluid />
-                    <small v-if="form.invalid('password')" class="text-red-500">{{ form.errors.password }}</small>
-                </div>
-                <div v-if="isAddUser">
-                    <label for="password_confirmation" class="block font-bold mb-3 required-field">Xác nhận mật khẩu</label>
-                    <Password id="password_confirmation" v-model.trim="form.password_confirmation" @change="form.validate('password_confirmation')" autocomplete="off" autofocus :invalid="submitted && !form.password_confirmation" fluid />
-                    <small v-if="form.invalid('password_confirmation')" class="text-red-500">{{ form.errors.password_confirmation }}</small>
-                </div>
-                <div>
-                    <label for="role" class="block font-bold mb-3 required-field">Vai trò</label>
-                    <Select v-model="form.role" @change="form.validate('role')" :options="roles" class="w-full" placeholder="Chọn vai trò" />
-                    <small v-if="form.invalid('role')" class="text-red-500">{{ form.errors.role }}</small>
-                </div>
-                <div>
-                    <span class="block font-bold mb-4 required-field">Trạng thái</span>
-                    <div class="grid grid-cols-12 gap-4">
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="status_on" v-model="form.status" value="On" name="status"/>
-                            <label for="status_on">ON</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="status_off" v-model="form.status" value="Off" name="status"/>
-                            <label for="status_off">OFF</label>
-                        </div>
+            <form @submit.prevent="saveUser">
+                <div class="flex flex-col gap-6">
+                    <div>
+                        <label for="name" class="block font-bold mb-3 required-field">Tên</label>
+                        <InputText id="name" v-model.trim="form.name" @blur="v$.name.$touch" :invalid="v$.name.$error || form.errors.name" fluid />
+                        <small v-if="v$.name.$error" class="text-red-500">{{ v$.name.$errors[0].$message }}</small>
+                        <small v-else-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</small>
                     </div>
-                    <small v-if="form.invalid('status')" class="text-red-500">{{ form.errors.status }}</small>
+                    <div>
+                        <label for="email" class="block font-bold mb-3 required-field">Email</label>
+                        <InputText id="email" v-model.trim="form.email" @blur="v$.email.$touch" :invalid="v$.email.$error || form.errors.email" fluid />
+                        <small v-if="v$.email.$error" class="text-red-500">{{ v$.email.$errors[0].$message }}</small>
+                        <small v-else-if="form.errors.email" class="text-red-500">{{ form.errors.email }}</small>
+                    </div>
+                    <div v-if="isAddUser">
+                        <label for="password" class="block font-bold mb-3 required-field">Mật khẩu</label>
+                        <Password id="password" v-model.trim="form.password" @blur="v$.password.$touch" autocomplete="off" :invalid="v$.password.$error || form.errors.password" fluid toggleMask />
+                        <small v-if="v$.password.$error" class="text-red-500">{{ v$.password.$errors[0].$message }}</small>
+                        <small v-else-if="form.errors.password" class="text-red-500">{{ form.errors.password }}</small>
+                    </div>
+                    <div v-if="isAddUser">
+                        <label for="password_confirmation" class="block font-bold mb-3 required-field">Xác nhận mật khẩu</label>
+                        <Password id="password_confirmation" v-model.trim="form.password_confirmation" @blur="v$.password_confirmation.$touch" autocomplete="off" :invalid="v$.password_confirmation.$error || form.errors.password_confirmation" fluid toggleMask />
+                        <small v-if="v$.password_confirmation.$error" class="text-red-500">{{ v$.password_confirmation.$errors[0].$message }}</small>
+                        <small v-else-if="form.errors.password_confirmation" class="text-red-500">{{ form.errors.password_confirmation }}</small>
+                    </div>
+                    <div>
+                        <label for="role" class="block font-bold mb-3 required-field">Vai trò</label>
+                        <Select id="role" v-model="form.role" @blur="v$.role.$touch" :options="roles" class="w-full" placeholder="Chọn vai trò" :invalid="v$.role.$error || form.errors.role" />
+                        <small v-if="v$.role.$error" class="text-red-500">{{ v$.role.$errors[0].$message }}</small>
+                        <small v-else-if="form.errors.role" class="text-red-500">{{ form.errors.role }}</small>
+                    </div>
+                    <div>
+                        <span class="block font-bold mb-4 required-field">Trạng thái</span>
+                        <div class="grid grid-cols-12 gap-4">
+                            <div class="flex items-center gap-2 col-span-6">
+                                <RadioButton id="status_on" v-model="form.status" value="On" name="status" @blur="v$.status.$touch" :invalid="v$.status.$error || form.errors.status"/>
+                                <label for="status_on">ON</label>
+                            </div>
+                            <div class="flex items-center gap-2 col-span-6">
+                                <RadioButton id="status_off" v-model="form.status" value="Off" name="status" @blur="v$.status.$touch" :invalid="v$.status.$error || form.errors.status"/>
+                                <label for="status_off">OFF</label>
+                            </div>
+                        </div>
+                        <small v-if="v$.status.$error" class="text-red-500">{{ v$.status.$errors[0].$message }}</small>
+                        <small v-else-if="form.errors.status" class="text-red-500">{{ form.errors.status }}</small>
+                    </div>
                 </div>
-            </div>
-
+            </form>
             <template #footer>
                 <Button label="Hủy" icon="pi pi-times" text @click="hideDialog" />
-                <Button label="Lưu" icon="pi pi-check" :disabled="form.hasErrors" @click="saveUser" />
+                <Button type="submit" label="Lưu" icon="pi pi-check" :disabled="v$.$invalid || form.processing" />
             </template>
         </Dialog>
 
         <Dialog v-model:visible="deleteUserDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="form"
+                <span v-if="form.name"
                     >Bạn chắc chắn muốn xóa <b>{{ form.name }}</b
                     >?</span
                 >
@@ -154,17 +161,34 @@
             </template>
         </Dialog>
     </div>
+    <Toast />
 </template>
 
 <script setup>
-import { Head } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, router, useForm } from '@inertiajs/vue3'; // Đổi useForm từ Precognition sang @inertiajs/vue3
+import { ref, computed } from 'vue'; // Import computed
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
-import { useForm } from 'laravel-precognition-vue-inertia';
 import { useToast } from 'primevue/usetoast';
-import { router } from '@inertiajs/vue3';
-import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
+
+// Import Vuelidate
+import { useVuelidate } from '@vuelidate/core';
+import { required, email, minLength, sameAs, helpers } from '@vuelidate/validators';
+
+// PrimeVue Components (nếu bạn dùng auto-import thì không cần liệt kê hết)
+import Toolbar from 'primevue/toolbar';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
+import Password from 'primevue/password'; // Thêm Password
+import RadioButton from 'primevue/radiobutton';
+import Select from 'primevue/select'; // Đổi từ Dropdown thành Select nếu cần
+import Toast from 'primevue/toast';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import Tag from 'primevue/tag'; // Thêm Tag
 
 const toast = useToast();
 const dt = ref();
@@ -182,8 +206,9 @@ defineProps({
 const userDialog = ref(false);
 const deleteUserDialog = ref(false);
 const deleteUsersDialog = ref(false);
-const form = useForm('post', '/users', {
-    id: '',
+
+const form = useForm({ // useForm từ @inertiajs/vue3 không nhận method và url trong khởi tạo
+    id: null, // Sử dụng null thay vì rỗng cho ID
     name: '',
     email: '',
     password: '',
@@ -191,73 +216,135 @@ const form = useForm('post', '/users', {
     role: '',
     status: '',
 });
+
 const submitted = ref(false);
 const isAddUser = ref(false);
 
+// Định nghĩa rules cho Vuelidate
+const rules = computed(() => {
+    // Rules cơ bản áp dụng cho cả tạo và cập nhật
+    const baseRules = {
+        name: {
+            required: helpers.withMessage('Tên không được để trống.', required),
+        },
+        email: {
+            required: helpers.withMessage('Email không được để trống.', required),
+            email: helpers.withMessage('Email sai định dạng.', email),
+        },
+        role: {
+            required: helpers.withMessage('Vai trò không được để trống.', required),
+        },
+        status: {
+            required: helpers.withMessage('Trạng thái không được để trống.', required),
+        },
+    };
+
+    // Thêm rules cho password chỉ khi là "Add new User"
+    if (isAddUser.value) {
+        baseRules.password = {
+            required: helpers.withMessage('Mật khẩu không được để trống.', required),
+            minLength: helpers.withMessage('Mật khẩu phải dài ít nhất 6 ký tự.', minLength(6)),
+        };
+        baseRules.password_confirmation = {
+            required: helpers.withMessage('Xác nhận mật khẩu không được để trống.', required),
+            sameAs: helpers.withMessage('Mật khẩu không khớp.', sameAs(form.password)),
+        };
+    } else {
+        // Đặt password và password_confirmation là optional khi không phải thêm mới
+        // hoặc khi không có giá trị để tránh validation lỗi khi edit
+        baseRules.password = {};
+        baseRules.password_confirmation = {};
+    }
+
+    return baseRules;
+});
+
+// Khởi tạo Vuelidate
+const v$ = useVuelidate(rules, form);
+
 const openNew = () => {
-    form.reset();
+    isAddUser.value = true;
+    form.reset(); // Reset form data
+    v$.value.$reset(); // Reset Vuelidate state
     submitted.value = false;
     userDialog.value = true;
-    isAddUser.value = true;
 };
 
 const hideDialog = () => {
     userDialog.value = false;
     submitted.value = false;
+    form.clearErrors(); // Xóa lỗi Inertia
+    v$.value.$reset(); // Reset Vuelidate state
 };
 
-const saveUser = () => {
+const saveUser = async () => {
     submitted.value = true;
+    const isFormValid = await v$.value.$validate(); // Chạy validation frontend
 
-    // Add new User
+    if (!isFormValid) {
+        toast.add({severity: 'error', summary: 'Lỗi Validation', detail: 'Vui lòng kiểm tra lại các trường có lỗi.', life: 3000});
+        return; // Dừng lại nếu frontend validation thất bại
+    }
+
+    // Nếu frontend validation pass, tiếp tục gửi đến backend
     if (isAddUser.value) {
-        // Creat new User
-        form.submit({
+        form.post('/users', {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
+                v$.value.$reset(); // Reset Vuelidate
                 userDialog.value = false;
-                toast.add({severity:'success', summary: 'Thành công', detail: message, life: 3000});
+                toast.add({severity:'success', summary: 'Thành công', detail: message.value, life: 3000});
             },
-            onError: () => {
-                toast.add({severity: 'error', summary: 'Lỗi', detail: message, life: 3000});
+            onError: (errors) => {
+                // InertiaJS tự động điền errors vào form.errors
+                console.error("Lỗi khi tạo người dùng:", errors);
+                toast.add({severity: 'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi tạo người dùng.', life: 3000});
             },
         });
     } else {
         // Edit this User
-        form.put(`users/${form.id}`, {
+        form.put(`/users/${form.id}`, {
             onSuccess: () => {
                 form.reset();
+                v$.value.$reset(); // Reset Vuelidate
                 userDialog.value = false;
-                toast.add({severity: 'success', summary: 'Thành công', detail: message, life: 3000});
+                toast.add({severity: 'success', summary: 'Thành công', detail: message.value, life: 3000});
             },
-            onError: () => {
-                toast.add({severity: 'error', summary: 'Lỗi', detail: message, life: 3000});
+            onError: (errors) => {
+                // InertiaJS tự động điền errors vào form.errors
+                console.error("Lỗi khi cập nhật người dùng:", errors);
+                toast.add({severity: 'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi cập nhật.', life: 3000});
             },
         });
-
     }
 };
+
 const editUser = (usr) => {
-    setUser(usr);
-    userDialog.value = true;
     isAddUser.value = false;
+    setUser(usr);
+    form.clearErrors(); // Xóa lỗi Inertia cũ
+    v$.value.$reset(); // Reset trạng thái validation của Vuelidate
+    submitted.value = false;
+    userDialog.value = true;
 };
+
 const confirmDeleteUser = (usr) => {
     setUser(usr);
     deleteUserDialog.value = true;
 };
 
 const deleteUser = () => {
-    form.delete(`users/${form.id}`, {
+    form.delete(`/users/${form.id}`, {
         onSuccess: () => {
             form.reset();
             deleteUserDialog.value = false;
-            toast.add({severity:'success', summary: 'Successful', detail: message, life: 3000});
+            toast.add({severity:'success', summary: 'Thành công', detail: message.value, life: 3000});
         },
-        onError: () => {
+        onError: (errors) => {
+            console.error("Lỗi khi xóa người dùng:", errors);
             deleteUserDialog.value = false;
-            toast.add({severity:'error', summary: 'Failed', detail: message, life: 3000});
+            toast.add({severity:'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi xóa người dùng.', life: 3000});
         },
     });
 };
@@ -268,26 +355,30 @@ const setUser = (usr) => {
     form.email = usr.email;
     form.role = usr.role;
     form.status = usr.status;
-}
+    form.password = ''; // Đảm bảo password trống khi edit
+    form.password_confirmation = ''; // Đảm bảo password_confirmation trống khi edit
+};
 
 const exportCSV = () => {
     dt.value.exportCSV();
 };
+
 const confirmDeleteSelected = () => {
     deleteUsersDialog.value = true;
 };
 
 const deleteSelectedUsers = () => {
-    router.post('users/bulkDelete', {users : selectedUsers.value }, {
+    router.post('users/bulkDelete', { users: selectedUsers.value }, {
         onSuccess: () => {
             deleteUsersDialog.value = false;
             selectedUsers.value = null;
-            toast.add({severity:'success', summary: 'Successful', detail: message, life: 3000});
+            toast.add({severity:'success', summary: 'Thành công', detail: message.value, life: 3000});
         },
-        onError: () => {
+        onError: (errors) => {
+            console.error("Lỗi khi xóa nhiều người dùng:", errors);
             deleteUsersDialog.value = false;
             selectedUsers.value = null;
-            toast.add({severity:'error', summary: 'Failed', detail: message, life: 3000});
+            toast.add({severity:'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi xóa nhiều người dùng.', life: 3000});
         },
     });
 };
@@ -317,19 +408,29 @@ const getStatusSeverity = (status) => {
     switch (status) {
         case 'On':
             return 'success';
-
         case 'Off':
             return 'danger';
+        default:
+            return null; // Handle default case if status is not 'On' or 'Off'
     }
 };
 
-const getRoleSeverity = (status) => {
-    switch (status) {
-        case 'Người quản trị':
+const getRoleSeverity = (role) => { // Đổi tên tham số từ status thành role cho rõ ràng
+    switch (role) {
+        case 'Quản trị':
             return 'success';
-
         case 'Người dùng':
             return 'info';
+        default:
+            return null; // Handle default case if role is not 'Quản trị' or 'Người dùng'
     }
 };
 </script>
+
+<style scoped>
+.required-field::after {
+    content: ' *';
+    color: red;
+    margin-left: 2px;
+}
+</style>

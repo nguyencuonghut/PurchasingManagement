@@ -13,7 +13,7 @@ const logout = () => {
 };
 
 const page = usePage();
-const user_name = computed(() => page.props.auth.user.user_name)
+const user_name = computed(() => page.props.auth.user.name)
 </script>
 
 <template>
