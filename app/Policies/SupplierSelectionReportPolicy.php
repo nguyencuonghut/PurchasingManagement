@@ -29,7 +29,7 @@ class SupplierSelectionReportPolicy
      */
     public function create(User $user): bool
     {
-        return 'Quản trị' == $user->role;
+        return 'Quản trị' == $user->role || 'Trưởng phòng Thu Mua' == $user->role || 'Nhân viên Thu Mua' == $user->role;
     }
 
     /**
