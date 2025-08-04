@@ -67,6 +67,7 @@
 
 
         <Dialog v-model:visible="reportDialog" :style="{ width: '450px' }" header="Chi tiết BCLCNCC" :modal="true">
+            {{ form.code }}
             <form @submit.prevent="saveReport">
                 <div class="flex flex-col gap-6">
                     <div>
@@ -244,7 +245,7 @@ const imageFile = ref(null);
 const showPlaceholder = ref(true);
 const isContentEditable = ref(true);
 
-const imageModalVisible = ref(false);
+const imageModalVisible = ref(false); // Keep this one
 const currentImageSrc = ref(null);
 
 const openImageModal = (imageUrl) => {
@@ -458,11 +459,11 @@ const editReport = (report) => {
     isAddReport.value = false;
     selectedReportId.value = report.id;
 
-    form.reset({
-        code: report.code,
-        description: report.description,
-        file_path: report.file_path,
-    });
+    // Properly populate form with existing data
+    form.code = report.code || '';
+    form.description = report.description || '';
+    form.file_path = report.file_path || null;
+
     form.clearErrors(); // Xóa lỗi Inertia cũ
     v$.value.$reset(); // Reset trạng thái validation của Vuelidate
 
