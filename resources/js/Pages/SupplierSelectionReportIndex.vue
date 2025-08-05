@@ -24,7 +24,7 @@
                 </div>
             </template>
             <template #empty> Không tìm thấy báo cáo. </template>
-            <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
+            <Column field="id" header="Id" style="width: 20%; height: 44px"></Column>
             <Column field="code" header="Mã" sortable style="min-width: 14rem">
                 <template #body="{ data }">
                     {{ data.code }}
@@ -38,7 +38,7 @@
                     {{ data.description }}
                 </template>
                 <template #filter="{ filterModel }">
-                    {{ data.description }}
+                    <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo mô tả" />
                 </template>
             </Column>
             <Column header="File đính kèm" style="min-width: 14rem">
@@ -48,8 +48,18 @@
                     </a>
                     <span v-else>Không có file</span>
                 </template>
+            </Column>
+
+            <Column header="Trạng thái" field="status" sortable :filterMenuStyle="{ width: '14rem' }" style="min-width: 12rem">
+                <template #body="{ data }">
+                    <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+                </template>
                 <template #filter="{ filterModel }">
-                    <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo file đính kèm" />
+                    <Select v-model="filterModel.value" :options="statuses" placeholder="Chọn" showClear>
+                        <template #option="slotProps">
+                            <Tag :value="slotProps.option" :severity="getStatusSeverity(slotProps.option)" />
+                        </template>
+                    </Select>
                 </template>
             </Column>
 
@@ -166,7 +176,7 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref, watch, nextTick, computed } from 'vue';
-import { FilterMatchMode } from '@primevue/core/api';
+import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { usePage } from '@inertiajs/vue3';
 
@@ -507,13 +517,54 @@ const deleteReport = () => {
     }
 };
 
-const filters = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-});
+
+const statuses = ref(['draft',
+                    'pending_review',
+                    'reviewed',
+                    'pending_pm_approval',
+                    'pm_approved',
+                    'pending_director_approval',
+                    'director_approved',
+                    'rejected']);
+const filters = ref();
+
+const initFilters = () => {
+    filters.value = {
+        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        code: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        description: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+    };
+};
+
+initFilters();
 
 const clearFilter = () => {
-    filters.value.global.value = null;
+    initFilters();
 };
+const getStatusSeverity = (status) => {
+    switch (status) {
+        case 'draft':
+            return 'secondary';
+        case 'pending_review':
+            return 'info';
+        case 'reviewed':
+            return 'info';
+        case 'pending_pm_approval':
+            return 'info';
+        case 'pm_approved':
+            return 'info';
+        case 'pending_director_approval':
+            return 'info';
+        case 'director_approved':
+            return 'success';
+        case 'rejected':
+            return 'danger';
+        default:
+            return null; // Handle default case if status is not 'On' or 'Off'
+    }
+};
+
 // END: Dialog & Form Logic
 </script>
 
