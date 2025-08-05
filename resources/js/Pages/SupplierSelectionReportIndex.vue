@@ -139,7 +139,7 @@
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="imageModalVisible" :style="{ width: '80vw', height: '80vh' }" header="Xem ảnh đính kèm" :modal="true" class="image-modal">
+        <Dialog v-model:visible="imageModalVisible" maximizable :style="{ width: '80vw', height: '80vh' }" header="Xem ảnh đính kèm" :modal="true" class="image-modal">
             <div class="image-modal-content">
                 <img v-if="currentImageSrc" :src="currentImageSrc" alt="Full size image" class="full-size-image" />
                 <p v-else>Không có ảnh để hiển thị.</p>
