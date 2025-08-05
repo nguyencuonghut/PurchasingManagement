@@ -419,8 +419,14 @@ const getRoleSeverity = (role) => { // Đổi tên tham số từ status thành 
     switch (role) {
         case 'Quản trị':
             return 'success';
-        case 'Người dùng':
+        case 'Nhân viên Thu Mua':
             return 'info';
+        case 'Nhân viên Kiểm Soát':
+            return 'warn';
+        case 'Trưởng phòng Thu Mua':
+            return 'secondary';
+        case 'Giám đốc':
+            return 'danger';
         default:
             return null; // Handle default case if role is not 'Quản trị' or 'Người dùng'
     }
