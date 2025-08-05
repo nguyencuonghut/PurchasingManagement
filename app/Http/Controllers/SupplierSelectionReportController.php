@@ -29,8 +29,8 @@ class SupplierSelectionReportController extends Controller
         $user = $request->user(); // Lấy đối tượng người dùng một lần
 
         $canCreate = $user->can('create', SupplierSelectionReport::class);
-        $canUpdate = $user->role === 'Quản trị'; // Ví dụ: Admin hoặc Editor có thể update
-        $canDelete = $user->role === 'Quản trị'; // Ví dụ: Chỉ Admin có thể delete
+        $canUpdate = $user->role === 'Quản trị' || $user->role === 'Nhân viên Thu Mua'; // Ví dụ: Admin hoặc Editor có thể update
+        $canDelete = $user->role === 'Quản trị' || $user->role === 'Nhân viên Thu Mua'; // Ví dụ: Chỉ Admin có thể delete
 
         $can = [
                 'create_report' => $canCreate,
@@ -61,7 +61,7 @@ class SupplierSelectionReportController extends Controller
 
         try {
             $data = $request->validated();
-            $data['user_id'] = $request->user()->id; // Gán user_id của người tạo
+            $data['creator_id'] = $request->user()->id; // Gán user_id của người tạo
 
             // Xử lý file_path
             if ($request->hasFile('file_path')) {

@@ -11,6 +11,20 @@ class SupplierSelectionReport extends Model
         'code',
         'description',
         'file_path',
+        'creator_id',
+        'status',
+        'reviewer_status',
+        'reviewer_notes',
+        'reviewer_id',
+        'reviewed_at',
+        'pm_approver_status',
+        'pm_approver_notes',
+        'pm_approver_id',
+        'pm_approved_at',
+        'director_approver_status',
+        'director_approver_notes',
+        'director_approver_id',
+        'director_approved_at',
     ];
 
     // Accessor để tự động thêm URL công khai cho file_path khi truy vấn

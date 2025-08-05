@@ -59,7 +59,7 @@
                         v-if="can.update_report && ($page.props.auth.user.role === 'Quản trị' || $page.props.auth.user.id === slotProps.data.user_id)"
                         icon="pi pi-pencil" outlined rounded class="mr-2" @click="editReport(slotProps.data)" />
                     <Button
-                        v-if="can.delete_report && $page.props.auth.user.role === 'Quản trị'"
+                        v-if="can.delete_report && ($page.props.auth.user.role === 'Quản trị' || $page.props.auth.user.id === slotProps.data.user_id)"
                         icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteReport(slotProps.data)" />
                 </template>
             </Column>
