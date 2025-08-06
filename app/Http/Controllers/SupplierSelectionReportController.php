@@ -235,7 +235,7 @@ class SupplierSelectionReportController extends Controller
         ]);
 
         // 3. Gửi email thông báo
-        $reviewers = User::where('role', 'Nhân viên Kiểm Soát')->get();
+        $reviewers = User::where('role', 'Trưởng phòng Thu Mua')->get();
         foreach ($reviewers as $reviewer) {
             Notification::route('mail' , $reviewer->email)->notify(new SupplierSelectionReportCreated($supplierSelectionReport));
         }

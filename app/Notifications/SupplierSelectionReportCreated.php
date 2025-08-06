@@ -38,11 +38,11 @@ class SupplierSelectionReportCreated extends Notification implements ShouldQueue
     {
         $url = '/supplier_selection_reports/' . $this->report->id;
         return (new MailMessage)
-                    ->subject('Đề nghị kiểm tra báo cáo lựa chọn nhà cung cấp số ' . $this->report->code)
+                    ->subject('Đề nghị phê duyệt báo cáo lựa chọn nhà cung cấp số ' . $this->report->code)
                     ->line('Xin mời kiểm tra báo cáo lựa chọn nhà cung cấp sau đây:')
                     ->line('- Số: ' . $this->report->code)
                     ->line('- Mô tả: ' . $this->report->description)
-                    ->action('Kiểm tra', url($url))
+                    ->action('Phê duyệt', url($url))
                     ->line('Xin cảm ơn!');
     }
 
