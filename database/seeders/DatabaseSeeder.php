@@ -24,38 +24,38 @@ class DatabaseSeeder extends Seeder
         ]);
         User::factory()->create([
             'name' => 'Phạm Thị Trang',
-            'email' => 'phamthitrang@honghafeed.com.vn',
+            'email' => 'nvtm@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role' => 'Nhân viên Thu Mua',
         ]);
         User::factory()->create([
             'name' => 'Bùi Thị Nụ',
-            'email' => 'buithinu@honghafeed.com.vn',
+            'email' => 'nvks@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role' => 'Nhân viên Kiểm Soát',
         ]);
         User::factory()->create([
             'name' => 'Lê Thị Hồng',
-            'email' => 'lethihong@honghafeed.com.vn',
+            'email' => 'tptm@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role' => 'Trưởng phòng Thu Mua',
         ]);
         User::factory()->create([
             'name' => 'Tạ Văn Toại',
-            'email' => 'tavantoai@honghafeed.com.vn',
+            'email' => 'gd@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role' => 'Giám đốc',
         ]);
-        User::factory()->create([
-            'name' => 'Nguyễn khôi Nguyên',
-            'email' => 'nguyenkhoinguyen@honghafeed.com.vn',
-            'password' => bcrypt('Hongha@123'),
-            'status' => 'On',
-            'role' => 'Giám đốc',
-        ]);
+        // User::factory()->create([
+        //     'name' => 'Nguyễn khôi Nguyên',
+        //     'email' => 'nguyenkhoinguyen@honghafeed.com.vn',
+        //     'password' => bcrypt('Hongha@123'),
+        //     'status' => 'On',
+        //     'role' => 'Giám đốc',
+        // ]);
     }
 }

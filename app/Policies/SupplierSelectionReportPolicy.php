@@ -37,7 +37,7 @@ class SupplierSelectionReportPolicy
      */
     public function update(User $user, SupplierSelectionReport $supplierSelectionReport): bool
     {
-        return 'Quản trị' == $user->role || $user->id === $supplierSelectionReport->user_id;
+        return 'Quản trị' == $user->role || $user->id === $supplierSelectionReport->creator_id;
     }
 
     /**
@@ -45,7 +45,7 @@ class SupplierSelectionReportPolicy
      */
     public function delete(User $user, SupplierSelectionReport $supplierSelectionReport): bool
     {
-        return 'Quản trị' == $user->role || $user->id === $supplierSelectionReport->user_id;
+        return 'Quản trị' == $user->role || $user->id === $supplierSelectionReport->creator_id;
     }
 
     /**

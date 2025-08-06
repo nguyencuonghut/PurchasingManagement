@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreSupplierSelectionReportRequest;
 use App\Http\Requests\UpdateSupplierSelectionReportRequest;
 use App\Models\SupplierSelectionReport;
+use App\Models\User;
+use App\Notifications\SupplierSelectionReportCreated;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // THÊM DÒNG NÀY
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -211,6 +214,32 @@ class SupplierSelectionReportController extends Controller
                 'message' => 'Đã xảy ra lỗi không mong muốn khi xóa báo cáo.',
             ]);
         }
+    }
+
+    public function sendForReview(SupplierSelectionReport $supplierSelectionReport)
+    {
+        // 1. Kiểm tra quyền
+        // Đảm bảo chỉ người tạo báo cáo mới có thể gửi duyệt
+        if ($supplierSelectionReport->creator_id !== auth()->id()) {
+            return redirect()->back()->withErrors('Bạn không có quyền!');
+
+       }
+
+        // 2. Cập nhật trạng thái
+        // Thay đổi 'status' từ 'draft' sang 'pending_review'
+        $supplierSelectionReport->update([
+            'status' => 'pending_review',
+        ]);
+
+        // 3. Gửi email thông báo
+        $reviewers = User::where('role', 'Nhân viên Kiểm Soát')->get();
+        foreach ($reviewers as $reviewer) {
+            Notification::route('mail' , $reviewer->email)->notify(new SupplierSelectionReportCreated($supplierSelectionReport));
+        }
+
+        // 4. Trả về phản hồi thành công
+        return redirect()->route('supplier_selection_reports.index')
+            ->with('success', 'Báo cáo đã được gửi duyệt thành công.');
     }
 
     /**

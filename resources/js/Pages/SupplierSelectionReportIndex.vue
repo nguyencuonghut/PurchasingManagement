@@ -41,7 +41,7 @@
                     <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo mô tả" />
                 </template>
             </Column>
-            <Column header="File đính kèm" style="min-width: 14rem">
+            <Column field="file_path" header="File đính kèm" style="min-width: 14rem">
                 <template #body="{ data }">
                     <a v-if="data.image_url" href="#" @click.prevent="openImageModal(data.image_url)" class="file-link">
                         <i class="pi pi-image mr-2"></i>Xem ảnh
@@ -63,14 +63,27 @@
                 </template>
             </Column>
 
-            <Column v-if="can.update_report || can.delete_report" :exportable="false" style="min-width: 12rem">
+            <Column v-if="can.update_report || can.delete_report" :exportable="false" style="min-width: 15rem">
                 <template #body="slotProps">
                     <Button
-                        v-if="can.update_report && ($page.props.auth.user.role === 'Quản trị' || $page.props.auth.user.id === slotProps.data.user_id)"
-                        icon="pi pi-pencil" outlined rounded class="mr-2" @click="editReport(slotProps.data)" />
+                        v-if="slotProps.data.status === 'draft' && $page.props.auth.user.id === slotProps.data.creator_id"
+                        icon="pi pi-send"
+                        outlined
+                        rounded
+                        severity="warn"
+                        @click="sendForReview(slotProps.data)"
+                        class="mr-2"
+                    />
+
                     <Button
-                        v-if="can.delete_report && ($page.props.auth.user.role === 'Quản trị' || $page.props.auth.user.id === slotProps.data.user_id)"
-                        icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteReport(slotProps.data)" />
+                        v-if="can.update_report && ($page.props.auth.user.role === 'Quản trị' || ($page.props.auth.user.id === slotProps.data.creator_id && slotProps.data.status === 'draft'))"
+                        icon="pi pi-pencil" outlined rounded class="mr-2" @click="editReport(slotProps.data)"
+                    />
+
+                    <Button
+                        v-if="can.delete_report && ($page.props.auth.user.role === 'Quản trị' || ($page.props.auth.user.id === slotProps.data.creator_id && slotProps.data.status === 'draft'))"
+                        icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteReport(slotProps.data)"
+                    />
                 </template>
             </Column>
         </DataTable>
@@ -125,7 +138,7 @@
                                     {{ (imageFile.size / 1024).toFixed(2) }} KB
                                     <template v-if="imageFile.name"> ({{ imageFile.name }})</template>
                                 </span>
-                                <span class="text-color-secondary" v-else-if="!imageFile && form.file_path && !form.file_path.startsWith('data:image')">
+                                <span v-else-if="!imageFile && form.file_path && !form.file_path.startsWith('data:image')">
                                     (Đã lưu trên server)
                                 </span>
                                 <Button
@@ -151,10 +164,17 @@
 
         <Dialog v-model:visible="imageModalVisible" maximizable :style="{ width: '80vw', height: '80vh' }" header="Xem ảnh đính kèm" :modal="true" class="image-modal">
             <div class="image-modal-content">
-                <img v-if="currentImageSrc" :src="currentImageSrc" alt="Full size image" class="full-size-image" />
+                <img v-if="currentImageSrc" :src="currentImageSrc" alt="Full size image" class="full-size-image" ref="imageRef" />
                 <p v-else>Không có ảnh để hiển thị.</p>
             </div>
             <template #footer>
+                <Button
+                    label="Xem full màn hình"
+                    icon="pi pi-external-link"
+                    @click="openFullscreen"
+                    class="p-button-outlined"
+                    v-if="currentImageSrc"
+                />
                 <Button label="Đóng" icon="pi pi-times" @click="imageModalVisible = false" />
             </template>
         </Dialog>
@@ -176,7 +196,7 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref, watch, nextTick, computed } from 'vue';
-import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
+import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { usePage } from '@inertiajs/vue3';
 
@@ -194,6 +214,8 @@ import RadioButton from 'primevue/radiobutton';
 import Toast from 'primevue/toast';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import Tag from 'primevue/tag';
+import Select from 'primevue/select';
 
 import html2canvas from 'html2canvas';
 
@@ -209,6 +231,21 @@ defineProps({
     reports: Object,
     can: Object,
 });
+
+const statuses = ref(['draft', 'pending_review', 'approved', 'rejected']);
+
+const getStatusSeverity = (status) => {
+    switch (status) {
+        case 'pending_review':
+            return 'warning';
+        case 'approved':
+            return 'success';
+        case 'rejected':
+            return 'danger';
+        default:
+            return 'info';
+    }
+};
 
 const reportDialog = ref(false);
 const deleteReportDialog = ref(false);
@@ -228,15 +265,11 @@ const rules = computed(() => {
         code: {
             required: helpers.withMessage('Mã báo cáo không được để trống.', required),
             maxLength: helpers.withMessage('Mã báo cáo không được vượt quá 255 ký tự.', maxLength(255)),
-            // Rule unique sẽ được xử lý hoàn toàn ở backend để tránh phức tạp frontend
         },
         description: {
             required: helpers.withMessage('Mô tả không được để trống.', required),
             maxLength: helpers.withMessage('Mô tả không được vượt quá 1000 ký tự.', maxLength(1000)),
         },
-        // File path: rule "required" sẽ được kiểm soát bởi Laravel dựa trên tình huống
-        // Frontend chỉ cần kiểm tra sự tồn tại nếu bạn muốn
-        // file_path: { required: helpers.withMessage('File đính kèm không được để trống.', required) },
     };
 });
 
@@ -254,12 +287,23 @@ const imageFile = ref(null);
 const showPlaceholder = ref(true);
 const isContentEditable = ref(true);
 
-const imageModalVisible = ref(false); // Keep this one
+const imageModalVisible = ref(false);
 const currentImageSrc = ref(null);
+const imageRef = ref(null);
 
 const openImageModal = (imageUrl) => {
     currentImageSrc.value = imageUrl;
     imageModalVisible.value = true;
+};
+
+const openFullscreen = () => {
+    if (imageRef.value && imageRef.value.requestFullscreen) {
+        imageRef.value.requestFullscreen();
+    } else if (imageRef.value && imageRef.value.webkitRequestFullscreen) {
+        imageRef.value.webkitRequestFullscreen();
+    } else if (imageRef.value && imageRef.value.msRequestFullscreen) {
+        imageRef.value.msRequestFullscreen();
+    }
 };
 
 const clearImage = (clearAll = false) => {
@@ -289,14 +333,13 @@ const handlePaste = async (event) => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 imagePreviewSrc.value = e.target.result;
-                form.file_path = e.target.result; // Lưu Base64 vào form.file_path
+                form.file_path = e.target.result;
             };
             reader.readAsDataURL(file);
             break;
         } else if (item.type === 'text/html') {
             const html = await new Promise(resolve => item.getAsString(resolve));
             if (html.includes('<table') || html.includes('<img')) {
-                // Nếu là nội dung HTML có thể là bảng hoặc hình ảnh, chuyển đổi sang ảnh
                 convertHtmlToImage(html);
                 imageFound = true;
                 break;
@@ -305,12 +348,11 @@ const handlePaste = async (event) => {
     }
 
     if (!imageFound) {
-        // Fallback: Nếu không tìm thấy ảnh và không phải HTML, dán nội dung dưới dạng text
         const text = (event.clipboardData || window.clipboardData).getData('text');
         if (pasteAreaRef.value) {
             const tempDiv = document.createElement('div');
-            tempDiv.innerText = text; // Dán dưới dạng text thuần
-            pasteAreaRef.value.innerHTML = ''; // Clear existing content
+            tempDiv.innerText = text;
+            pasteAreaRef.value.innerHTML = '';
             pasteAreaRef.value.appendChild(tempDiv);
         }
         showPlaceholder.value = !text.trim();
@@ -331,7 +373,7 @@ const handleDrop = (event) => {
         const reader = new FileReader();
         reader.onload = (e) => {
             imagePreviewSrc.value = e.target.result;
-            form.file_path = e.target.result; // Lưu Base64 vào form.file_path
+            form.file_path = e.target.result;
         };
         reader.readAsDataURL(file);
     } else {
@@ -343,25 +385,24 @@ const handleDrop = (event) => {
 const convertHtmlToImage = (html) => {
     const tempDiv = document.createElement('div');
     tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px'; // Đặt ra ngoài màn hình
-    tempDiv.style.width = 'fit-content'; // Đảm bảo div co giãn theo nội dung
-    tempDiv.style.padding = '10px'; // Thêm padding để ảnh không bị cắt sát
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.width = 'fit-content';
+    tempDiv.style.padding = '10px';
     tempDiv.innerHTML = html;
     document.body.appendChild(tempDiv);
 
-    // Sử dụng nextTick để đảm bảo DOM đã render xong
     nextTick(() => {
         html2canvas(tempDiv, {
-            scale: 2, // Tăng scale để ảnh nét hơn
-            useCORS: true, // Quan trọng nếu có ảnh từ các nguồn khác
-            logging: false // Tắt logging của html2canvas
+            scale: 2,
+            useCORS: true,
+            logging: false
         }).then(canvas => {
             const imgData = canvas.toDataURL('image/png');
             imagePreviewSrc.value = imgData;
             form.file_path = imgData;
             imageFile.value = new File([dataURLtoBlob(imgData)], 'pasted_content.png', { type: 'image/png' });
 
-            document.body.removeChild(tempDiv); // Xóa div tạm thời
+            document.body.removeChild(tempDiv);
         }).catch(error => {
             console.error('Error converting HTML to image:', error);
             toast.add({severity: 'error', summary: 'Lỗi', detail: 'Không thể chuyển đổi nội dung dán thành ảnh.', life: 3000});
@@ -399,7 +440,7 @@ const handleBlur = () => {
 const openNew = () => {
     isAddReport.value = true;
     form.reset();
-    v$.value.$reset(); // Reset trạng thái validation của Vuelidate
+    v$.value.$reset();
     selectedReportId.value = null;
     clearImage();
     submitted.value = false;
@@ -409,8 +450,8 @@ const openNew = () => {
 const hideDialog = () => {
     reportDialog.value = false;
     submitted.value = false;
-    form.clearErrors(); // Xóa lỗi Inertia
-    v$.value.$reset(); // Reset trạng thái validation của Vuelidate
+    form.clearErrors();
+    v$.value.$reset();
     clearImage();
     selectedReportId.value = null;
 };
@@ -418,14 +459,13 @@ const hideDialog = () => {
 const saveReport = async () => {
 
     submitted.value = true;
-    const isFormValid = await v$.value.$validate(); // Chạy validation frontend
+    const isFormValid = await v$.value.$validate();
 
     if (!isFormValid) {
         toast.add({severity: 'error', summary: 'Lỗi Validation', detail: 'Vui lòng kiểm tra lại các trường có lỗi.', life: 3000});
-        return; // Dừng lại nếu frontend validation thất bại
+        return;
     }
 
-    // Nếu frontend validation pass, tiếp tục gửi đến backend
     if (isAddReport.value) {
         form.post('/supplier_selection_reports', {
             preserveScroll: true,
@@ -438,11 +478,10 @@ const saveReport = async () => {
                 selectedReportId.value = null;
             },
             onError: (errors) => {
-                // InertiaJS tự động điền errors vào form.errors
                 toast.add({severity: 'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi tạo báo cáo.', life: 3000});
             },
         });
-    } else { // Logic CẬP NHẬT
+    } else {
         if (selectedReportId.value) {
             form.put(`/supplier_selection_reports/${selectedReportId.value}`, {
                 onSuccess: () => {
@@ -467,15 +506,14 @@ const editReport = (report) => {
     isAddReport.value = false;
     selectedReportId.value = report.id;
 
-    // Properly populate form with existing data
-    form.code = report.code || '';
-    form.description = report.description || '';
-    form.file_path = report.file_path || null;
+    form.reset({
+        code: report.code,
+        description: report.description,
+        file_path: report.image_url,
+    });
+    form.clearErrors();
+    v$.value.$reset();
 
-    form.clearErrors(); // Xóa lỗi Inertia cũ
-    v$.value.$reset(); // Reset trạng thái validation của Vuelidate
-
-    // Cập nhật preview ảnh nếu có
     if (report.image_url) {
         imagePreviewSrc.value = report.image_url;
         showPlaceholder.value = false;
@@ -517,54 +555,37 @@ const deleteReport = () => {
     }
 };
 
-
-const statuses = ref(['draft',
-                    'pending_review',
-                    'reviewed',
-                    'pending_pm_approval',
-                    'pm_approved',
-                    'pending_director_approval',
-                    'director_approved',
-                    'rejected']);
-const filters = ref();
-
-const initFilters = () => {
-    filters.value = {
-        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        code: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        description: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-    };
+// Hàm mới để gửi báo cáo đi phê duyệt
+const sendForReview = (report) => {
+    router.put(`/supplier_selection_reports/${report.id}/send-for-review`, {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.add({severity:'success', summary: 'Thành công', detail: `Báo cáo ${report.code} đã được gửi duyệt.`, life: 3000});
+        },
+        onError: (errors) => {
+            console.error("Lỗi khi gửi yêu cầu duyệt báo cáo:", errors);
+            const flash = page.props.flash;
+            toast.add({severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi gửi yêu cầu duyệt báo cáo!', life: 3000});
+        },
+    });
 };
 
-initFilters();
+
+const filters = ref({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    code: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+    description: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+    file_path: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+});
 
 const clearFilter = () => {
-    initFilters();
+    filters.value = {
+        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        code: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        description: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        file_path: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+    };
 };
-const getStatusSeverity = (status) => {
-    switch (status) {
-        case 'draft':
-            return 'secondary';
-        case 'pending_review':
-            return 'info';
-        case 'reviewed':
-            return 'info';
-        case 'pending_pm_approval':
-            return 'info';
-        case 'pm_approved':
-            return 'info';
-        case 'pending_director_approval':
-            return 'info';
-        case 'director_approved':
-            return 'success';
-        case 'rejected':
-            return 'danger';
-        default:
-            return null; // Handle default case if status is not 'On' or 'Off'
-    }
-};
-
 // END: Dialog & Form Logic
 </script>
 
@@ -579,12 +600,12 @@ const getStatusSeverity = (status) => {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 140px; /* Adjust as needed */
+    min-height: 140px;
     width: 100%;
     text-align: center;
     color: var(--text-color-secondary);
     font-style: italic;
-    background-color: var(--surface-100); /* Light background for paste area */
+    background-color: var(--surface-100);
     border-radius: var(--border-radius);
     padding: 1rem;
     box-sizing: border-box;
@@ -605,28 +626,27 @@ const getStatusSeverity = (status) => {
 }
 
 .p-editor-container {
-    /* Styles for the contenteditable div */
     border: 1px solid var(--surface-300);
     border-radius: var(--border-radius);
     padding: 1rem;
     cursor: text;
     min-height: 150px;
     box-sizing: border-box;
-    overflow: hidden; /* Ensure image doesn't overflow */
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .p-editor-container.has-content {
-    background-color: var(--surface-0); /* White background when content is present */
+    background-color: var(--surface-0);
 }
 
 .image-modal .p-dialog-content {
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden; /* Hide scrollbars if content overflows dialog */
+    overflow: hidden;
 }
 
 .image-modal-content {
@@ -635,13 +655,13 @@ const getStatusSeverity = (status) => {
     align-items: center;
     width: 100%;
     height: 100%;
-    overflow: auto; /* Allow scroll if image is too large */
+    overflow: auto;
 }
 
 .image-modal .full-size-image {
     max-width: 100%;
     max-height: 100%;
     display: block;
-    object-fit: contain; /* Ensure the image fits within the modal without cropping */
+    object-fit: contain;
 }
 </style>

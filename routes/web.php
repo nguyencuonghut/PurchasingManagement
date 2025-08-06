@@ -25,5 +25,8 @@ Route::group(['middleware'=>'auth:web'], function() {
     Route::resource('users', UserController::class);
 
     //SupplierSelectionReport routes
-    Route::resource('supplier_selection_reports', SupplierSelectionReportController::class);
+    Route::resource('/supplier_selection_reports', SupplierSelectionReportController::class);
+    Route::put('/supplier_selection_reports/{supplier_selection_report}/send-for-review',
+        [SupplierSelectionReportController::class, 'sendForReview'])
+        ->name('supplier_selection_reports.sendForReview');
 });
