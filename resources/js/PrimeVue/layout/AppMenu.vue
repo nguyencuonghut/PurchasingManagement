@@ -1,23 +1,32 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 import AppMenuItem from './AppMenuItem.vue';
 
-const model = ref([
-    {
-        label: 'Home',
-        items: [
-            { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
-            { label: 'BCLCNCC', icon: 'pi pi-fw pi-report', to: '/supplier_selection_reports' }
-        ]
-    },
-    {
-        label: 'HỆ THỐNG',
-        items: [
-            { label: 'Người dùng', icon: 'pi pi-fw pi-users', to: '/users' },
-        ]
-    },
-]);
+const page = usePage();
+const userRole = computed(() => page.props.auth?.user?.role);
+
+const model = computed(() => {
+    const base = [
+        {
+            label: 'Home',
+            items: [
+                { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
+                { label: 'BCLCNCC', icon: 'pi pi-fw pi-report', to: '/supplier_selection_reports' }
+            ]
+        }
+    ];
+    if (userRole.value === 'Quản trị') {
+        base.push({
+            label: 'HỆ THỐNG',
+            items: [
+                { label: 'Người dùng', icon: 'pi pi-fw pi-users', to: '/users' },
+            ]
+        });
+    }
+    return base;
+});
 </script>
 
 <template>
