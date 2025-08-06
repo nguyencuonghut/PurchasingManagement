@@ -2,7 +2,9 @@
 import { useLayout } from '@/PrimeVue/layout/composables/layout';
 import { onBeforeMount, ref, watch } from 'vue';
 import NavLink from "@/Components/NavLink.vue";
+import { usePage } from '@inertiajs/vue3';
 
+const page = usePage();
 const { layoutState, setActiveMenuItem, toggleMenu } = useLayout();
 
 const props = defineProps({
@@ -61,6 +63,14 @@ function itemClick(event, item) {
     setActiveMenuItem(foundItemKey);
 }
 
+// Helper: check if BCLCNCC menu should be active
+function isBCLCNCCActive(item) {
+    if (item.to === '/supplier_selection_reports') {
+        return page.url.startsWith('/supplier_selection_reports');
+    }
+    return page.url === item.to;
+}
+
 </script>
 
 <template>
@@ -71,7 +81,7 @@ function itemClick(event, item) {
             <span class="layout-menuitem-text">{{ item.label }}</span>
             <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
         </a>
-        <NavLink v-if="item.to && !item.items && item.visible !== false" :href="item.to" @click="itemClick($event, item, index)" :class="[item.class, { 'active-route': $page.url === item.to }]" tabindex="0">
+        <NavLink v-if="item.to && !item.items && item.visible !== false" :href="item.to" @click="itemClick($event, item, index)" :class="[item.class, { 'active-route': isBCLCNCCActive(item) }]" tabindex="0">
             <i :class="item.icon" class="layout-menuitem-icon"></i>
             <span class="layout-menuitem-text">{{ item.label }}</span>
             <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>

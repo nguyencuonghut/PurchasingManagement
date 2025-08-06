@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\SupplierSelectionReportCreated;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // THÊM DÒNG NÀY
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -108,7 +109,9 @@ class SupplierSelectionReportController extends Controller
      */
     public function show(SupplierSelectionReport $supplierSelectionReport)
     {
-        //
+        return Inertia::render('SupplierSelectionReportShow', [
+            'report' => $supplierSelectionReport->only(['id', 'code', 'description', 'file_path', 'image_url', 'status', 'pm_approver_status', 'pm_approver_notes', 'reviewer_status', 'reviewer_notes']),
+        ]);
     }
 
     /**
@@ -240,6 +243,99 @@ class SupplierSelectionReportController extends Controller
         // 4. Trả về phản hồi thành công
         return redirect()->route('supplier_selection_reports.index')
             ->with('success', 'Báo cáo đã được gửi duyệt thành công.');
+    }
+
+    /**
+     * Trưởng phòng Thu Mua duyệt phiếu
+     */
+    public function managerReview(Request $request, SupplierSelectionReport $supplierSelectionReport)
+    {
+        $user = $request->user();
+        if ($user->role !== 'Trưởng phòng Thu Mua') {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'Bạn không có quyền duyệt phiếu này.'
+            ]);
+        }
+        $validated = $request->validate([
+            'pm_approver_status' => 'required|in:approved,rejected',
+            'pm_approver_notes' => 'nullable|string|max:1000',
+        ]);
+        Log::info($request->all());
+        $supplierSelectionReport->pm_approver_status = $validated['pm_approver_status'];
+        $supplierSelectionReport->pm_approver_notes = $validated['pm_approver_notes'] ?? null;
+        $supplierSelectionReport->status = 'pm_approved';
+        $supplierSelectionReport->pm_approver_id = Auth::id(); // Gán ID của người duyệt
+        $supplierSelectionReport->save();
+
+        // Nếu approved, gửi email cho Nhân viên Kiểm Soát yêu cầu review
+        if ($validated['pm_approver_status'] === 'approved'
+            && $supplierSelectionReport->status === 'pm_approved') {
+            $users = User::where('role', 'Nhân viên Kiểm Soát')->get();
+            foreach ($users as $user) {
+                Notification::route('mail', $user->email)->notify(new \App\Notifications\SupplierSelectionReportNeedReview($supplierSelectionReport));
+            }
+        } else {
+            // Nếu rejected, thông báo cho Nhân viên Thu Mua
+            $purchasingStaffs = User::where('role', 'Nhân viên Thu Mua')->get();
+            foreach ($purchasingStaffs as $staff) {
+                Notification::route('mail', $staff->email)->notify(new \App\Notifications\SupplierSelectionReportRejectedByManager($supplierSelectionReport));
+            }
+        }
+
+        return redirect()->route('supplier_selection_reports.show', $supplierSelectionReport->id)
+            ->with('flash', [
+                'type' => 'success',
+                'message' => 'Đã duyệt phiếu thành công!'
+            ]);
+    }
+
+    /**
+     * Action review báo cáo (chỉ Nhân viên Kiểm Soát được phép)
+     */
+    public function review(Request $request, SupplierSelectionReport $supplierSelectionReport)
+    {
+        $user = $request->user();
+        if ($user->role !== 'Nhân viên Kiểm Soát') {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'Bạn không có quyền review báo cáo này.'
+            ]);
+        }
+        $validated = $request->validate([
+            'reviewer_status' => 'required|in:approved,rejected',
+            'reviewer_notes' => 'nullable|string|max:1000',
+        ]);
+        $supplierSelectionReport->reviewer_status = $validated['reviewer_status'];
+        $supplierSelectionReport->reviewer_notes = $validated['reviewer_notes'] ?? null;
+        $supplierSelectionReport->reviewer_id = Auth::id(); // Gán ID của người review
+        $supplierSelectionReport->status = 'reviewed'; // Cập nhật trạng thái báo cáo
+        $supplierSelectionReport->save();
+
+        // Gửi email notification kết quả review
+        $purchasingStaffs = User::where('role', 'Nhân viên Thu Mua')->get();
+        $manager = User::where('role', 'Trưởng phòng Thu Mua')->first();
+        if ($validated['reviewer_status'] === 'approved') {
+            // Thông báo cho nhân viên Thu Mua
+            foreach ($purchasingStaffs as $staff) {
+                Notification::route('mail', $staff->email)->notify(new \App\Notifications\SupplierSelectionReportReviewed($supplierSelectionReport, 'approved'));
+            }
+            // Thông báo cho trưởng phòng Thu Mua
+            if ($manager) {
+                Notification::route('mail', $manager->email)->notify(new \App\Notifications\SupplierSelectionReportNeedPMApproval($supplierSelectionReport));
+            }
+        } else {
+            // rejected: Thông báo cho nhân viên Thu Mua
+            foreach ($purchasingStaffs as $staff) {
+                Notification::route('mail', $staff->email)->notify(new \App\Notifications\SupplierSelectionReportReviewed($supplierSelectionReport, 'rejected'));
+            }
+        }
+
+        return redirect()->route('supplier_selection_reports.show', $supplierSelectionReport->id)
+            ->with('flash', [
+                'type' => 'success',
+                'message' => 'Đã gửi review thành công!'
+            ]);
     }
 
     /**

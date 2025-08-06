@@ -27,7 +27,9 @@
             <Column field="id" header="Id" style="width: 20%; height: 44px"></Column>
             <Column field="code" header="Mã" sortable style="min-width: 14rem">
                 <template #body="{ data }">
-                    {{ data.code }}
+                    <a :href="`/supplier_selection_reports/${data.id}`" class="text-primary hover:underline" style="cursor:pointer">
+                      {{ data.code }}
+                    </a>
                 </template>
                 <template #filter="{ filterModel }">
                     <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo mã" />
