@@ -229,9 +229,9 @@ class SupplierSelectionReportController extends Controller
        }
 
         // 2. Cập nhật trạng thái
-        // Thay đổi 'status' từ 'draft' sang 'pending_review'
+        // Thay đổi 'status' từ 'draft' sang 'pending_pm_approval' cho Trưởng phòng Thu Mua duyệt
         $supplierSelectionReport->update([
-            'status' => 'pending_review',
+            'status' => 'pending_pm_approval',
         ]);
 
         // 3. Gửi email thông báo
