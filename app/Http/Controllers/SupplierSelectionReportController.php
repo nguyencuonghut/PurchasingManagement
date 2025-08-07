@@ -261,7 +261,6 @@ class SupplierSelectionReportController extends Controller
             'pm_approver_status' => 'required|in:approved,rejected',
             'pm_approver_notes' => 'nullable|string|max:1000',
         ]);
-        Log::info($request->all());
         $supplierSelectionReport->pm_approver_status = $validated['pm_approver_status'];
         $supplierSelectionReport->pm_approver_notes = $validated['pm_approver_notes'] ?? null;
         if ('approved' == $validated['pm_approver_status']) {
