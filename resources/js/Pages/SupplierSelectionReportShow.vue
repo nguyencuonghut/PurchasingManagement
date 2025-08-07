@@ -8,7 +8,7 @@
       <div><b>Mã:</b> {{ report.code }}</div>
       <div><b>Mô tả:</b> {{ report.description }}</div>
       <div><b>Trạng thái:</b> <Tag :value="report.status" :severity="getStatusSeverity(report.status)" /></div>
-      <div v-if="report.status == 'pm_approved'"><b>Trưởng phòng mua đã duyệt:</b>
+      <div v-if="report.pm_approver_status"><b>Trưởng phòng mua đã duyệt:</b>
         <div class="flex ml-6 gap-4">
           <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.pm_approver_status" :severity="getStatusSeverity(report.pm_approver_status)" /></div>
           <div v-if="report.pm_approver_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.pm_approver_notes }}</div>
