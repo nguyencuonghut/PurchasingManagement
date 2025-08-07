@@ -197,8 +197,8 @@
 
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref, watch, nextTick, computed } from 'vue';
-import { FilterMatchMode } from '@primevue/core/api';
+import { ref, nextTick, computed } from 'vue';
+import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { usePage } from '@inertiajs/vue3';
 
@@ -212,7 +212,6 @@ import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
-import RadioButton from 'primevue/radiobutton';
 import Toast from 'primevue/toast';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
@@ -234,14 +233,28 @@ defineProps({
     can: Object,
 });
 
-const statuses = ref(['draft', 'pending_review', 'approved', 'rejected']);
+const statuses = ref(['draft',
+                    'pending_pm_approval',
+                    'pm_approved',
+                    'pending_review',
+                    'reviewed',
+                    'pending_director_approval',
+                    'director_approved',
+                    'rejected'
+                ]);
 
 const getStatusSeverity = (status) => {
     switch (status) {
         case 'pending_review':
-            return 'warning';
-        case 'approved':
+        case 'pending_pm_approval':
+        case 'pending_director_approval':
+            return 'warn';
+
+        case 'pm_approved':
+        case 'reviewed':
+        case 'director_approved':
             return 'success';
+
         case 'rejected':
             return 'danger';
         default:
@@ -572,21 +585,41 @@ const sendForReview = (report) => {
 };
 
 
-const filters = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    code: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-    description: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-    file_path: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-});
-
-const clearFilter = () => {
+const filters = ref();
+const initFilters = () => {
     filters.value = {
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        code: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        description: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        file_path: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        code: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        description: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
     };
 };
+
+initFilters();
+
+const clearFilter = () => {
+    initFilters();
+};
+
+
+// const filters = ref({
+//     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+//     code: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+//     description: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+//     file_path: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+//     status: { operator: FilterMatchMode.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+
+// });
+
+// const clearFilter = () => {
+//     filters.value = {
+//         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+//         code: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+//         description: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+//         file_path: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+//         status: { operator: FilterMatchMode.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+//     };
+// };
 // END: Dialog & Form Logic
 </script>
 
