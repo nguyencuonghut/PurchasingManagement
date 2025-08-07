@@ -138,12 +138,22 @@ const reviewer_notes = ref('');
 const processing = ref(false);
 
 const getStatusSeverity = (status) => {
-  switch (status) {
-    case 'pending_review': return 'warning';
-    case 'approved': return 'success';
-    case 'rejected': return 'danger';
-    default: return 'info';
-  }
+    switch (status) {
+        case 'pending_review':
+        case 'pending_pm_approval':
+        case 'pending_director_approval':
+            return 'warn';
+
+        case 'pm_approved':
+        case 'reviewed':
+        case 'director_approved':
+            return 'success';
+
+        case 'rejected':
+            return 'danger';
+        default:
+            return 'info';
+    }
 };
 
 const submitReview = () => {
