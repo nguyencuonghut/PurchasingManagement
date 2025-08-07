@@ -18,10 +18,10 @@ return new class extends Migration
             $table->text('file_path');
             $table->foreignId('creator_id')->constrained('users')->onDelete('cascade');
             $table->enum('status', ['draft',
-                                    'pending_review',
-                                    'reviewed',
                                     'pending_pm_approval',
                                     'pm_approved',
+                                    'pending_review',
+                                    'reviewed',
                                     'pending_director_approval',
                                     'director_approved',
                                     'rejected'
