@@ -26,7 +26,7 @@ class SupplierSelectionReportController extends Controller
     public function index(Request $request)
     {
         $reports = SupplierSelectionReport::all()->map(function ($report) {
-            return collect($report)->only(['id', 'code', 'description', 'file_path', 'image_url', 'status']);
+            return collect($report)->only(['id', 'code', 'description', 'file_path', 'image_url', 'status', 'creator_id']);
         });
 
         // Lấy quyền của người dùng hiện tại
