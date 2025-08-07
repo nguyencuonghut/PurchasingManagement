@@ -264,7 +264,14 @@ class SupplierSelectionReportController extends Controller
         Log::info($request->all());
         $supplierSelectionReport->pm_approver_status = $validated['pm_approver_status'];
         $supplierSelectionReport->pm_approver_notes = $validated['pm_approver_notes'] ?? null;
-        $supplierSelectionReport->status = 'pm_approved';
+        if ('approved' == $validated['pm_approver_status']) {
+            // Nếu approved, gán trạng thái là 'pm_approved'
+            $supplierSelectionReport->status = 'pm_approved';
+        } else {
+            // Nếu rejected, gán trạng thái là 'rejected'
+            $supplierSelectionReport->status = 'rejected';
+
+        }
         $supplierSelectionReport->pm_approver_id = Auth::id(); // Gán ID của người duyệt
         $supplierSelectionReport->save();
 
