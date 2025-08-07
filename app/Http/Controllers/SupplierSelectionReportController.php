@@ -8,6 +8,7 @@ use App\Models\SupplierSelectionReport;
 use App\Models\User;
 use App\Notifications\SupplierSelectionReportCreated;
 use App\Http\Requests\ManagerReviewSupplierSelectionReportRequest;
+use App\Http\Requests\AuditorReviewSupplierSelectionReportRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // THÊM DÒNG NÀY
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use App\Notifications\SupplierSelectionReportNeedAuditorReview;
+use App\Notifications\SupplierSelectionReportNeedDirectorApproval;
 
 class SupplierSelectionReportController extends Controller
 {
@@ -269,12 +272,19 @@ class SupplierSelectionReportController extends Controller
         $supplierSelectionReport->pm_approver_id = Auth::id();
         $supplierSelectionReport->save();
 
-        if ($validated['pm_approver_status'] === 'approved' && $supplierSelectionReport->status === 'pm_approved') {
-            $users = User::where('role', 'Nhân viên Kiểm Soát')->get();
-            foreach ($users as $user) {
-                Notification::route('mail', $user->email)->notify(new \App\Notifications\SupplierSelectionReportNeedReview($supplierSelectionReport));
+        if ($supplierSelectionReport->status === 'pm_approved') {
+            // Gửi notification cho Nhân viên Kiểm Soát (yêu cầu review)
+            $auditors = User::where('role', 'Nhân viên Kiểm Soát')->get();
+            foreach ($auditors as $auditor) {
+                Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorReview($supplierSelectionReport));
+            }
+            // Gửi notification cho Nhân viên Thu Mua (kết quả duyệt)
+            $purchasingStaffs = User::where('role', 'Nhân viên Thu Mua')->get();
+            foreach ($purchasingStaffs as $staff) {
+                Notification::route('mail', $staff->email)->notify(new \App\Notifications\SupplierSelectionReportApprovedByManager($supplierSelectionReport));
             }
         } else {
+            // Nếu rejected, thông báo cho Nhân viên Thu Mua
             $purchasingStaffs = User::where('role', 'Nhân viên Thu Mua')->get();
             foreach ($purchasingStaffs as $staff) {
                 Notification::route('mail', $staff->email)->notify(new \App\Notifications\SupplierSelectionReportRejectedByManager($supplierSelectionReport));
@@ -291,7 +301,7 @@ class SupplierSelectionReportController extends Controller
     /**
      * Action review báo cáo (chỉ Nhân viên Kiểm Soát được phép)
      */
-    public function review(Request $request, SupplierSelectionReport $supplierSelectionReport)
+    public function review(AuditorReviewSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
         if ($user->role !== 'Nhân viên Kiểm Soát') {
@@ -300,32 +310,30 @@ class SupplierSelectionReportController extends Controller
                 'message' => 'Bạn không có quyền review báo cáo này.'
             ]);
         }
-        $validated = $request->validate([
-            'reviewer_status' => 'required|in:approved,rejected',
-            'reviewer_notes' => 'nullable|string|max:1000',
-        ]);
+
+        $validated = $request->validated();
+        // Cập nhật trạng thái và ghi chú của Nhân viên Kiểm Soát
         $supplierSelectionReport->reviewer_status = $validated['reviewer_status'];
         $supplierSelectionReport->reviewer_notes = $validated['reviewer_notes'] ?? null;
         $supplierSelectionReport->reviewer_id = Auth::id(); // Gán ID của người review
-        $supplierSelectionReport->status = 'reviewed'; // Cập nhật trạng thái báo cáo
+        if ($validated['reviewer_status'] === 'approved') {
+            $supplierSelectionReport->status = 'reviewed';
+        } else {
+            $supplierSelectionReport->status = 'rejected';
+        }
         $supplierSelectionReport->save();
 
-        // Gửi email notification kết quả review
-        $purchasingStaffs = User::where('role', 'Nhân viên Thu Mua')->get();
-        $manager = User::where('role', 'Trưởng phòng Thu Mua')->first();
-        if ($validated['reviewer_status'] === 'approved') {
-            // Thông báo cho nhân viên Thu Mua
-            foreach ($purchasingStaffs as $staff) {
-                Notification::route('mail', $staff->email)->notify(new \App\Notifications\SupplierSelectionReportReviewed($supplierSelectionReport, 'approved'));
-            }
-            // Thông báo cho trưởng phòng Thu Mua
-            if ($manager) {
-                Notification::route('mail', $manager->email)->notify(new \App\Notifications\SupplierSelectionReportNeedPMApproval($supplierSelectionReport));
+        if ($supplierSelectionReport->status === 'reviewed') {
+            // Gửi notification cho Giám đốc
+            $directors = User::where('role', 'Giám đốc')->get();
+            foreach ($directors as $director) {
+                Notification::route('mail', $director->email)->notify(new SupplierSelectionReportNeedDirectorApproval($supplierSelectionReport));
             }
         } else {
-            // rejected: Thông báo cho nhân viên Thu Mua
+            // Nếu rejected, thông báo cho Nhân viên Thu Mua
+            $purchasingStaffs = User::where('role', 'Nhân viên Thu Mua')->get();
             foreach ($purchasingStaffs as $staff) {
-                Notification::route('mail', $staff->email)->notify(new \App\Notifications\SupplierSelectionReportReviewed($supplierSelectionReport, 'rejected'));
+                Notification::route('mail', $staff->email)->notify(new \App\Notifications\SupplierSelectionReportRejectedByAuditor($supplierSelectionReport));
             }
         }
 

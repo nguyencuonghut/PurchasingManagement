@@ -14,6 +14,12 @@
           <div v-if="report.pm_approver_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.pm_approver_notes }}</div>
         </div>
       </div>
+      <div v-if="report.reviewer_status"><b>Nhân viên Kiểm Soát đã review:</b>
+        <div class="flex ml-6 gap-4">
+          <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.reviewer_status" :severity="getStatusSeverity(report.reviewer_status)" /></div>
+          <div v-if="report.reviewer_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.reviewer_notes }}</div>
+        </div>
+      </div>
       <div v-if="report.image_url">
         <b>File đính kèm:</b>
         <img :src="report.image_url" alt="Ảnh đính kèm" style="max-width: 100%; max-height: 100%; display: block; margin-top: 8px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer;" @click="openImageModal(report.image_url)" />
@@ -57,7 +63,7 @@
         </div>
       </form>
     </div>
-    <div v-else-if="canReview && report.status === 'manager_approved'">
+    <div v-else-if="canReview && report.status === 'pm_approved'">
       <h3 class="font-bold mb-2">Nhân viên Kiểm Soát review</h3>
       <form @submit.prevent="submitReview" class="flex flex-col gap-4">
         <div>
@@ -168,12 +174,12 @@ const submitReview = () => {
   }, {
     preserveScroll: true,
     onSuccess: () => {
-      toast.add({severity: 'success', summary: 'Thành công', detail: 'Đã gửi review!', life: 3000});
+      toast.add({severity: 'success', summary: 'Thành công', detail: 'Đã duyệt thành công!', life: 3000});
       processing.value = false;
     },
     onError: (errors) => {
-      console.error('Lỗi khi gửi review:', errors);
-      toast.add({severity: 'error', summary: 'Lỗi', detail: 'Gửi review thất bại.', life: 3000});
+      console.error('Lỗi khi duyệt:', errors);
+      toast.add({severity: 'error', summary: 'Lỗi', detail: 'Lỗi xảy ra trong quá trình duyệt.', life: 3000});
       processing.value = false;
     }
   });

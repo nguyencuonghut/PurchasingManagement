@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SupplierSelectionReportNeedReview extends Notification implements ShouldQueue
+class SupplierSelectionReportRejectedByAuditor extends Notification implements ShouldQueue
 {
     use Queueable;
     protected $report;
@@ -37,11 +37,10 @@ class SupplierSelectionReportNeedReview extends Notification implements ShouldQu
     {
         $url = '/supplier_selection_reports/' . $this->report->id;
         return (new MailMessage)
-                    ->subject('Đề nghị kiểm tra báo cáo lựa chọn nhà cung cấp số ' . $this->report->code)
-                    ->line('Xin mời kiểm tra báo cáo lựa chọn nhà cung cấp sau đây:')
-                    ->line('- Số: ' . $this->report->code)
-                    ->line('- Mô tả: ' . $this->report->description)
-                    ->action('Kiểm tra', url($url))
+                    ->subject('Kiểm Soát Nội Bộ đã từ chối duyệt báo cáo cáo lựa chọn nhà cung cấp số: ' . $this->report->code)
+                    ->line('Báo cáo lựa chọn nhà cung cấp số:' . $this->report->code . ' đã bị từ chối bởi Kiểm Soát Nội Bộ.')
+                    ->line('Lý do từ chối: ' . $this->report->reviewer_notes)
+                    ->action('Chi tiết', url($url))
                     ->line('Xin cảm ơn!');
     }
 

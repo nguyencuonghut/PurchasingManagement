@@ -31,4 +31,5 @@ Route::group(['middleware'=>'auth:web'], function() {
         ->name('supplier_selection_reports.sendForReview');
     Route::get('/supplier_selection_reports/{supplierSelectionReport}', [SupplierSelectionReportController::class, 'show'])->name('supplier_selection_reports.show');
     Route::post('/supplier_selection_reports/{supplierSelectionReport}/manager-review', [SupplierSelectionReportController::class, 'managerReview'])->name('supplier_selection_reports.managerReview');
+    Route::post('/supplier_selection_reports/{supplierSelectionReport}/review', [SupplierSelectionReportController::class, 'review'])->name('supplier_selection_reports.review');
 });
