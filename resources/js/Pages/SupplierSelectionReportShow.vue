@@ -8,16 +8,21 @@
       <div><b>Mã:</b> {{ report.code }}</div>
       <div><b>Mô tả:</b> {{ report.description }}</div>
       <div><b>Trạng thái:</b> <Tag :value="report.status" :severity="getStatusSeverity(report.status)" /></div>
-      <div v-if="report.pm_approver_status"><b>Trưởng phòng mua đã duyệt:</b>
+      <div><b>Người tạo:</b> {{ report.creator_name }} ({{ formatDate(report.created_at) }})</div>
+      <div v-if="'pending' !== report.manager_approved_result"><b>Trưởng phòng Thu Mua:</b>
         <div class="flex ml-6 gap-4">
-          <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.pm_approver_status" :severity="getStatusSeverity(report.pm_approver_status)" /></div>
-          <div v-if="report.pm_approver_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.pm_approver_notes }}</div>
+          <div style="width: 50%"><b>Người duyệt: </b>{{ report.manager_name }}</div>
+          <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.created_at) }}</div>
+        </div>
+        <div class="flex ml-6 gap-4">
+          <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.manager_approved_result" :severity="getResultsSeverity(report.manager_approved_result)" /></div>
+          <div v-if="report.manager_approved_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.manager_approved_notes }}</div>
         </div>
       </div>
-      <div v-if="report.reviewer_status"><b>Nhân viên Kiểm Soát đã review:</b>
+      <div v-if="'pending' !== report.auditor_audited_result"><b>Nhân viên Kiểm Soát đã kiểm tra:</b>
         <div class="flex ml-6 gap-4">
-          <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.reviewer_status" :severity="getStatusSeverity(report.reviewer_status)" /></div>
-          <div v-if="report.reviewer_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.reviewer_notes }}</div>
+          <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.auditor_audited_result" :severity="getResultsSeverity(report.auditor_audited_result)" /></div>
+          <div v-if="report.auditor_audited_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.auditor_audited_notes }}</div>
         </div>
       </div>
       <div v-if="report.image_url">
@@ -45,35 +50,32 @@
       <div v-else>
         <b>File đính kèm:</b> Không có file
       </div>
-      <div v-if="report.review_note">
-        <b>Ghi chú review:</b> {{ report.review_note }}
-      </div>
     </div>
-    <div v-if="canManagerReview && report.status === 'pending_pm_approval'">
+    <div v-if="canManagerReview && report.status === 'pending_manager_approval'">
       <h3 class="font-bold mb-2">Trưởng phòng Thu Mua duyệt phiếu</h3>
-      <form @submit.prevent="submitManagerReview" class="flex flex-col gap-4">
+      <form @submit.prevent="submitManagerApprove" class="flex flex-col gap-4">
         <div>
-          <Select v-model="pm_approver_status" :options="['approved', 'rejected']" placeholder="Chọn trạng thái" class="w-full" />
+          <Select v-model="manager_approved_result" :options="['approved', 'rejected']" placeholder="Chọn trạng thái" class="w-full" />
         </div>
         <div>
-          <textarea v-model="pm_approver_notes" placeholder="Ghi chú (tuỳ chọn)" rows="3" class="w-full p-2 border rounded resize-vertical" />
+          <textarea v-model="manager_approved_notes" placeholder="Ghi chú (tuỳ chọn)" rows="3" class="w-full p-2 border rounded resize-vertical" />
         </div>
         <div>
           <Button type="submit" label="Duyệt phiếu" :disabled="managerProcessing" class="w-full" />
         </div>
       </form>
     </div>
-    <div v-else-if="canReview && report.status === 'pm_approved'">
+    <div v-else-if="canReview && report.status === 'manager_approved'">
       <h3 class="font-bold mb-2">Nhân viên Kiểm Soát review</h3>
-      <form @submit.prevent="submitReview" class="flex flex-col gap-4">
+      <form @submit.prevent="submitAuditorAudit" class="flex flex-col gap-4">
         <div>
-          <Select v-model="reviewer_status" :options="['approved', 'rejected']" placeholder="Chọn trạng thái" class="w-full" />
+          <Select v-model="auditor_audited_result" :options="['approved', 'rejected']" placeholder="Chọn trạng thái" class="w-full" />
         </div>
         <div>
-          <textarea v-model="reviewer_notes" placeholder="Ghi chú (tuỳ chọn)" rows="3" class="w-full p-2 border rounded resize-vertical" />
+          <textarea v-model="auditor_audited_notes" placeholder="Ghi chú (tuỳ chọn)" rows="3" class="w-full p-2 border rounded resize-vertical" />
         </div>
         <div>
-          <Button type="submit" label="Gửi review" :disabled="processing" class="w-full" />
+          <Button type="submit" label="Gửi kiểm tra" :disabled="processing" class="w-full" />
         </div>
       </form>
     </div>
@@ -114,18 +116,18 @@ const report = computed(() => page.props.report);
 const user = computed(() => page.props.auth.user);
 const canReview = computed(() => user.value.role === 'Nhân viên Kiểm Soát');
 const canManagerReview = computed(() => user.value.role === 'Trưởng phòng Thu Mua');
-const pm_approver_status = ref('');
-const pm_approver_notes = ref('');
+const manager_approved_result = ref('');
+const manager_approved_notes = ref('');
 const managerProcessing = ref(false);
-const submitManagerReview = () => {
-  if (!pm_approver_status.value) {
+const submitManagerApprove = () => {
+  if (!manager_approved_result.value) {
     toast.add({severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn trạng thái duyệt.', life: 3000});
     return;
   }
   managerProcessing.value = true;
-  router.post(`/supplier_selection_reports/${report.value.id}/manager-review`, {
-    pm_approver_status: pm_approver_status.value,
-    pm_approver_notes: pm_approver_notes.value
+  router.post(`/supplier_selection_reports/${report.value.id}/manager-approve`, {
+    manager_approved_result: manager_approved_result.value,
+    manager_approved_notes: manager_approved_notes.value
   }, {
     preserveScroll: true,
     onSuccess: () => {
@@ -139,19 +141,47 @@ const submitManagerReview = () => {
     }
   });
 };
-const reviewer_status = ref('');
-const reviewer_notes = ref('');
+const auditor_audited_result = ref('');
+const auditor_audited_notes = ref('');
 const processing = ref(false);
+
+const getResultsSeverity = (result) => {
+    switch (result) {
+        case 'rejected':
+            return 'danger';
+
+        case 'approved':
+            return 'success';
+        default:
+            return 'info';
+    }
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) return '';
+
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
 
 const getStatusSeverity = (status) => {
     switch (status) {
-        case 'pending_review':
-        case 'pending_pm_approval':
-        case 'pending_director_approval':
+        case 'draft':
+            return 'secondary';
+
+        case 'pending_manager_approval':
             return 'warn';
 
-        case 'pm_approved':
-        case 'reviewed':
+        case 'manager_approved':
+        case 'auditor_approved':
+            return 'info';
+
         case 'director_approved':
             return 'success';
 
@@ -162,15 +192,15 @@ const getStatusSeverity = (status) => {
     }
 };
 
-const submitReview = () => {
-  if (!reviewer_status.value) {
-    toast.add({severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn trạng thái review.', life: 3000});
+const submitAuditorAudit = () => {
+  if (!auditor_audited_result.value) {
+    toast.add({severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn trạng thái.', life: 3000});
     return;
   }
   processing.value = true;
-  router.post(`/supplier_selection_reports/${report.value.id}/review`, {
-    reviewer_status: reviewer_status.value,
-    reviewer_notes: reviewer_notes.value
+  router.post(`/supplier_selection_reports/${report.value.id}/auditor-audit`, {
+    auditor_audited_result: auditor_audited_result.value,
+    auditor_audited_notes: auditor_audited_notes.value
   }, {
     preserveScroll: true,
     onSuccess: () => {

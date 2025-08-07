@@ -15,17 +15,17 @@ class AuditorReviewSupplierSelectionReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reviewer_status' => 'required|in:approved,rejected',
-            'reviewer_notes' => 'nullable|string|max:1000',
+            'auditor_audited_result' => 'required|in:approved,rejected',
+            'auditor_audited_notes' => 'nullable|string|max:1000',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'reviewer_status.required' => 'Vui lòng chọn trạng thái duyệt.',
-            'reviewer_status.in' => 'Trạng thái duyệt không hợp lệ.',
-            'reviewer_notes.max' => 'Ghi chú không được vượt quá 1000 ký tự.',
+            'auditor_audited_result.required' => 'Vui lòng chọn trạng thái duyệt.',
+            'auditor_audited_result.in' => 'Trạng thái duyệt không hợp lệ.',
+            'auditor_audited_notes.max' => 'Ghi chú không được vượt quá 1000 ký tự.',
         ];
     }
 }

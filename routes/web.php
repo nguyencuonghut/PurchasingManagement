@@ -26,10 +26,10 @@ Route::group(['middleware'=>'auth:web'], function() {
 
     //SupplierSelectionReport routes
     Route::resource('/supplier_selection_reports', SupplierSelectionReportController::class);
-    Route::put('/supplier_selection_reports/{supplier_selection_report}/send-for-review',
-        [SupplierSelectionReportController::class, 'sendForReview'])
-        ->name('supplier_selection_reports.sendForReview');
+    Route::put('/supplier_selection_reports/{supplier_selection_report}/request-manager-to-approve',
+        [SupplierSelectionReportController::class, 'requestManagerToApprove'])
+        ->name('supplier_selection_reports.requestManagerToApprove');
     Route::get('/supplier_selection_reports/{supplierSelectionReport}', [SupplierSelectionReportController::class, 'show'])->name('supplier_selection_reports.show');
-    Route::post('/supplier_selection_reports/{supplierSelectionReport}/manager-review', [SupplierSelectionReportController::class, 'managerReview'])->name('supplier_selection_reports.managerReview');
-    Route::post('/supplier_selection_reports/{supplierSelectionReport}/review', [SupplierSelectionReportController::class, 'review'])->name('supplier_selection_reports.review');
+    Route::post('/supplier_selection_reports/{supplierSelectionReport}/manager-approve', [SupplierSelectionReportController::class, 'managerApprove'])->name('supplier_selection_reports.managerApprove');
+    Route::post('/supplier_selection_reports/{supplierSelectionReport}/auditor-audit', [SupplierSelectionReportController::class, 'auditorAudit'])->name('supplier_selection_reports.auditorAudit');
 });

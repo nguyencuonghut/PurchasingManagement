@@ -73,7 +73,7 @@
                         outlined
                         rounded
                         severity="warn"
-                        @click="sendForReview(slotProps.data)"
+                        @click="requestManagerToApprove(slotProps.data)"
                         class="mr-2"
                     />
 
@@ -234,24 +234,25 @@ defineProps({
 });
 
 const statuses = ref(['draft',
-                    'pending_pm_approval',
-                    'pm_approved',
-                    'pending_review',
-                    'reviewed',
-                    'pending_director_approval',
+                    'pending_manager_approval',
+                    'manager_approved',
+                    'auditor_approved',
                     'director_approved',
                     'rejected'
                 ]);
 
 const getStatusSeverity = (status) => {
     switch (status) {
-        case 'pending_review':
-        case 'pending_pm_approval':
-        case 'pending_director_approval':
+        case 'draft':
+            return 'secondary';
+
+        case 'pending_manager_approval':
             return 'warn';
 
-        case 'pm_approved':
-        case 'reviewed':
+        case 'manager_approved':
+        case 'auditor_approved':
+            return 'info';
+
         case 'director_approved':
             return 'success';
 
@@ -571,8 +572,8 @@ const deleteReport = () => {
 };
 
 // Hàm mới để gửi báo cáo đi phê duyệt
-const sendForReview = (report) => {
-    router.put(`/supplier_selection_reports/${report.id}/send-for-review`, {}, {
+const requestManagerToApprove = (report) => {
+    router.put(`/supplier_selection_reports/${report.id}/request-manager-to-approve`, {}, {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({severity:'success', summary: 'Thành công', detail: `Báo cáo ${report.code} đã được gửi duyệt.`, life: 3000});

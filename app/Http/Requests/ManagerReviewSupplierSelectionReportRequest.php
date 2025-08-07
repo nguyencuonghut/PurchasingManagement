@@ -15,17 +15,17 @@ class ManagerReviewSupplierSelectionReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pm_approver_status' => 'required|in:approved,rejected',
-            'pm_approver_notes' => 'nullable|string|max:1000',
+            'manager_approved_result' => 'required|in:approved,rejected',
+            'manager_approved_notes' => 'nullable|string|max:1000',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'pm_approver_status.required' => 'Vui lòng chọn trạng thái duyệt.',
-            'pm_approver_status.in' => 'Trạng thái duyệt không hợp lệ.',
-            'pm_approver_notes.max' => 'Ghi chú không được vượt quá 1000 ký tự.',
+            'manager_approved_result.required' => 'Vui lòng chọn trạng thái duyệt.',
+            'manager_approved_result.in' => 'Trạng thái duyệt không hợp lệ.',
+            'manager_approved_notes.max' => 'Ghi chú không được vượt quá 1000 ký tự.',
         ];
     }
 }

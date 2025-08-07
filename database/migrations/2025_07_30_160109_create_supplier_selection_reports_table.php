@@ -18,27 +18,25 @@ return new class extends Migration
             $table->text('file_path');
             $table->foreignId('creator_id')->constrained('users')->onDelete('cascade');
             $table->enum('status', ['draft',
-                                    'pending_pm_approval',
-                                    'pm_approved',
-                                    'pending_review',
-                                    'reviewed',
-                                    'pending_director_approval',
+                                    'pending_manager_approval',
+                                    'manager_approved',
+                                    'auditor_approved',
                                     'director_approved',
                                     'rejected'
                                     ])
                                     ->default('draft');
-            $table->enum('reviewer_status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->longText('reviewer_notes')->nullable();
-            $table->foreignId('reviewer_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamp('reviewed_at')->nullable();
-            $table->enum('pm_approver_status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->longText('pm_approver_notes')->nullable();
-            $table->foreignId('pm_approver_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamp('pm_approved_at')->nullable();
-            $table->enum('director_approver_status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->longText('director_approver_notes')->nullable();
-            $table->foreignId('director_approver_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->enum('auditor_audited_result', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->longText('auditor_audited_notes')->nullable();
+            $table->timestamp('auditor_audited_at')->nullable();
+            $table->foreignId('auditor_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->enum('manager_approved_result', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->longText('manager_approved_notes')->nullable();
+            $table->timestamp('manager_approved_at')->nullable();
+            $table->foreignId('manager_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->enum('director_approved_result', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->longText('director_approved_notes')->nullable();
             $table->timestamp('director_approved_at')->nullable();
+            $table->foreignId('director_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }
