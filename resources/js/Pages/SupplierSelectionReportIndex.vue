@@ -566,7 +566,6 @@ const sendForReview = (report) => {
         },
         onError: (errors) => {
             console.error("Lỗi khi gửi yêu cầu duyệt báo cáo:", errors);
-            const flash = page.props.flash;
             toast.add({severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi gửi yêu cầu duyệt báo cáo!', life: 3000});
         },
     });
