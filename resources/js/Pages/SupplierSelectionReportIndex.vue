@@ -601,25 +601,6 @@ const clearFilter = () => {
     initFilters();
 };
 
-
-// const filters = ref({
-//     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-//     code: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-//     description: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-//     file_path: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-//     status: { operator: FilterMatchMode.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-
-// });
-
-// const clearFilter = () => {
-//     filters.value = {
-//         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-//         code: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-//         description: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-//         file_path: { operator: FilterMatchMode.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-//         status: { operator: FilterMatchMode.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-//     };
-// };
 // END: Dialog & Form Logic
 </script>
 
