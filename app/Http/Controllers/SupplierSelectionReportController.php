@@ -9,7 +9,7 @@ use App\Models\User;
 use App\Notifications\SupplierSelectionReportApprovedByDirector;
 use App\Notifications\SupplierSelectionReportApprovedByManager;
 use App\Notifications\SupplierSelectionReportCreated;
-use App\Notifications\SupplierSelectionReportNeedAuditorReview;
+use App\Notifications\SupplierSelectionReportNeedAuditorAudit;
 use App\Notifications\SupplierSelectionReportNeedDirectorApproval;
 use App\Notifications\SupplierSelectionReportRejectedByAuditor;
 use App\Notifications\SupplierSelectionReportRejectedByDirector;
@@ -108,7 +108,7 @@ class SupplierSelectionReportController extends Controller
             if ($data['status'] === 'manager_approved') {
                 $auditors = User::where('role', 'Nhân viên Kiểm Soát')->get();
                 foreach ($auditors as $auditor) {
-                    Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorReview($data));
+                    Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorAudit($data));
                 }
             }
             return redirect()->back()->with('flash', [
@@ -300,7 +300,7 @@ class SupplierSelectionReportController extends Controller
             // Gửi notification cho Nhân viên Kiểm Soát (yêu cầu review)
             $auditors = User::where('role', 'Nhân viên Kiểm Soát')->get();
             foreach ($auditors as $auditor) {
-                Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorReview($supplierSelectionReport));
+                Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorAudit($supplierSelectionReport));
             }
             // Gửi notification cho người tạo phiếu (kết quả duyệt)
             Notification::route('mail', $supplierSelectionReport->creator->email)->notify(new SupplierSelectionReportApprovedByManager($supplierSelectionReport));

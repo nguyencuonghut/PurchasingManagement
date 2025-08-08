@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SupplierSelectionReportNeedAuditorReview extends Notification implements ShouldQueue
+class SupplierSelectionReportNeedAuditorAudit extends Notification implements ShouldQueue
 {
     use Queueable;
     protected $report;
