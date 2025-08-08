@@ -16,7 +16,7 @@ use App\Notifications\SupplierSelectionReportRejectedByDirector;
 use App\Notifications\SupplierSelectionReportRejectedByManager;
 use App\Http\Requests\DirectorApproveSupplierSelectionReportRequest;
 use App\Http\Requests\ManagerReviewSupplierSelectionReportRequest;
-use App\Http\Requests\AuditorReviewSupplierSelectionReportRequest;
+use App\Http\Requests\AuditorAuditSupplierSelectionReportRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // THÊM DÒNG NÀY
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -319,7 +319,7 @@ class SupplierSelectionReportController extends Controller
     /**
      * Nhân viên Kiểm Soát kiểm tra phiếu
      */
-    public function auditorAudit(AuditorReviewSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
+    public function auditorAudit(AuditorAuditSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
         if ($user->role !== 'Nhân viên Kiểm Soát') {
