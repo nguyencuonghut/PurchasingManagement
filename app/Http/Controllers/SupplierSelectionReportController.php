@@ -6,7 +6,15 @@ use App\Http\Requests\StoreSupplierSelectionReportRequest;
 use App\Http\Requests\UpdateSupplierSelectionReportRequest;
 use App\Models\SupplierSelectionReport;
 use App\Models\User;
+use App\Notifications\SupplierSelectionReportApprovedByDirector;
+use App\Notifications\SupplierSelectionReportApprovedByManager;
 use App\Notifications\SupplierSelectionReportCreated;
+use App\Notifications\SupplierSelectionReportNeedAuditorReview;
+use App\Notifications\SupplierSelectionReportNeedDirectorApproval;
+use App\Notifications\SupplierSelectionReportRejectedByAuditor;
+use App\Notifications\SupplierSelectionReportRejectedByDirector;
+use App\Notifications\SupplierSelectionReportRejectedByManager;
+use App\Http\Requests\DirectorApproveSupplierSelectionReportRequest;
 use App\Http\Requests\ManagerReviewSupplierSelectionReportRequest;
 use App\Http\Requests\AuditorReviewSupplierSelectionReportRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // THÊM DÒNG NÀY
@@ -17,8 +25,6 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
-use App\Notifications\SupplierSelectionReportNeedAuditorReview;
-use App\Notifications\SupplierSelectionReportNeedDirectorApproval;
 
 class SupplierSelectionReportController extends Controller
 {
@@ -297,10 +303,10 @@ class SupplierSelectionReportController extends Controller
                 Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorReview($supplierSelectionReport));
             }
             // Gửi notification cho người tạo phiếu (kết quả duyệt)
-            Notification::route('mail', $supplierSelectionReport->creator->email)->notify(new \App\Notifications\SupplierSelectionReportApprovedByManager($supplierSelectionReport));
+            Notification::route('mail', $supplierSelectionReport->creator->email)->notify(new SupplierSelectionReportApprovedByManager($supplierSelectionReport));
         } else {
             // Nếu rejected, thông báo cho người tạo phiếu
-            Notification::route('mail', $supplierSelectionReport->creator->email)->notify(new \App\Notifications\SupplierSelectionReportRejectedByManager($supplierSelectionReport));
+            Notification::route('mail', $supplierSelectionReport->creator->email)->notify(new SupplierSelectionReportRejectedByManager($supplierSelectionReport));
         }
 
         return redirect()->route('supplier_selection_reports.show', $supplierSelectionReport->id)
@@ -345,7 +351,7 @@ class SupplierSelectionReportController extends Controller
             }
         } else {
             // Nếu rejected, thông báo cho người tạo phiếu
-            Notification::route('mail', $supplierSelectionReport->creator->email)->notify(new \App\Notifications\SupplierSelectionReportRejectedByAuditor($supplierSelectionReport));
+            Notification::route('mail', $supplierSelectionReport->creator->email)->notify(new SupplierSelectionReportRejectedByAuditor($supplierSelectionReport));
         }
 
         return redirect()->route('supplier_selection_reports.show', $supplierSelectionReport->id)
@@ -358,7 +364,7 @@ class SupplierSelectionReportController extends Controller
     /**
      * Giám đốc duyệt phiếu
      */
-    public function directorApprove(Request $request, SupplierSelectionReport $supplierSelectionReport)
+    public function directorApprove(DirectorApproveSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
         if ($user->role !== 'Giám đốc') {
@@ -368,10 +374,7 @@ class SupplierSelectionReportController extends Controller
             ]);
         }
 
-        $validated = $request->validate([
-            'director_approved_result' => 'required|in:approved,rejected',
-            'director_approved_notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         // Cập nhật thông tin duyệt của Giám đốc
         $supplierSelectionReport->director_approved_result = $validated['director_approved_result'];
@@ -394,15 +397,15 @@ class SupplierSelectionReportController extends Controller
 
         if ($validated['director_approved_result'] === 'approved') {
             // Gửi notification cho creator và auditor khi được duyệt
-            Notification::route('mail', $creator->email)->notify(new \App\Notifications\SupplierSelectionReportApprovedByDirector($supplierSelectionReport));
+            Notification::route('mail', $creator->email)->notify(new SupplierSelectionReportApprovedByDirector($supplierSelectionReport));
             if ($auditor) {
-                Notification::route('mail', $auditor->email)->notify(new \App\Notifications\SupplierSelectionReportApprovedByDirector($supplierSelectionReport));
+                Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportApprovedByDirector($supplierSelectionReport));
             }
         } else {
             // Gửi notification cho creator và auditor khi bị từ chối
-            Notification::route('mail', $creator->email)->notify(new \App\Notifications\SupplierSelectionReportRejectedByDirector($supplierSelectionReport));
+            Notification::route('mail', $creator->email)->notify(new SupplierSelectionReportRejectedByDirector($supplierSelectionReport));
             if ($auditor) {
-                Notification::route('mail', $auditor->email)->notify(new \App\Notifications\SupplierSelectionReportRejectedByDirector($supplierSelectionReport));
+                Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportRejectedByDirector($supplierSelectionReport));
             }
         }
 
