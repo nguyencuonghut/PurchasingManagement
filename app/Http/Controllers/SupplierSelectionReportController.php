@@ -15,7 +15,7 @@ use App\Notifications\SupplierSelectionReportRejectedByAuditor;
 use App\Notifications\SupplierSelectionReportRejectedByDirector;
 use App\Notifications\SupplierSelectionReportRejectedByManager;
 use App\Http\Requests\DirectorApproveSupplierSelectionReportRequest;
-use App\Http\Requests\ManagerReviewSupplierSelectionReportRequest;
+use App\Http\Requests\ManagerApproveSupplierSelectionReportRequest;
 use App\Http\Requests\AuditorAuditSupplierSelectionReportRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // THÊM DÒNG NÀY
 use Illuminate\Http\Request;
@@ -274,7 +274,7 @@ class SupplierSelectionReportController extends Controller
     /**
      * Trưởng phòng Thu Mua duyệt phiếu
      */
-    public function managerApprove(ManagerReviewSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
+    public function managerApprove(ManagerApproveSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
         if ($user->role !== 'Trưởng phòng Thu Mua') {
