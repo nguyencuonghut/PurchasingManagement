@@ -65,17 +65,17 @@
         <b>File đính kèm:</b> Không có file
       </div>
     </div>
-    <div v-if="canManagerReview
+    <div v-if="canManagerApprove
         && (report.status === 'pending_manager_approval' || report.status === 'manager_approved' || report.status === 'rejected')
         && report.auditor_audited_result === 'pending'">
       <Button label="Duyệt phiếu" icon="pi pi-check" @click="openManagerModal" class="w-full" />
     </div>
-    <div v-else-if="canReview
+    <div v-else-if="canAudit
         && (report.status === 'manager_approved' || report.status === 'auditor_approved' || report.status === 'rejected')
         && report.director_approved_result === 'pending'">
       <Button label="Kiểm tra phiếu" icon="pi pi-search" @click="openAuditorModal" class="w-full" />
     </div>
-    <div v-if="canDirectorReview
+    <div v-if="canDirectorApprove
         && (report.status === 'auditor_approved' || report.status === 'director_approved' || report.status === 'rejected')">
       <Button label="Duyệt phiếu" icon="pi pi-check" @click="openDirectorModal" class="w-full" />
     </div>
@@ -174,9 +174,9 @@ const page = usePage();
 const toast = useToast();
 const report = computed(() => page.props.report);
 const user = computed(() => page.props.auth.user);
-const canReview = computed(() => user.value.role === 'Nhân viên Kiểm Soát');
-const canManagerReview = computed(() => user.value.role === 'Trưởng phòng Thu Mua');
-const canDirectorReview = computed(() => user.value.role === 'Giám đốc');
+const canAudit = computed(() => user.value.role === 'Nhân viên Kiểm Soát');
+const canManagerApprove = computed(() => user.value.role === 'Trưởng phòng Thu Mua');
+const canDirectorApprove = computed(() => user.value.role === 'Giám đốc');
 const manager_approved_result = ref('');
 const manager_approved_notes = ref('');
 const managerProcessing = ref(false);
