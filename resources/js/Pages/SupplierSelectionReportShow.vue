@@ -12,14 +12,18 @@
       <div v-if="'pending' !== report.manager_approved_result"><b>Trưởng phòng Thu Mua:</b>
         <div class="flex ml-6 gap-4">
           <div style="width: 50%"><b>Người duyệt: </b>{{ report.manager_name }}</div>
-          <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.created_at) }}</div>
+          <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.manager_approved_at) }}</div>
         </div>
         <div class="flex ml-6 gap-4">
           <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.manager_approved_result" :severity="getResultsSeverity(report.manager_approved_result)" /></div>
           <div v-if="report.manager_approved_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.manager_approved_notes }}</div>
         </div>
       </div>
-      <div v-if="'pending' !== report.auditor_audited_result"><b>Nhân viên Kiểm Soát đã kiểm tra:</b>
+      <div v-if="'pending' !== report.auditor_audited_result"><b>Nhân viên Kiểm Soát:</b>
+        <div class="flex ml-6 gap-4">
+          <div style="width: 50%"><b>Người duyệt: </b>{{ report.auditor_name }}</div>
+          <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.auditor_audited_at) }}</div>
+        </div>
         <div class="flex ml-6 gap-4">
           <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.auditor_audited_result" :severity="getResultsSeverity(report.auditor_audited_result)" /></div>
           <div v-if="report.auditor_audited_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.auditor_audited_notes }}</div>

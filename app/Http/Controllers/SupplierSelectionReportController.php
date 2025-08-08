@@ -90,6 +90,7 @@ class SupplierSelectionReportController extends Controller
             // Nếu người tạo là Trưởng phòng Thu Mua, thì trạng thái sẽ là 'manager_approved'
             if ($request->user()->role === 'Trưởng phòng Thu Mua') {
                 $data['status'] = 'manager_approved';
+                $data['manager_approved_at'] = now(); // Ghi lại thời gian duyệt
             } else {
                 // Mặc định trạng thái là 'draft' nếu không phải Trưởng phòng Thu Mua
                 $data['status'] = 'draft';
@@ -285,6 +286,8 @@ class SupplierSelectionReportController extends Controller
             $supplierSelectionReport->status = 'rejected';
         }
         $supplierSelectionReport->manager_id = Auth::id();
+        $supplierSelectionReport->manager_approved_at = now(); // Ghi lại thời gian duyệt
+        // Lưu bản ghi đã cập nhật
         $supplierSelectionReport->save();
 
         if ($supplierSelectionReport->status === 'manager_approved') {
@@ -324,12 +327,14 @@ class SupplierSelectionReportController extends Controller
         // Cập nhật trạng thái và ghi chú của Nhân viên Kiểm Soát
         $supplierSelectionReport->auditor_audited_result = $validated['auditor_audited_result'];
         $supplierSelectionReport->auditor_audited_notes = $validated['auditor_audited_notes'] ?? null;
-        $supplierSelectionReport->reviewer_id = Auth::id(); // Gán ID của người review
+        $supplierSelectionReport->auditor_id = Auth::id(); // Gán ID của người review
         if ($validated['auditor_audited_result'] === 'approved') {
             $supplierSelectionReport->status = 'reviewed';
         } else {
             $supplierSelectionReport->status = 'rejected';
         }
+        $supplierSelectionReport->auditor_audited_at = now(); // Ghi lại thời gian review
+        // Lưu bản ghi đã cập nhật
         $supplierSelectionReport->save();
 
         if ($supplierSelectionReport->status === 'auditor_approved') {
