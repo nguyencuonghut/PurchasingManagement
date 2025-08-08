@@ -87,8 +87,23 @@ class SupplierSelectionReportController extends Controller
                 $data['file_path'] = null;
             }
 
+            // Nếu người tạo là Trưởng phòng Thu Mua, thì trạng thái sẽ là 'manager_approved'
+            if ($request->user()->role === 'Trưởng phòng Thu Mua') {
+                $data['status'] = 'manager_approved';
+            } else {
+                // Mặc định trạng thái là 'draft' nếu không phải Trưởng phòng Thu Mua
+                $data['status'] = 'draft';
+            }
+            // Tạo bản ghi mới trong cơ sở dữ liệu
             SupplierSelectionReport::create($data);
 
+            // Gửi thông báo cho Nhân viên Kiểm Soát trong trường hợp Trưởng phòng Thu Mua đã duyệt
+            if ($data['status'] === 'manager_approved') {
+                $auditors = User::where('role', 'Nhân viên Kiểm Soát')->get();
+                foreach ($auditors as $auditor) {
+                    Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorReview($data));
+                }
+            }
             return redirect()->back()->with('flash', [
                 'type' => 'success',
                 'message' => 'Báo cáo đã được tạo thành công!',
