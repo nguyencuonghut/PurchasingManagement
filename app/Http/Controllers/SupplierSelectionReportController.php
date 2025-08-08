@@ -356,6 +356,64 @@ class SupplierSelectionReportController extends Controller
     }
 
     /**
+     * Giám đốc duyệt phiếu
+     */
+    public function directorApprove(Request $request, SupplierSelectionReport $supplierSelectionReport)
+    {
+        $user = $request->user();
+        if ($user->role !== 'Giám đốc') {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'Bạn không có quyền duyệt phiếu này.'
+            ]);
+        }
+
+        $validated = $request->validate([
+            'director_approved_result' => 'required|in:approved,rejected',
+            'director_approved_notes' => 'nullable|string|max:1000',
+        ]);
+
+        // Cập nhật thông tin duyệt của Giám đốc
+        $supplierSelectionReport->director_approved_result = $validated['director_approved_result'];
+        $supplierSelectionReport->director_approved_notes = $validated['director_approved_notes'] ?? null;
+        $supplierSelectionReport->director_id = Auth::id();
+        $supplierSelectionReport->director_approved_at = now();
+
+        // Cập nhật trạng thái dựa trên kết quả duyệt
+        if ($validated['director_approved_result'] === 'approved') {
+            $supplierSelectionReport->status = 'director_approved';
+        } else {
+            $supplierSelectionReport->status = 'rejected';
+        }
+
+        $supplierSelectionReport->save();
+
+        // Gửi email notification cho creator và auditor
+        $creator = $supplierSelectionReport->creator;
+        $auditor = $supplierSelectionReport->auditor;
+
+        if ($validated['director_approved_result'] === 'approved') {
+            // Gửi notification cho creator và auditor khi được duyệt
+            Notification::route('mail', $creator->email)->notify(new \App\Notifications\SupplierSelectionReportApprovedByDirector($supplierSelectionReport));
+            if ($auditor) {
+                Notification::route('mail', $auditor->email)->notify(new \App\Notifications\SupplierSelectionReportApprovedByDirector($supplierSelectionReport));
+            }
+        } else {
+            // Gửi notification cho creator và auditor khi bị từ chối
+            Notification::route('mail', $creator->email)->notify(new \App\Notifications\SupplierSelectionReportRejectedByDirector($supplierSelectionReport));
+            if ($auditor) {
+                Notification::route('mail', $auditor->email)->notify(new \App\Notifications\SupplierSelectionReportRejectedByDirector($supplierSelectionReport));
+            }
+        }
+
+        return redirect()->route('supplier_selection_reports.show', $supplierSelectionReport->id)
+            ->with('flash', [
+                'type' => 'success',
+                'message' => 'Đã duyệt phiếu thành công!'
+            ]);
+    }
+
+    /**
      * Helper function to upload an image file.
      *
      * @param \Illuminate\Http\UploadedFile $file

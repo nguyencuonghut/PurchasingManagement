@@ -32,4 +32,5 @@ Route::group(['middleware'=>'auth:web'], function() {
     Route::get('/supplier_selection_reports/{supplierSelectionReport}', [SupplierSelectionReportController::class, 'show'])->name('supplier_selection_reports.show');
     Route::post('/supplier_selection_reports/{supplierSelectionReport}/manager-approve', [SupplierSelectionReportController::class, 'managerApprove'])->name('supplier_selection_reports.managerApprove');
     Route::post('/supplier_selection_reports/{supplierSelectionReport}/auditor-audit', [SupplierSelectionReportController::class, 'auditorAudit'])->name('supplier_selection_reports.auditorAudit');
+    Route::post('/supplier_selection_reports/{supplierSelectionReport}/director-approve', [SupplierSelectionReportController::class, 'directorApprove'])->name('supplier_selection_reports.directorApprove');
 });
