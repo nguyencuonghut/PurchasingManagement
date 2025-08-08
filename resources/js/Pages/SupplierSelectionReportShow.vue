@@ -45,7 +45,7 @@
           <div v-if="report.director_approved_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.director_approved_notes }}</div>
         </div>
       </div>
-      <div v-if="report.image_url">
+      <div v-if="report.image_url" class="mt-2">
         <b>File đính kèm:</b>
         <img :src="report.image_url" alt="Ảnh đính kèm" style="max-width: 100%; max-height: 100%; display: block; margin-top: 8px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer;" @click="openImageModal(report.image_url)" />
         <Dialog v-model:visible="imageModalVisible" maximizable :style="{ width: '80vw', height: '80vh' }" header="Xem ảnh đính kèm" :modal="true" class="image-modal">
