@@ -60,19 +60,10 @@
         && report.auditor_audited_result === 'pending'">
       <Button label="Duyệt phiếu" icon="pi pi-check" @click="openManagerModal" class="w-full" />
     </div>
-    <div v-else-if="canReview && report.status === 'manager_approved'">
-      <h3 class="font-bold mb-2">Nhân viên Kiểm Soát review</h3>
-      <form @submit.prevent="submitAuditorAudit" class="flex flex-col gap-4">
-        <div>
-          <Select v-model="auditor_audited_result" :options="['approved', 'rejected']" placeholder="Chọn trạng thái" class="w-full" />
-        </div>
-        <div>
-          <textarea v-model="auditor_audited_notes" placeholder="Ghi chú (tuỳ chọn)" rows="3" class="w-full p-2 border rounded resize-vertical" />
-        </div>
-        <div>
-          <Button type="submit" label="Gửi kiểm tra" :disabled="processing" class="w-full" />
-        </div>
-      </form>
+    <div v-else-if="canReview
+        && (report.status === 'manager_approved' || report.status === 'auditor_approved' || report.status === 'rejected')
+        && report.director_approved_result === 'pending'">
+      <Button label="Kiểm tra phiếu" icon="pi pi-search" @click="openAuditorModal" class="w-full" />
     </div>
   </div>
   <Toast />
@@ -93,6 +84,26 @@
       <div class="flex gap-2 justify-end">
         <Button label="Hủy" icon="pi pi-times" @click="closeManagerModal" class="p-button-text" />
         <Button label="Gửi" icon="pi pi-check" @click="submitManagerApprove" :disabled="managerProcessing" :loading="managerProcessing" />
+      </div>
+    </template>
+  </Dialog>
+
+  <!-- Auditor Review Modal -->
+  <Dialog v-model:visible="auditorModalVisible" :modal="true" header="Nhân viên Kiểm Soát review phiếu" :style="{ width: '500px' }">
+    <div class="flex flex-col gap-4">
+      <div>
+        <label class="block mb-2 font-semibold">Kết quả kiểm tra</label>
+        <Select v-model="auditor_audited_result" :options="['approved', 'rejected']" placeholder="Chọn kết quả" class="w-full" />
+      </div>
+      <div>
+        <label class="block mb-2 font-semibold">Ghi chú</label>
+        <textarea v-model="auditor_audited_notes" placeholder="Nhập ghi chú (tuỳ chọn)" rows="4" class="w-full p-2 border rounded resize-vertical" />
+      </div>
+    </div>
+    <template #footer>
+      <div class="flex gap-2 justify-end">
+        <Button label="Hủy" icon="pi pi-times" @click="closeAuditorModal" class="p-button-text" />
+        <Button label="Gửi" icon="pi pi-check" @click="submitAuditorAudit" :disabled="processing" :loading="processing" />
       </div>
     </template>
   </Dialog>
@@ -173,6 +184,18 @@ const submitManagerApprove = () => {
 const auditor_audited_result = ref('');
 const auditor_audited_notes = ref('');
 const processing = ref(false);
+const auditorModalVisible = ref(false);
+
+const openAuditorModal = () => {
+  auditorModalVisible.value = true;
+  // Reset form values when opening modal
+  auditor_audited_result.value = '';
+  auditor_audited_notes.value = '';
+};
+
+const closeAuditorModal = () => {
+  auditorModalVisible.value = false;
+};
 
 const getResultsSeverity = (result) => {
     switch (result) {
@@ -235,6 +258,7 @@ const submitAuditorAudit = () => {
     onSuccess: () => {
       toast.add({severity: 'success', summary: 'Thành công', detail: 'Đã duyệt thành công!', life: 3000});
       processing.value = false;
+      closeAuditorModal();
     },
     onError: (errors) => {
       console.error('Lỗi khi duyệt:', errors);

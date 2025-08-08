@@ -329,7 +329,7 @@ class SupplierSelectionReportController extends Controller
         $supplierSelectionReport->auditor_audited_notes = $validated['auditor_audited_notes'] ?? null;
         $supplierSelectionReport->auditor_id = Auth::id(); // Gán ID của người review
         if ($validated['auditor_audited_result'] === 'approved') {
-            $supplierSelectionReport->status = 'reviewed';
+            $supplierSelectionReport->status = 'auditor_approved';
         } else {
             $supplierSelectionReport->status = 'rejected';
         }
