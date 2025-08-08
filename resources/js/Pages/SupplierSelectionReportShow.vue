@@ -5,11 +5,17 @@
   <div class="card">
     <h2 class="font-bold text-xl mb-4">Chi tiết báo cáo lựa chọn nhà cung cấp</h2>
     <div class="mb-4">
-      <div><b>Mã:</b> {{ report.code }}</div>
-      <div><b>Mô tả:</b> {{ report.description }}</div>
-      <div><b>Trạng thái:</b> <Tag :value="report.status" :severity="getStatusSeverity(report.status)" /></div>
-      <div><b>Người tạo:</b> {{ report.creator_name }} ({{ formatDate(report.created_at) }})</div>
-      <div v-if="'pending' !== report.manager_approved_result"><b>Trưởng phòng Thu Mua:</b>
+      <div>
+      <div class="flex gap-4">
+        <div style="width: 50%"><b>Mã:</b> {{ report.code }}</div>
+        <div style="width: 50%" class="ml-6"><b>Mô tả:</b> {{ report.description }}</div>
+      </div>
+      </div>
+      <div class="flex gap-4">
+        <div style="width: 50%"><b>Trạng thái:</b> <Tag :value="report.status" :severity="getStatusSeverity(report.status)" /></div>
+        <div style="width: 50%" class="ml-6"><b>Người tạo:</b> {{ report.creator_name }} ({{ formatDate(report.created_at) }})</div>
+      </div>
+      <div v-if="'pending' !== report.manager_approved_result" class="mt-2"><b>Trưởng phòng Thu Mua:</b>
         <div class="flex ml-6 gap-4">
           <div style="width: 50%"><b>Người duyệt: </b>{{ report.manager_name }}</div>
           <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.manager_approved_at) }}</div>
@@ -19,7 +25,7 @@
           <div v-if="report.manager_approved_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.manager_approved_notes }}</div>
         </div>
       </div>
-      <div v-if="'pending' !== report.auditor_audited_result"><b>Nhân viên Kiểm Soát:</b>
+      <div v-if="'pending' !== report.auditor_audited_result" class="mt-2"><b>Nhân viên Kiểm Soát:</b>
         <div class="flex ml-6 gap-4">
           <div style="width: 50%"><b>Người duyệt: </b>{{ report.auditor_name }}</div>
           <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.auditor_audited_at) }}</div>
@@ -29,7 +35,7 @@
           <div v-if="report.auditor_audited_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.auditor_audited_notes }}</div>
         </div>
       </div>
-      <div v-if="'pending' !== report.director_approved_result"><b>Giám đốc:</b>
+      <div v-if="'pending' !== report.director_approved_result" class="mt-2"><b>Giám đốc:</b>
         <div class="flex ml-6 gap-4">
           <div style="width: 50%"><b>Người duyệt: </b>{{ report.director_name }}</div>
           <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.director_approved_at) }}</div>
