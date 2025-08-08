@@ -78,12 +78,12 @@
                     />
 
                     <Button
-                        v-if="can.update_report && ($page.props.auth.user.role === 'Quản trị' || ($page.props.auth.user.id === slotProps.data.creator_id && slotProps.data.status === 'draft'))"
+                        v-if="can.update_report && ($page.props.auth.user.role === 'Quản trị' || ($page.props.auth.user.id === slotProps.data.creator_id && slotProps.data.status === 'draft' || ($page.props.auth.user.id === slotProps.data.creator_id && 'Trưởng phòng Thu Mua' == $page.props.auth.user.role && slotProps.data.status === 'manager_approved')))"
                         icon="pi pi-pencil" outlined rounded class="mr-2" @click="editReport(slotProps.data)"
                     />
 
                     <Button
-                        v-if="can.delete_report && ($page.props.auth.user.role === 'Quản trị' || ($page.props.auth.user.id === slotProps.data.creator_id && slotProps.data.status === 'draft'))"
+                        v-if="can.delete_report && ($page.props.auth.user.role === 'Quản trị' || ($page.props.auth.user.id === slotProps.data.creator_id && slotProps.data.status === 'draft' || ($page.props.auth.user.id === slotProps.data.creator_id && 'Trưởng phòng Thu Mua' == $page.props.auth.user.role && slotProps.data.status === 'manager_approved')))"
                         icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteReport(slotProps.data)"
                     />
                 </template>
