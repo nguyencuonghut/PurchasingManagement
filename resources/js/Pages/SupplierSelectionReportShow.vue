@@ -55,19 +55,8 @@
         <b>File đính kèm:</b> Không có file
       </div>
     </div>
-    <div v-if="canManagerReview && report.status === 'pending_manager_approval'">
-      <h3 class="font-bold mb-2">Trưởng phòng Thu Mua duyệt phiếu</h3>
-      <form @submit.prevent="submitManagerApprove" class="flex flex-col gap-4">
-        <div>
-          <Select v-model="manager_approved_result" :options="['approved', 'rejected']" placeholder="Chọn trạng thái" class="w-full" />
-        </div>
-        <div>
-          <textarea v-model="manager_approved_notes" placeholder="Ghi chú (tuỳ chọn)" rows="3" class="w-full p-2 border rounded resize-vertical" />
-        </div>
-        <div>
-          <Button type="submit" label="Duyệt phiếu" :disabled="managerProcessing" class="w-full" />
-        </div>
-      </form>
+    <div v-if="canManagerReview && (report.status === 'pending_manager_approval' || report.status === 'manager_approved' || report.status === 'rejected')">
+      <Button label="Duyệt phiếu" icon="pi pi-check" @click="openManagerModal" class="w-full" />
     </div>
     <div v-else-if="canReview && report.status === 'manager_approved'">
       <h3 class="font-bold mb-2">Nhân viên Kiểm Soát review</h3>
@@ -85,6 +74,26 @@
     </div>
   </div>
   <Toast />
+
+  <!-- Manager Approval Modal -->
+  <Dialog v-model:visible="managerModalVisible" :modal="true" header="Trưởng phòng Thu Mua duyệt phiếu" :style="{ width: '500px' }">
+    <div class="flex flex-col gap-4">
+      <div>
+        <label class="block mb-2 font-semibold">Kết quả duyệt</label>
+        <Select v-model="manager_approved_result" :options="['approved', 'rejected']" placeholder="Chọn kết quả" class="w-full" />
+      </div>
+      <div>
+        <label class="block mb-2 font-semibold">Ghi chú</label>
+        <textarea v-model="manager_approved_notes" placeholder="Nhập ghi chú (tuỳ chọn)" rows="4" class="w-full p-2 border rounded resize-vertical" />
+      </div>
+    </div>
+    <template #footer>
+      <div class="flex gap-2 justify-end">
+        <Button label="Hủy" icon="pi pi-times" @click="closeManagerModal" class="p-button-text" />
+        <Button label="Gửi" icon="pi pi-check" @click="submitManagerApprove" :disabled="managerProcessing" :loading="managerProcessing" />
+      </div>
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
@@ -123,6 +132,19 @@ const canManagerReview = computed(() => user.value.role === 'Trưởng phòng Th
 const manager_approved_result = ref('');
 const manager_approved_notes = ref('');
 const managerProcessing = ref(false);
+const managerModalVisible = ref(false);
+
+const openManagerModal = () => {
+  managerModalVisible.value = true;
+  // Reset form values when opening modal
+  manager_approved_result.value = '';
+  manager_approved_notes.value = '';
+};
+
+const closeManagerModal = () => {
+  managerModalVisible.value = false;
+};
+
 const submitManagerApprove = () => {
   if (!manager_approved_result.value) {
     toast.add({severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn trạng thái duyệt.', life: 3000});
@@ -137,6 +159,7 @@ const submitManagerApprove = () => {
     onSuccess: () => {
       toast.add({severity: 'success', summary: 'Thành công', detail: 'Đã duyệt phiếu!', life: 3000});
       managerProcessing.value = false;
+      closeManagerModal();
     },
     onError: (errors) => {
       console.error('Lỗi khi duyệt phiếu:', errors);
