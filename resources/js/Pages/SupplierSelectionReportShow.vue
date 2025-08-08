@@ -55,7 +55,9 @@
         <b>File đính kèm:</b> Không có file
       </div>
     </div>
-    <div v-if="canManagerReview && (report.status === 'pending_manager_approval' || report.status === 'manager_approved' || report.status === 'rejected')">
+    <div v-if="canManagerReview
+        && (report.status === 'pending_manager_approval' || report.status === 'manager_approved' || report.status === 'rejected')
+        && report.auditor_audited_result === 'pending'">
       <Button label="Duyệt phiếu" icon="pi pi-check" @click="openManagerModal" class="w-full" />
     </div>
     <div v-else-if="canReview && report.status === 'manager_approved'">
