@@ -3,88 +3,104 @@
     <title>Chi tiết BCLCNCC</title>
   </Head>
   <div class="card">
-    <h2 class="font-bold text-xl mb-4">Chi tiết báo cáo lựa chọn nhà cung cấp</h2>
-    <div class="mb-4">
-      <div>
-      <div class="flex gap-4">
-        <div style="width: 50%"><b>Mã:</b> {{ report.code }}</div>
-        <div style="width: 50%" class="ml-6"><b>Mô tả:</b> {{ report.description }}</div>
-      </div>
-      </div>
-      <div class="flex gap-4">
-        <div style="width: 50%"><b>Trạng thái:</b> <Tag :value="report.status" :severity="getStatusSeverity(report.status)" /></div>
-        <div style="width: 50%" class="ml-6"><b>Người tạo:</b> {{ report.creator_name }} ({{ formatDate(report.created_at) }})</div>
-      </div>
-      <div v-if="'pending' !== report.manager_approved_result" class="mt-2"><b>Trưởng phòng Thu Mua:</b>
-        <div class="flex ml-6 gap-4">
-          <div style="width: 50%"><b>Người duyệt: </b>{{ report.manager_name }}</div>
-          <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.manager_approved_at) }}</div>
-        </div>
-        <div class="flex ml-6 gap-4">
-          <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.manager_approved_result" :severity="getResultsSeverity(report.manager_approved_result)" /></div>
-          <div v-if="report.manager_approved_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.manager_approved_notes }}</div>
-        </div>
-      </div>
-      <div v-if="'pending' !== report.auditor_audited_result" class="mt-2"><b>Nhân viên Kiểm Soát:</b>
-        <div class="flex ml-6 gap-4">
-          <div style="width: 50%"><b>Người duyệt: </b>{{ report.auditor_name }}</div>
-          <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.auditor_audited_at) }}</div>
-        </div>
-        <div class="flex ml-6 gap-4">
-          <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.auditor_audited_result" :severity="getResultsSeverity(report.auditor_audited_result)" /></div>
-          <div v-if="report.auditor_audited_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.auditor_audited_notes }}</div>
-        </div>
-      </div>
-      <div v-if="'pending' !== report.director_approved_result" class="mt-2"><b>Giám đốc:</b>
-        <div class="flex ml-6 gap-4">
-          <div style="width: 50%"><b>Người duyệt: </b>{{ report.director_name }}</div>
-          <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.director_approved_at) }}</div>
-        </div>
-        <div class="flex ml-6 gap-4">
-          <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.director_approved_result" :severity="getResultsSeverity(report.director_approved_result)" /></div>
-          <div v-if="report.director_approved_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.director_approved_notes }}</div>
-        </div>
-      </div>
-      <div v-if="report.image_url" class="mt-2">
-        <b>File đính kèm:</b>
-        <img :src="report.image_url" alt="Ảnh đính kèm" style="max-width: 100%; max-height: 100%; display: block; margin-top: 8px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer;" @click="openImageModal(report.image_url)" />
-        <Dialog v-model:visible="imageModalVisible" maximizable :style="{ width: '80vw', height: '80vh' }" header="Xem ảnh đính kèm" :modal="true" class="image-modal">
-          <div class="image-modal-content">
-            <img v-if="currentImageSrc" :src="currentImageSrc" alt="Full size image" ref="imageRef" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain; margin: auto;" />
-            <p v-else>Không có ảnh để hiển thị.</p>
-          </div>
-          <template #footer>
-              <div class="flex gap-2 justify-end">
-                <Button
-                    label="Xem full màn hình"
-                    icon="pi pi-external-link"
-                    @click="openFullscreen"
-                    class="p-button-outlined"
-                    v-if="currentImageSrc"
-                />
-                <Button label="Đóng" icon="pi pi-times" @click="imageModalVisible = false" />
+    <!-- Tabs with two tabs -->
+    <Tabs value="0">
+      <TabList>
+        <Tab value="0">Chi tiết</Tab>
+        <Tab value="1">Lịch sử</Tab>
+      </TabList>
+      <TabPanels>
+        <TabPanel value="0">
+          <div class="mb-4">
+            <div>
+            <div class="flex gap-4">
+              <div style="width: 50%"><b>Mã:</b> {{ report.code }}</div>
+              <div style="width: 50%" class="ml-6"><b>Mô tả:</b> {{ report.description }}</div>
+            </div>
+            </div>
+            <div class="flex gap-4">
+              <div style="width: 50%"><b>Trạng thái:</b> <Tag :value="report.status" :severity="getStatusSeverity(report.status)" /></div>
+              <div style="width: 50%" class="ml-6"><b>Người tạo:</b> {{ report.creator_name }} ({{ formatDate(report.created_at) }})</div>
+            </div>
+            <div v-if="'pending' !== report.manager_approved_result" class="mt-2"><b>Trưởng phòng Thu Mua:</b>
+              <div class="flex ml-6 gap-4">
+                <div style="width: 50%"><b>Người duyệt: </b>{{ report.manager_name }}</div>
+                <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.manager_approved_at) }}</div>
               </div>
-          </template>
-        </Dialog>
-      </div>
-      <div v-else>
-        <b>File đính kèm:</b> Không có file
-      </div>
-    </div>
-    <div v-if="canManagerApprove
-        && (report.status === 'pending_manager_approval' || report.status === 'manager_approved' || report.status === 'rejected')
-        && report.auditor_audited_result === 'pending'">
-      <Button label="Duyệt phiếu" icon="pi pi-check" @click="openManagerModal" class="w-full" />
-    </div>
-    <div v-else-if="canAudit
-        && (report.status === 'manager_approved' || report.status === 'auditor_approved' || report.status === 'rejected')
-        && report.director_approved_result === 'pending'">
-      <Button label="Kiểm tra phiếu" icon="pi pi-search" @click="openAuditorModal" class="w-full" />
-    </div>
-    <div v-if="canDirectorApprove
-        && (report.status === 'auditor_approved' || report.status === 'director_approved' || report.status === 'rejected')">
-      <Button label="Duyệt phiếu" icon="pi pi-check" @click="openDirectorModal" class="w-full" />
-    </div>
+              <div class="flex ml-6 gap-4">
+                <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.manager_approved_result" :severity="getResultsSeverity(report.manager_approved_result)" /></div>
+                <div v-if="report.manager_approved_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.manager_approved_notes }}</div>
+              </div>
+            </div>
+            <div v-if="'pending' !== report.auditor_audited_result" class="mt-2"><b>Nhân viên Kiểm Soát:</b>
+              <div class="flex ml-6 gap-4">
+                <div style="width: 50%"><b>Người duyệt: </b>{{ report.auditor_name }}</div>
+                <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.auditor_audited_at) }}</div>
+              </div>
+              <div class="flex ml-6 gap-4">
+                <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.auditor_audited_result" :severity="getResultsSeverity(report.auditor_audited_result)" /></div>
+                <div v-if="report.auditor_audited_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.auditor_audited_notes }}</div>
+              </div>
+            </div>
+            <div v-if="'pending' !== report.director_approved_result" class="mt-2"><b>Giám đốc:</b>
+              <div class="flex ml-6 gap-4">
+                <div style="width: 50%"><b>Người duyệt: </b>{{ report.director_name }}</div>
+                <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.director_approved_at) }}</div>
+              </div>
+              <div class="flex ml-6 gap-4">
+                <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.director_approved_result" :severity="getResultsSeverity(report.director_approved_result)" /></div>
+                <div v-if="report.director_approved_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.director_approved_notes }}</div>
+              </div>
+            </div>
+            <div v-if="report.image_url" class="mt-2">
+              <b>File đính kèm:</b>
+              <img :src="report.image_url" alt="Ảnh đính kèm" style="max-width: 100%; max-height: 100%; display: block; margin-top: 8px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer;" @click="openImageModal(report.image_url)" />
+              <Dialog v-model:visible="imageModalVisible" maximizable :style="{ width: '80vw', height: '80vh' }" header="Xem ảnh đính kèm" :modal="true" class="image-modal">
+                <div class="image-modal-content">
+                  <img v-if="currentImageSrc" :src="currentImageSrc" alt="Full size image" ref="imageRef" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain; margin: auto;" />
+                  <p v-else>Không có ảnh để hiển thị.</p>
+                </div>
+                <template #footer>
+                    <div class="flex gap-2 justify-end">
+                      <Button
+                          label="Xem full màn hình"
+                          icon="pi pi-external-link"
+                          @click="openFullscreen"
+                          class="p-button-outlined"
+                          v-if="currentImageSrc"
+                      />
+                      <Button label="Đóng" icon="pi pi-times" @click="imageModalVisible = false" />
+                    </div>
+                </template>
+              </Dialog>
+            </div>
+            <div v-else>
+              <b>File đính kèm:</b> Không có file
+            </div>
+          </div>
+          <div v-if="canManagerApprove
+              && (report.status === 'pending_manager_approval' || report.status === 'manager_approved' || report.status === 'rejected')
+              && report.auditor_audited_result === 'pending'">
+            <Button label="Duyệt phiếu" icon="pi pi-check" @click="openManagerModal" class="w-full" />
+          </div>
+          <div v-else-if="canAudit
+              && (report.status === 'manager_approved' || report.status === 'auditor_approved' || report.status === 'rejected')
+              && report.director_approved_result === 'pending'">
+            <Button label="Kiểm tra phiếu" icon="pi pi-search" @click="openAuditorModal" class="w-full" />
+          </div>
+          <div v-if="canDirectorApprove
+              && (report.status === 'auditor_approved' || report.status === 'director_approved' || report.status === 'rejected')">
+            <Button label="Duyệt phiếu" icon="pi pi-check" @click="openDirectorModal" class="w-full" />
+          </div>
+        </TabPanel>
+
+        <TabPanel value="1">
+          <div class="p-4">
+            <p class="text-lg text-center text-gray-600">Lịch sử phiếu</p>
+          </div>
+        </TabPanel>
+      </TabPanels>
+    </Tabs>
   </div>
   <Toast />
 
@@ -151,6 +167,11 @@
 
 <script setup>
 import Dialog from 'primevue/dialog';
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
+import TabPanel from 'primevue/tabpanel';
 const imageModalVisible = ref(false);
 const currentImageSrc = ref(null);
 const imageRef = ref(null);
