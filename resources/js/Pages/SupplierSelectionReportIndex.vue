@@ -107,7 +107,7 @@
                         <small v-else-if="form.errors.description" class="text-red-500">{{ form.errors.description }}</small>
                     </div>
                     <div>
-                        <label for="file_path" class="block font-bold mb-3 required-field">File</label>
+                        <label for="file_path" class="block font-bold mb-3 required-field">File báo cáo</label>
 
                         <div class="integrated-paste-input">
                             <div
@@ -145,7 +145,7 @@
                                 </span>
                                 <Button
                                     label="Xóa ảnh"
-                                    icon="pi times"
+                                    icon="pi pi-times"
                                     class="p-button-danger p-button-text p-button-sm ml-auto"
                                     @click="clearImage(true)" />
                             </div>
@@ -155,6 +155,85 @@
                             </div>
                         </div>
                         <small v-if="form.errors.file_path" class="text-red-500">{{ form.errors.file_path }}</small>
+                    </div>
+
+                    <!-- Quotation Files Upload Section -->
+                    <div>
+                        <label class="block font-bold mb-3">File báo giá</label>
+
+                        <!-- File Upload Area -->
+                        <div
+                            class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
+                            @drop.prevent="handleQuotationFilesDrop"
+                            @dragover.prevent
+                            @click="$refs.quotationFilesInput.click()"
+                        >
+                            <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-600 mb-1">Kéo thả file báo giá vào đây hoặc click để chọn</p>
+                            <p class="text-sm text-gray-500">Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG</p>
+                            <input
+                                type="file"
+                                ref="quotationFilesInput"
+                                @change="handleQuotationFilesSelect"
+                                multiple
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                class="hidden"
+                            />
+                        </div>
+
+                        <!-- Uploaded Files List -->
+                        <div v-if="uploadedQuotationFiles.length > 0" class="mt-4">
+                            <h4 class="font-semibold mb-2">File đã upload:</h4>
+                            <div class="space-y-2">
+                                <div
+                                    v-for="(file, index) in uploadedQuotationFiles"
+                                    :key="index"
+                                    class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                                >
+                                    <div class="flex items-center space-x-3">
+                                        <i :class="getFileIcon(file.type)" class="text-xl"></i>
+                                        <div>
+                                            <p class="font-medium text-sm">{{ file.name }}</p>
+                                            <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        icon="pi pi-times"
+                                        class="p-button-text p-button-danger p-button-sm"
+                                        @click="removeQuotationFile(index)"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Existing Quotation Files (for edit mode) -->
+                        <div v-if="existingQuotationFiles.length > 0" class="mt-4">
+                            <h4 class="font-semibold mb-2">File báo giá hiện có:</h4>
+                            <div class="space-y-2">
+                                <div
+                                    v-for="file in existingQuotationFiles"
+                                    :key="file.id"
+                                    class="flex items-center justify-between p-3 bg-blue-50 rounded-lg"
+                                >
+                                    <div class="flex items-center space-x-3">
+                                        <i :class="getFileIcon(file.file_type)" class="text-xl text-blue-600"></i>
+                                        <div>
+                                            <a :href="file.file_url" target="_blank" class="font-medium text-sm text-blue-600 hover:underline">
+                                                {{ file.file_name }}
+                                            </a>
+                                            <p class="text-xs text-gray-500">{{ file.file_size_formatted }}</p>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        icon="pi pi-trash"
+                                        class="p-button-text p-button-danger p-button-sm"
+                                        @click="deleteExistingQuotationFile(file.id)"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <small v-if="form.errors.quotation_files" class="text-red-500">{{ form.errors.quotation_files }}</small>
                     </div>
                 </div>
             </form>
@@ -269,11 +348,12 @@ const selectedReports = ref([]);
 
 const selectedReportId = ref(null);
 
-const form = useForm({
-    code: '',
-    description: '',
-    file_path: null,
-});
+    const form = useForm({
+        code: '',
+        description: '',
+        file_path: null,
+        quotation_files: [],
+    });
 
 // Định nghĩa rules cho Vuelidate
 const rules = computed(() => {
@@ -303,9 +383,14 @@ const imageFile = ref(null);
 const showPlaceholder = ref(true);
 const isContentEditable = ref(true);
 
-const imageModalVisible = ref(false);
-const currentImageSrc = ref(null);
-const imageRef = ref(null);
+    const imageModalVisible = ref(false);
+    const currentImageSrc = ref(null);
+    const imageRef = ref(null);
+
+    // Quotation files management
+    const uploadedQuotationFiles = ref([]);
+    const existingQuotationFiles = ref([]);
+    const quotationFilesInput = ref(null);
 
 const openImageModal = (imageUrl) => {
     currentImageSrc.value = imageUrl;
@@ -451,6 +536,97 @@ const handleBlur = () => {
 };
 // END: Image Modal & Paste/Drop File Logic
 
+// START: Quotation Files Management
+const handleQuotationFilesDrop = (event) => {
+    const files = Array.from(event.dataTransfer.files);
+    addQuotationFiles(files);
+};
+
+const handleQuotationFilesSelect = (event) => {
+    const files = Array.from(event.target.files);
+    addQuotationFiles(files);
+};
+
+const addQuotationFiles = (files) => {
+    const validFiles = files.filter(file => {
+        const validTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'image/jpeg',
+            'image/jpg',
+            'image/png'
+        ];
+        return validTypes.includes(file.type);
+    });
+
+    if (validFiles.length !== files.length) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Cảnh báo',
+            detail: 'Một số file không được hỗ trợ và đã bị bỏ qua.',
+            life: 3000
+        });
+    }
+
+    uploadedQuotationFiles.value.push(...validFiles);
+    form.quotation_files = [...uploadedQuotationFiles.value];
+};
+
+const removeQuotationFile = (index) => {
+    uploadedQuotationFiles.value.splice(index, 1);
+    form.quotation_files = [...uploadedQuotationFiles.value];
+};
+
+const deleteExistingQuotationFile = (fileId) => {
+    if (confirm('Bạn có chắc chắn muốn xóa file này?')) {
+        router.delete(`/quotation_files/${fileId}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                existingQuotationFiles.value = existingQuotationFiles.value.filter(file => file.id !== fileId);
+                toast.add({
+                    severity: 'success',
+                    summary: 'Thành công',
+                    detail: 'File đã được xóa',
+                    life: 3000
+                });
+            },
+            onError: (errors) => {
+                toast.add({
+                    severity: 'error',
+                    summary: 'Lỗi',
+                    detail: 'Không thể xóa file',
+                    life: 3000
+                });
+            }
+        });
+    }
+};
+
+const getFileIcon = (fileType) => {
+    const iconMap = {
+        'application/pdf': 'pi pi-file-pdf text-red-500',
+        'application/msword': 'pi pi-file-word text-blue-500',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'pi pi-file-word text-blue-500',
+        'application/vnd.ms-excel': 'pi pi-file-excel text-green-500',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'pi pi-file-excel text-green-500',
+        'image/jpeg': 'pi pi-image text-purple-500',
+        'image/jpg': 'pi pi-image text-purple-500',
+        'image/png': 'pi pi-image text-purple-500',
+    };
+    return iconMap[fileType] || 'pi pi-file';
+};
+
+const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+// END: Quotation Files Management
 
 // START: Dialog & Form Logic
 const openNew = () => {
@@ -459,6 +635,8 @@ const openNew = () => {
     v$.value.$reset();
     selectedReportId.value = null;
     clearImage();
+    uploadedQuotationFiles.value = [];
+    existingQuotationFiles.value = [];
     submitted.value = false;
     reportDialog.value = true;
 };
@@ -473,7 +651,6 @@ const hideDialog = () => {
 };
 
 const saveReport = async () => {
-
     submitted.value = true;
     const isFormValid = await v$.value.$validate();
 
@@ -482,15 +659,39 @@ const saveReport = async () => {
         return;
     }
 
+    // Prepare form data with files
+    const formData = new FormData();
+    formData.append('code', form.code);
+    formData.append('description', form.description);
+
+    if (form.file_path) {
+        if (typeof form.file_path === 'string' && form.file_path.startsWith('data:image')) {
+            // Handle base64 image
+            const blob = dataURLtoBlob(form.file_path);
+            formData.append('file_path', blob, 'report_image.png');
+        } else if (form.file_path instanceof File) {
+            formData.append('file_path', form.file_path);
+        }
+    }
+
+    // Add quotation files
+    uploadedQuotationFiles.value.forEach((file, index) => {
+        formData.append('quotation_files[]', file);
+    });
+
     if (isAddReport.value) {
         form.post('/supplier_selection_reports', {
+            data: formData,
             preserveScroll: true,
+            forceFormData: true,
             onSuccess: () => {
                 form.reset();
                 v$.value.$reset();
                 reportDialog.value = false;
                 toast.add({severity:'success', summary: 'Thành công', detail: message.value, life: 3000});
                 clearImage();
+                uploadedQuotationFiles.value = [];
+                existingQuotationFiles.value = [];
                 selectedReportId.value = null;
             },
             onError: (errors) => {
@@ -500,12 +701,16 @@ const saveReport = async () => {
     } else {
         if (selectedReportId.value) {
             form.put(`/supplier_selection_reports/${selectedReportId.value}`, {
+                data: formData,
+                forceFormData: true,
                 onSuccess: () => {
                     form.reset();
                     v$.value.$reset();
                     reportDialog.value = false;
                     toast.add({severity:'success', summary: 'Thành công', detail: message.value, life: 3000});
                     clearImage();
+                    uploadedQuotationFiles.value = [];
+                    existingQuotationFiles.value = [];
                     selectedReportId.value = null;
                 },
                 onError: (errors) => {
@@ -526,6 +731,7 @@ const editReport = (report) => {
         code: report.code,
         description: report.description,
         file_path: report.image_url,
+        quotation_files: [],
     });
     form.clearErrors();
     v$.value.$reset();
@@ -541,6 +747,10 @@ const editReport = (report) => {
     if (pasteAreaRef.value) {
         pasteAreaRef.value.innerHTML = '';
     }
+
+    // Load existing quotation files
+    existingQuotationFiles.value = report.quotation_files || [];
+    uploadedQuotationFiles.value = [];
 
     submitted.value = false;
     reportDialog.value = true;

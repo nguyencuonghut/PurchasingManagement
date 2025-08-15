@@ -81,4 +81,14 @@ class SupplierSelectionReport extends Model
     {
         return $this->director ? $this->director->name : 'N/A';
     }
+
+    public function quotationFiles()
+    {
+        return $this->hasMany(QuotationFile::class);
+    }
+
+    public function getQuotationFilesCountAttribute()
+    {
+        return $this->quotationFiles()->count();
+    }
 }
