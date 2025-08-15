@@ -134,16 +134,46 @@ class SupplierSelectionReportController extends Controller
      */
     public function show(SupplierSelectionReport $supplierSelectionReport)
     {
+        $report = $supplierSelectionReport->load('quotationFiles');
+
         return Inertia::render('SupplierSelectionReportShow', [
-            'report' => $supplierSelectionReport->load('quotationFiles')->only([
-                'id', 'code', 'description', 'file_path', 'image_url', 'status',
-                'manager_approved_result', 'manager_approved_notes', 'auditor_audited_result',
-                'auditor_audited_notes', 'director_approved_result', 'director_approved_notes',
-                'creator_name', 'manager_name', 'auditor_name', 'director_name',
-                'creator_id', 'manager_id', 'auditor_id', 'director_id',
-                'manager_approved_at', 'auditor_audited_at', 'director_approved_at',
-                'created_at', 'updated_at', 'quotation_files'
-            ]),
+            'report' => [
+                'id' => $report->id,
+                'code' => $report->code,
+                'description' => $report->description,
+                'file_path' => $report->file_path,
+                'image_url' => $report->image_url,
+                'status' => $report->status,
+                'manager_approved_result' => $report->manager_approved_result,
+                'manager_approved_notes' => $report->manager_approved_notes,
+                'auditor_audited_result' => $report->auditor_audited_result,
+                'auditor_audited_notes' => $report->auditor_audited_notes,
+                'director_approved_result' => $report->director_approved_result,
+                'director_approved_notes' => $report->director_approved_notes,
+                'creator_name' => $report->creator_name,
+                'manager_name' => $report->manager_name,
+                'auditor_name' => $report->auditor_name,
+                'director_name' => $report->director_name,
+                'creator_id' => $report->creator_id,
+                'manager_id' => $report->manager_id,
+                'auditor_id' => $report->auditor_id,
+                'director_id' => $report->director_id,
+                'manager_approved_at' => $report->manager_approved_at,
+                'auditor_audited_at' => $report->auditor_audited_at,
+                'director_approved_at' => $report->director_approved_at,
+                'created_at' => $report->created_at,
+                'updated_at' => $report->updated_at,
+                'quotation_files' => $report->quotationFiles->map(function ($file) {
+                    return [
+                        'id' => $file->id,
+                        'file_name' => $file->file_name,
+                        'file_url' => $file->file_url,
+                        'file_size_formatted' => $file->file_size_formatted,
+                        'file_type' => $file->file_type,
+                        'created_at' => $file->created_at,
+                    ];
+                })
+            ],
         ]);
     }
 

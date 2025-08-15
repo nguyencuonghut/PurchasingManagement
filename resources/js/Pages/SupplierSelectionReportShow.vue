@@ -7,7 +7,7 @@
     <Tabs value="0">
       <TabList>
         <Tab value="0">Chi tiết</Tab>
-        <Tab value="1">Lịch sử</Tab>
+        <Tab value="1">Báo giá</Tab>
       </TabList>
       <TabPanels>
         <TabPanel value="0">
@@ -96,7 +96,33 @@
 
         <TabPanel value="1">
           <div class="p-4">
-            <p class="text-lg text-center text-gray-600">Lịch sử phiếu</p>
+            <DataTable :value="report.quotation_files" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
+                       responsiveLayout="scroll" :globalFilterFields="['file_name']"
+                       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                       currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} file báo giá">
+              <template #empty>
+                <div class="text-center p-4">
+                  <p class="text-gray-600">Không có file báo giá nào</p>
+                </div>
+              </template>
+              <Column field="index" header="STT" style="width: 10%">
+                <template #body="{ index }">
+                  {{ index + 1 }}
+                </template>
+              </Column>
+              <Column field="file_name" header="File báo giá" style="width: 70%">
+                <template #body="{ data }">
+                  <a :href="data.file_url" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline">
+                    {{ data.file_name }}
+                  </a>
+                </template>
+              </Column>
+              <Column field="file_size_formatted" header="Dung lượng" style="width: 20%">
+                <template #body="{ data }">
+                  {{ data.file_size_formatted }}
+                </template>
+              </Column>
+            </DataTable>
           </div>
         </TabPanel>
       </TabPanels>
