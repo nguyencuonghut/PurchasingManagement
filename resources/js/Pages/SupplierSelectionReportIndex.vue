@@ -65,6 +65,12 @@
                 </template>
             </Column>
 
+            <Column header="Báo giá" field="quotation_files_count" sortable style="min-width: 8rem">
+                <template #body="{ data }">
+                    <span class="font-medium">{{ data.quotation_files_count ?? 0 }}</span>
+                </template>
+            </Column>
+
             <Column v-if="can.update_report || can.delete_report" :exportable="false" style="min-width: 15rem">
                 <template #body="slotProps">
                     <Button
