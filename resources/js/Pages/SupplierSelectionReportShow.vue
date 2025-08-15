@@ -96,28 +96,34 @@
 
         <TabPanel value="1">
           <div class="p-4">
-            <DataTable :value="report.quotation_files" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
-                       responsiveLayout="scroll" :globalFilterFields="['file_name']"
-                       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                       currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} file báo giá">
-              <template #empty>
-                <div class="text-center p-4">
-                  <p class="text-gray-600">Không có file báo giá nào</p>
+            <DataTable ref="dtQuotation" v-model:filters="filtersQuotation" :value="report.quotation_files" paginator :rows="10" dataKey="id" filterDisplay="menu"
+                :globalFilterFields="['file_name']">
+              <template #header>
+                <div class="flex justify-between">
+                  <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearQuotationFilter()" />
+                  <IconField>
+                    <InputIcon>
+                      <i class="pi pi-search" />
+                    </InputIcon>
+                    <InputText v-model="filtersQuotation['global'].value" placeholder="Tìm kiếm file báo giá" />
+                  </IconField>
                 </div>
               </template>
-              <Column field="index" header="STT" style="width: 10%">
-                <template #body="{ index }">
-                  {{ index + 1 }}
+              <template #empty> Không có file báo giá nào. </template>
+              <Column header="STT" style="width: 60px">
+                <template #body="slotProps">
+                  {{ slotProps.index + 1 }}
                 </template>
               </Column>
-              <Column field="file_name" header="File báo giá" style="width: 70%">
+              <Column field="file_name" header="File báo giá" sortable style="min-width: 14rem">
                 <template #body="{ data }">
-                  <a :href="data.file_url" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline">
-                    {{ data.file_name }}
-                  </a>
+                  <a :href="data.file_url" target="_blank" class="text-primary hover:underline" style="cursor:pointer">{{ data.file_name }}</a>
+                </template>
+                <template #filter="{ filterModel }">
+                  <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo tên file" />
                 </template>
               </Column>
-              <Column field="file_size_formatted" header="Dung lượng" style="width: 20%">
+              <Column field="file_size_formatted" header="Dung lượng" style="min-width: 8rem" sortable>
                 <template #body="{ data }">
                   {{ data.file_size_formatted }}
                 </template>
@@ -192,6 +198,25 @@
 </template>
 
 <script setup>
+// Đã có import { ref, computed } from 'vue' phía dưới, không cần lặp lại
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import { FilterMatchMode } from '@primevue/core/api';
+
+const dtQuotation = ref();
+const filtersQuotation = ref({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  file_name: { value: null, matchMode: FilterMatchMode.CONTAINS },
+});
+const clearQuotationFilter = () => {
+  filtersQuotation.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    file_name: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  };
+};
 import Dialog from 'primevue/dialog';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
