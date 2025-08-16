@@ -36,7 +36,11 @@
               </template>
             </Column>
             <Column field="description" header="Mô tả" />
-            <Column field="status" header="Trạng thái" />
+            <Column field="status" header="Trạng thái">
+              <template #body="{ data }">
+                <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+              </template>
+            </Column>
             <Column field="created_at" header="Ngày tạo">
               <template #body="{ data }">
                 {{ formatDate(data.created_at) }}
@@ -49,10 +53,22 @@
         <template #title>Phiếu cần xử lý</template>
         <template #content>
           <DataTable :value="pendingReports" :rows="5" paginator :rowsPerPageOptions="[5,10]">
-            <Column field="code" header="Mã" />
+            <Column field="code" header="Mã">
+              <template #body="{ data }">
+                <a :href="`/supplier_selection_reports/${data.id}`" class="text-primary hover:underline" style="cursor:pointer">{{ data.code }}</a>
+              </template>
+            </Column>
             <Column field="description" header="Mô tả" />
-            <Column field="status" header="Trạng thái" />
-            <Column field="created_at" header="Ngày tạo" />
+            <Column field="status" header="Trạng thái">
+              <template #body="{ data }">
+                <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+              </template>
+            </Column>
+            <Column field="created_at" header="Ngày tạo">
+              <template #body="{ data }">
+                {{ formatDate(data.created_at) }}
+              </template>
+            </Column>
           </DataTable>
         </template>
       </Card>
@@ -79,6 +95,27 @@ import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+
+import Tag from 'primevue/tag';
+
+// Copy getStatusSeverity logic from SupplierSelectionReportIndex.vue
+const getStatusSeverity = (status) => {
+  switch (status) {
+    case 'draft':
+      return 'secondary';
+    case 'pending_manager_approval':
+      return 'warn';
+    case 'manager_approved':
+    case 'auditor_approved':
+      return 'info';
+    case 'director_approved':
+      return 'success';
+    case 'rejected':
+      return 'danger';
+    default:
+      return 'info';
+  }
+};
 
 
 
