@@ -57,5 +57,6 @@ class DatabaseSeeder extends Seeder
         //     'status' => 'On',
         //     'role' => 'Giám đốc',
         // ]);
+        $this->call(\Database\Seeders\SupplierSelectionReportSeeder::class);
     }
 }
