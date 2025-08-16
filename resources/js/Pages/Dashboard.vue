@@ -1,4 +1,7 @@
 <template>
+  <Head>
+    <title>Dashboard</title>
+  </Head>
   <div class="dashboard">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
   <Card v-for="stat in stats" :key="stat.label" class="text-center">
@@ -91,6 +94,7 @@
 <script setup>
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { Head } from '@inertiajs/vue3';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import DataTable from 'primevue/datatable';
