@@ -36,7 +36,10 @@ class SupplierSelectionReportController extends Controller
      */
     public function index(Request $request)
     {
-        $reports = SupplierSelectionReport::with('quotationFiles')->get()->map(function ($report) {
+        $reports = SupplierSelectionReport::with('quotationFiles')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($report) {
             return collect($report)->only(['id', 'code', 'description', 'file_path', 'image_url', 'status', 'creator_id'])
                 ->merge(['quotation_files_count' => $report->quotation_files_count]);
         });
