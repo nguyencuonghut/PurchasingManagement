@@ -379,7 +379,6 @@ const rules = computed(() => {
 const v$ = useVuelidate(rules, form);
 
 const submitted = ref(false);
-const isAddReport = ref(false);
 
 
 // START: Image Modal & Paste/Drop File Logic
@@ -636,15 +635,8 @@ const formatFileSize = (bytes) => {
 
 // START: Dialog & Form Logic
 const openNew = () => {
-    isAddReport.value = true;
-    form.reset();
-    v$.value.$reset();
-    selectedReportId.value = null;
-    clearImage();
-    uploadedQuotationFiles.value = [];
-    existingQuotationFiles.value = [];
-    submitted.value = false;
-    reportDialog.value = true;
+    // Điều hướng sang trang tạo mới thay vì mở modal
+    router.get('/supplier_selection_reports/create');
 };
 
 const hideDialog = () => {
@@ -685,10 +677,9 @@ const saveReport = async () => {
         formData.append('quotation_files[]', file);
     });
 
-    if (isAddReport.value) {
-        form.post('/supplier_selection_reports', {
+    if (selectedReportId.value) {
+        form.put(`/supplier_selection_reports/${selectedReportId.value}`, {
             data: formData,
-            preserveScroll: true,
             forceFormData: true,
             onSuccess: () => {
                 form.reset();
@@ -701,31 +692,11 @@ const saveReport = async () => {
                 selectedReportId.value = null;
             },
             onError: (errors) => {
-                toast.add({severity: 'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi tạo báo cáo.', life: 3000});
+                toast.add({severity: 'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi cập nhật.', life: 3000});
             },
         });
     } else {
-        if (selectedReportId.value) {
-            form.put(`/supplier_selection_reports/${selectedReportId.value}`, {
-                data: formData,
-                forceFormData: true,
-                onSuccess: () => {
-                    form.reset();
-                    v$.value.$reset();
-                    reportDialog.value = false;
-                    toast.add({severity:'success', summary: 'Thành công', detail: message.value, life: 3000});
-                    clearImage();
-                    uploadedQuotationFiles.value = [];
-                    existingQuotationFiles.value = [];
-                    selectedReportId.value = null;
-                },
-                onError: (errors) => {
-                    toast.add({severity: 'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi cập nhật.', life: 3000});
-                },
-            });
-        } else {
-            toast.add({severity: 'error', summary: 'Lỗi', detail: 'Không tìm thấy ID báo cáo để cập nhật.', life: 3000});
-        }
+        toast.add({severity: 'error', summary: 'Lỗi', detail: 'Không tìm thấy ID báo cáo để cập nhật.', life: 3000});
     }
 };
 

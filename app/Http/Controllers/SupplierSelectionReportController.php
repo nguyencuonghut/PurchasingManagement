@@ -64,6 +64,22 @@ class SupplierSelectionReportController extends Controller
     }
 
     /**
+     * Show the form for creating a new resource.
+     */
+    public function create(Request $request)
+    {
+        $this->authorize('create', SupplierSelectionReport::class);
+
+        // You can pass any initial props needed for the create page here
+        return Inertia::render('SupplierSelectionReportCreate', [
+            // Example: permissions or defaults
+            'can' => [
+                'create_report' => $request->user()->can('create', SupplierSelectionReport::class),
+            ],
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(StoreSupplierSelectionReportRequest $request)
@@ -114,7 +130,7 @@ class SupplierSelectionReportController extends Controller
                 }
             }
 
-            return redirect()->back()->with('flash', [
+            return redirect()->route('supplier_selection_reports.index')->with('flash', [
                 'type' => 'success',
                 'message' => 'Báo cáo đã được tạo thành công!',
             ]);
