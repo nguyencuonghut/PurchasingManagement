@@ -11,10 +11,6 @@
                     <span class="p-button-icon p-button-icon-left pi pi-arrow-left"></span>
                     <span class="p-button-label">Quay lại</span>
                 </Link>
-                <Button :disabled="form.processing" class="p-button p-component" @click="saveReport">
-                    <span class="p-button-icon p-button-icon-left pi pi-check"></span>
-                    <span class="p-button-label">Lưu</span>
-                </Button>
             </div>
         </div>
 
