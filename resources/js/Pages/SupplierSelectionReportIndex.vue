@@ -733,12 +733,11 @@ const editReport = (report) => {
     isAddReport.value = false;
     selectedReportId.value = report.id;
 
-    form.reset({
-        code: report.code,
-        description: report.description,
-        file_path: report.image_url,
-        quotation_files: [],
-    });
+    // Populate form fields directly (useForm.reset does not accept object values)
+    form.code = report.code || '';
+    form.description = report.description || '';
+    form.file_path = report.image_url || null;
+    form.quotation_files = [];
     form.clearErrors();
     v$.value.$reset();
 
