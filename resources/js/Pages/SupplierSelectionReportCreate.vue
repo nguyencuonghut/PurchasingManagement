@@ -16,101 +16,108 @@
 
         <form @submit.prevent="saveReport">
             <div class="flex flex-col gap-6">
-                <div>
-                    <label for="code" class="block font-bold mb-3 required-field">Mã</label>
-                    <InputText id="code" v-model="form.code" @blur="v$.code.$touch" :invalid="v$.code.$error || form.errors.code" fluid />
-                    <small v-if="v$.code.$error" class="text-red-500">{{ v$.code.$errors[0].$message }}</small>
-                    <small v-else-if="form.errors.code" class="text-red-500">{{ form.errors.code }}</small>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="code" class="block font-bold mb-3 required-field">Mã</label>
+                        <InputText id="code" v-model="form.code" @blur="v$.code.$touch" :invalid="v$.code.$error || form.errors.code" fluid />
+                        <small v-if="v$.code.$error" class="text-red-500">{{ v$.code.$errors[0].$message }}</small>
+                        <small v-else-if="form.errors.code" class="text-red-500">{{ form.errors.code }}</small>
+                    </div>
+
+                    <div>
+                        <label for="description" class="block font-bold mb-3 required-field">Mô tả</label>
+                        <InputText id="description" v-model.trim="form.description" @blur="v$.description.$touch" :invalid="v$.description.$error || form.errors.description" fluid />
+                        <small v-if="v$.description.$error" class="text-red-500">{{ v$.description.$errors[0].$message }}</small>
+                        <small v-else-if="form.errors.description" class="text-red-500">{{ form.errors.description }}</small>
+                    </div>
                 </div>
 
-                <div>
-                    <label for="description" class="block font-bold mb-3 required-field">Mô tả</label>
-                    <InputText id="description" v-model.trim="form.description" @blur="v$.description.$touch" :invalid="v$.description.$error || form.errors.description" fluid />
-                    <small v-if="v$.description.$error" class="text-red-500">{{ v$.description.$errors[0].$message }}</small>
-                    <small v-else-if="form.errors.description" class="text-red-500">{{ form.errors.description }}</small>
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="h-full">
+                        <label for="file_path" class="block font-bold mb-3 required-field">File báo cáo</label>
 
-                <div>
-                    <label for="file_path" class="block font-bold mb-3 required-field">File báo cáo</label>
-
-                    <div class="integrated-paste-input">
                         <div
-                            ref="pasteAreaRef"
-                            :contenteditable="isContentEditable"
-                            class="p-inputtext p-component p-editor-container"
-                            :class="{ 'has-content': imagePreviewSrc || (!showPlaceholder && pasteAreaRef?.innerText.trim() !== '') }"
-                            style="min-height: 150px; border: 1px solid var(--surface-300); padding: 1rem; cursor: text; overflow: hidden;"
-                            @paste="handlePaste"
-                            @drop.prevent="handleDrop"
-                            @focus="handleFocus"
-                            @blur="handleBlur"
+                            class="integrated-paste-input border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-text hover:border-blue-400 transition-colors min-h-56 flex flex-col justify-center"
+                            @click="pasteAreaRef?.focus()"
                         >
-                            <div v-if="!imagePreviewSrc && showPlaceholder" class="paste-content-wrapper">
-                                <p class="placeholder-text">
-                                    Dán ảnh (Ctrl+V) hoặc kéo thả file ảnh vào đây.
-                                    <br />
-                                    (Nếu dán bảng Excel/Word, sẽ có tùy chọn chuyển thành ảnh.)
-                                </p>
-                            </div>
-                            <div v-else-if="imagePreviewSrc" class="paste-content-wrapper">
-                                <img :src="imagePreviewSrc" alt="Image Preview" class="pasted-image-preview" />
-                            </div>
-                        </div>
-
-                        <div v-if="imagePreviewSrc" class="mt-3 flex align-items-center gap-2">
-                            <i class="pi pi-image text-xl"></i>
-                            <span class="font-medium">Ảnh hiện tại</span>
-                            <span class="text-color-secondary" v-if="imageFile">
-                                {{ (imageFile.size / 1024).toFixed(2) }} KB
-                                <template v-if="imageFile.name"> ({{ imageFile.name }})</template>
-                            </span>
-                            <Button label="Xóa ảnh" icon="pi pi-times" class="p-button-danger p-button-text p-button-sm ml-auto" @click="clearImage(true)" />
-                        </div>
-                        <div v-else-if="imageFile" class="mt-3 flex align-items-center gap-2">
-                            <i class="pi pi-spinner pi-spin text-xl"></i>
-                            <span class="font-medium">Đang xử lý ảnh...</span>
-                        </div>
-                    </div>
-                    <small v-if="form.errors.file_path" class="text-red-500">{{ form.errors.file_path }}</small>
-                </div>
-
-                <!-- Quotation Files Upload Section -->
-                <div>
-                    <label class="block font-bold mb-3">File báo giá</label>
-
-                    <!-- File Upload Area -->
-                    <div
-                        class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
-                        @drop.prevent="handleQuotationFilesDrop"
-                        @dragover.prevent
-                        @click="quotationFilesInput?.click()"
-                    >
-                        <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-gray-600 mb-1">Kéo thả file báo giá vào đây hoặc click để chọn</p>
-                        <p class="text-sm text-gray-500">Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG</p>
-                        <input
-                            type="file"
-                            ref="quotationFilesInput"
-                            @change="handleQuotationFilesSelect"
-                            multiple
-                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-                            class="hidden"
-                        />
-                    </div>
-
-                    <!-- Uploaded Files List -->
-                    <div v-if="uploadedQuotationFiles.length" class="mt-4">
-                        <h4 class="text-sm font-semibold mb-2">File đã upload</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <div v-for="(file, index) in uploadedQuotationFiles" :key="index" class="p-3 border rounded flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <i :class="getFileIcon(file.type)"></i>
-                                    <div class="flex flex-col">
-                                        <span class="font-medium">{{ file.name }}</span>
-                                        <small class="text-gray-500">{{ formatFileSize(file.size) }}</small>
-                                    </div>
+                            <div
+                                ref="pasteAreaRef"
+                                :contenteditable="isContentEditable"
+                                class="p-inputtext p-component p-editor-container"
+                                :class="{ 'has-content': imagePreviewSrc || (!showPlaceholder && pasteAreaRef?.innerText.trim() !== '') }"
+                                style="min-height: 150px; padding: 0; cursor: text; overflow: hidden; outline: none; border: none;"
+                                @paste="handlePaste"
+                                @drop.prevent="handleDrop"
+                                @focus="handleFocus"
+                                @blur="handleBlur"
+                            >
+                                <div v-if="!imagePreviewSrc && showPlaceholder" class="paste-content-wrapper">
+                                    <p class="placeholder-text">
+                                        Dán ảnh (Ctrl+V) hoặc kéo thả file ảnh vào đây.
+                                        <br />
+                                        (Nếu dán bảng Excel/Word, sẽ có tùy chọn chuyển thành ảnh.)
+                                    </p>
                                 </div>
-                                <Button icon="pi pi-times" text severity="danger" @click="removeQuotationFile(index)" />
+                                <div v-else-if="imagePreviewSrc" class="paste-content-wrapper">
+                                    <img :src="imagePreviewSrc" alt="Image Preview" class="pasted-image-preview" />
+                                </div>
+                            </div>
+
+                            <div v-if="imagePreviewSrc" class="mt-3 flex align-items-center gap-2">
+                                <i class="pi pi-image text-xl"></i>
+                                <span class="font-medium">Ảnh hiện tại</span>
+                                <span class="text-color-secondary" v-if="imageFile">
+                                    {{ (imageFile.size / 1024).toFixed(2) }} KB
+                                    <template v-if="imageFile.name"> ({{ imageFile.name }})</template>
+                                </span>
+                                <Button label="Xóa ảnh" icon="pi pi-times" class="p-button-danger p-button-text p-button-sm ml-auto" @click="clearImage(true)" />
+                            </div>
+                            <div v-else-if="imageFile" class="mt-3 flex align-items-center gap-2">
+                                <i class="pi pi-spinner pi-spin text-xl"></i>
+                                <span class="font-medium">Đang xử lý ảnh...</span>
+                            </div>
+                        </div>
+                        <small v-if="form.errors.file_path" class="text-red-500">{{ form.errors.file_path }}</small>
+                    </div>
+
+                    <!-- Quotation Files Upload Section -->
+                    <div class="h-full flex flex-col">
+                        <label class="block font-bold mb-3">File báo giá</label>
+
+                        <!-- File Upload Area -->
+                        <div
+                            class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors min-h-56 flex flex-col justify-center"
+                            @drop.prevent="handleQuotationFilesDrop"
+                            @dragover.prevent
+                            @click="quotationFilesInput?.click()"
+                        >
+                            <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-600 mb-1">Kéo thả file báo giá vào đây hoặc click để chọn</p>
+                            <p class="text-sm text-gray-500">Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG</p>
+                            <input
+                                type="file"
+                                ref="quotationFilesInput"
+                                @change="handleQuotationFilesSelect"
+                                multiple
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                class="hidden"
+                            />
+                        </div>
+
+                        <!-- Uploaded Files List -->
+                        <div v-if="uploadedQuotationFiles.length" class="mt-4">
+                            <h4 class="text-sm font-semibold mb-2">File đã upload</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <div v-for="(file, index) in uploadedQuotationFiles" :key="index" class="p-3 border rounded flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i :class="getFileIcon(file.type)"></i>
+                                        <div class="flex flex-col">
+                                            <span class="font-medium">{{ file.name }}</span>
+                                            <small class="text-gray-500">{{ formatFileSize(file.size) }}</small>
+                                        </div>
+                                    </div>
+                                    <Button icon="pi pi-times" text severity="danger" @click="removeQuotationFile(index)" />
+                                </div>
                             </div>
                         </div>
                     </div>
