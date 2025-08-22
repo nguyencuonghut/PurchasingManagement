@@ -66,6 +66,12 @@
                 </template>
             </Column>
 
+            <Column field="creator_name" header="Người tạo" sortable style="min-width: 12rem">
+                <template #body="{ data }">
+                    {{ data.creator_name || 'N/A' }}
+                </template>
+            </Column>
+
             <Column header="Trạng thái" field="status" sortable :filterMenuStyle="{ width: '14rem' }" style="min-width: 12rem">
                 <template #body="{ data }">
                     <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
@@ -76,12 +82,6 @@
                             <Tag :value="slotProps.option" :severity="getStatusSeverity(slotProps.option)" />
                         </template>
                     </Select>
-                </template>
-            </Column>
-
-            <Column header="Báo giá" field="quotation_files_count" sortable style="min-width: 8rem">
-                <template #body="{ data }">
-                    <span class="font-medium">{{ data.quotation_files_count ?? 0 }}</span>
                 </template>
             </Column>
 
