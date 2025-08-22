@@ -1,6 +1,7 @@
 <script setup>
 import AppConfigurator from '@/PrimeVue/layout/AppConfigurator.vue';
 import { useLayout } from '@/PrimeVue/layout/composables/layout';
+import Button from 'primevue/button';
 
 const { toggleDarkMode, isDarkTheme } = useLayout();
 </script>

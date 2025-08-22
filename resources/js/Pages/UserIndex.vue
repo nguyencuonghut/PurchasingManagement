@@ -189,6 +189,7 @@ import Toast from 'primevue/toast';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Tag from 'primevue/tag'; // Thêm Tag
+import FileUpload from 'primevue/fileupload';
 
 const toast = useToast();
 const dt = ref();

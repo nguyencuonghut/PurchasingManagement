@@ -5,6 +5,9 @@ import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
+import Toast from 'primevue/toast';
+import SelectButton from 'primevue/selectbutton';
+import StyleClass from 'primevue/styleclass';
 
 import '@/PrimeVue/assets/styles.scss';
 import '@/PrimeVue/assets/tailwind.css';
@@ -37,6 +40,9 @@ createInertiaApp({
       })
       .use(ToastService)
       .use(ConfirmationService)
+      .component('Toast', Toast)
+      .component('SelectButton', SelectButton)
+      .directive('styleclass', StyleClass)
       .mount(el);
   },
 })
