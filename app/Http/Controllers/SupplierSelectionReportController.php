@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class SupplierSelectionReportController extends Controller
 {
@@ -40,10 +41,11 @@ class SupplierSelectionReportController extends Controller
             ->orderBy('id', 'desc')
             ->get()
             ->map(function ($report) {
-            return collect($report)->only(['id', 'code', 'description', 'file_path', 'image_url', 'status', 'creator_id'])
+            return collect($report)->only(['id', 'code', 'description', 'file_path', 'image_url', 'status', 'creator_id', 'created_at'])
                 ->merge([
                     'quotation_files_count' => $report->quotation_files_count,
-                    'creator_name' => $report->creator_name
+                    'creator_name' => $report->creator_name,
+                    'formatted_created_at' => $report->created_at ? Carbon::parse($report->created_at)->format('d/m/Y H:i') : 'N/A'
                 ]);
         });
 

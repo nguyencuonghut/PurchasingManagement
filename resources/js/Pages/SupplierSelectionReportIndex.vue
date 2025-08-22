@@ -19,7 +19,7 @@
             :rows="10"
             dataKey="id"
             filterDisplay="menu"
-            :globalFilterFields="['code', 'description', 'file_path']"
+            :globalFilterFields="['code', 'description', 'file_path', 'formatted_created_at']"
             :sortField="'created_at'"
             :sortOrder="-1"
         >
@@ -69,6 +69,15 @@
             <Column field="creator_name" header="Người tạo" sortable style="min-width: 12rem">
                 <template #body="{ data }">
                     {{ data.creator_name || 'N/A' }}
+                </template>
+            </Column>
+
+            <Column field="created_at" header="Ngày tạo" sortable style="min-width: 14rem">
+                <template #body="{ data }">
+                    {{ data.formatted_created_at || 'N/A' }}
+                </template>
+                <template #filter="{ filterModel }">
+                    <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo ngày (dd/mm/yyyy)" />
                 </template>
             </Column>
 
@@ -205,6 +214,32 @@ const getStatusSeverity = (status) => {
     }
 };
 
+const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A';
+
+    const date = new Date(dateString);
+    // Use UTC methods to avoid timezone conversion
+    const day = date.getUTCDate().toString().padStart(2, '0');
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+    const year = date.getUTCFullYear();
+    const hours = date.getUTCHours().toString().padStart(2, '0');
+    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
+const formatDateForSearch = (dateString) => {
+    if (!dateString) return '';
+
+    const date = new Date(dateString);
+    // Use UTC methods to avoid timezone conversion
+    const day = date.getUTCDate().toString().padStart(2, '0');
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+    const year = date.getUTCFullYear();
+
+    return `${day}/${month}/${year}`;
+};
+
 // ==== Image view modal ====
 const imageModalVisible = ref(false);
 const currentImageSrc = ref(null);
@@ -287,6 +322,20 @@ const initFilters = () => {
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
         code: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
         description: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        created_at: {
+            operator: FilterOperator.AND,
+            constraints: [{
+                value: null,
+                matchMode: FilterMatchMode.CUSTOM,
+                match: (value, filter) => {
+                    if (!filter) return true;
+                    if (!value) return false;
+
+                    const formattedDate = formatDateForSearch(value);
+                    return formattedDate.includes(filter);
+                }
+            }]
+        },
         status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
     };
 };
