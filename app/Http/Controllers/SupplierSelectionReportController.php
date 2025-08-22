@@ -53,6 +53,8 @@ class SupplierSelectionReportController extends Controller
                          ->where('manager_id', $user->id);
                   });
             });
+        } elseif ($user->role === 'Giám đốc') {
+            $query->where('director_id', $user->id);
         }
 
         $reports = $query->get()
