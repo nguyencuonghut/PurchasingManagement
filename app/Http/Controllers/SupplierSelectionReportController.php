@@ -55,11 +55,13 @@ class SupplierSelectionReportController extends Controller
         $canCreate = $user->can('create', SupplierSelectionReport::class);
         $canUpdate = $user->role === 'Quản trị' || $user->role === 'Nhân viên Thu Mua' || $user->role === 'Trưởng phòng Thu Mua';
         $canDelete = $user->role === 'Quản trị' || $user->role === 'Nhân viên Thu Mua' || $user->role === 'Trưởng phòng Thu Mua';
+        $canExport = true;//Always can export
 
         $can = [
             'create_report' => $canCreate,
             'update_report' => $canUpdate,
             'delete_report' => $canDelete,
+            'export_report' => $canExport,
         ];
 
         return Inertia::render('SupplierSelectionReportIndex', [

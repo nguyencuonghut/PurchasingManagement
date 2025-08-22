@@ -8,6 +8,9 @@
             <template #start>
                 <Button v-if="can.create_report" label="New" icon="pi pi-plus" class="mr-2" @click="openNew" />
             </template>
+            <template #end>
+                <Button v-if="can.export_report" label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" />
+            </template>
         </Toolbar>
 
         <DataTable
@@ -330,6 +333,10 @@ initFilters();
 
 const selectedReports = ref([]);
 const clearFilter = () => { initFilters(); };
+
+const exportCSV = () => {
+    dt.value.exportCSV();
+};
 </script>
 
 <style scoped>
