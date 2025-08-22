@@ -69,9 +69,15 @@ class SupplierSelectionReportController extends Controller
             'export_report' => $canExport,
         ];
 
+        $managers = User::where('role', 'Trưởng phòng Thu Mua')
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('SupplierSelectionReportIndex', [
             'reports' => $reports,
             'can' => $can,
+            'managers' => $managers,
         ]);
     }
 
@@ -416,23 +422,39 @@ class SupplierSelectionReportController extends Controller
         }
     }
 
-    public function requestManagerToApprove(SupplierSelectionReport $supplierSelectionReport)
+    public function requestManagerToApprove(Request $request, SupplierSelectionReport $supplierSelectionReport)
     {
         if ($supplierSelectionReport->creator_id !== auth()->id()) {
             return redirect()->back()->withErrors('Bạn không có quyền!');
+        }
+
+        $managerId = $request->input('manager_id');
+        if (!$managerId) {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'Vui lòng chọn Trưởng phòng duyệt.'
+            ]);
+        }
+
+        $manager = User::where('role', 'Trưởng phòng Thu Mua')->where('id', $managerId)->first();
+        if (!$manager) {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'Người duyệt không hợp lệ.'
+            ]);
         }
 
         $supplierSelectionReport->update([
             'status' => 'pending_manager_approval',
         ]);
 
-        $reviewers = User::where('role', 'Trưởng phòng Thu Mua')->get();
-        foreach ($reviewers as $reviewer) {
-            Notification::route('mail', $reviewer->email)->notify(new SupplierSelectionReportCreated($supplierSelectionReport));
-        }
+        Notification::route('mail', $manager->email)->notify(new SupplierSelectionReportCreated($supplierSelectionReport));
 
         return redirect()->route('supplier_selection_reports.index')
-            ->with('success', 'Báo cáo đã được gửi duyệt thành công.');
+            ->with('flash', [
+                'type' => 'success',
+                'message' => 'Báo cáo đã được gửi duyệt thành công!'
+            ]);
     }
 
     /**

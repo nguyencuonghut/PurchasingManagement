@@ -151,6 +151,17 @@
             </template>
         </Dialog>
 
+        <Dialog v-model:visible="sendApproveDialog" :style="{ width: '450px' }" header="Trưởng phòng duyệt" :modal="true">
+            <div class="flex flex-col gap-4">
+                <label for="manager" class="block font-bold">Chọn Trưởng phòng duyệt</label>
+                <Select id="manager" v-model="selectedManagerId" :options="managers" optionLabel="name" optionValue="id" placeholder="Chọn Trưởng phòng" class="w-full" />
+            </div>
+            <template #footer>
+                <Button label="Hủy" icon="pi pi-times" text @click="sendApproveDialog = false" />
+                <Button label="Gửi" icon="pi pi-check" @click="submitSendToManager" :disabled="!selectedManagerId" />
+            </template>
+        </Dialog>
+
         <!-- Modal xác nhận xóa -->
         <Dialog v-model:visible="deleteReportDialog" :style="{ width: '450px' }" header="Xác nhận xóa" :modal="true">
             <div class="confirmation-content">
@@ -194,6 +205,7 @@ defineProps({
     errors: { type: Object },
     reports: Object,
     can: Object,
+    managers: Array,
 });
 
 const statuses = ref([
@@ -295,11 +307,33 @@ const deleteReport = () => {
 };
 
 // ==== Approve flow ====
+const sendApproveDialog = ref(false);
+const selectedManagerId = ref(null);
+const reportToSend = ref(null);
+
 const requestManagerToApprove = (report) => {
-    router.put(`/supplier_selection_reports/${report.id}/request-manager-to-approve`, {}, {
+    reportToSend.value = report;
+    selectedManagerId.value = null;
+    sendApproveDialog.value = true;
+};
+
+const submitSendToManager = () => {
+    if (!reportToSend.value) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không tìm thấy báo cáo để gửi.', life: 3000 });
+        return;
+    }
+    if (!selectedManagerId.value) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn Trưởng phòng duyệt.', life: 3000 });
+        return;
+    }
+
+    router.put(`/supplier_selection_reports/${reportToSend.value.id}/request-manager-to-approve`, { manager_id: selectedManagerId.value }, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({ severity:'success', summary: 'Thành công', detail: `Báo cáo ${report.code} đã được gửi duyệt.`, life: 3000 });
+            sendApproveDialog.value = false;
+            reportToSend.value = null;
+            selectedManagerId.value = null;
+            toast.add({ severity:'success', summary: 'Thành công', detail: 'Báo cáo đã được gửi duyệt.', life: 3000 });
         },
         onError: (errors) => {
             console.error("Lỗi khi gửi yêu cầu duyệt báo cáo:", errors);
