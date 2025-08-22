@@ -45,6 +45,14 @@ class SupplierSelectionReportController extends Controller
 
         if ($user->role === 'Nhân viên Thu Mua') {
             $query->where('creator_id', $user->id);
+        } elseif ($user->role === 'Trưởng phòng Thu Mua') {
+            $query->where(function($q) use ($user) {
+                $q->where('creator_id', $user->id)
+                  ->orWhere(function($q2) use ($user) {
+                      $q2->whereNotNull('manager_id')
+                         ->where('manager_id', $user->id);
+                  });
+            });
         }
 
         $reports = $query->get()
@@ -446,6 +454,7 @@ class SupplierSelectionReportController extends Controller
 
         $supplierSelectionReport->update([
             'status' => 'pending_manager_approval',
+            'manager_id' => $manager->id,
         ]);
 
         Notification::route('mail', $manager->email)->notify(new SupplierSelectionReportCreated($supplierSelectionReport));
