@@ -44,19 +44,26 @@ class DatabaseSeeder extends Seeder
             'role' => 'Trưởng phòng Thu Mua',
         ]);
         User::factory()->create([
+            'name' => 'Vũ Hoàng Giang',
+            'email' => 'tptm2@honghafeed.com.vn',
+            'password' => bcrypt('Hongha@123'),
+            'status' => 'On',
+            'role' => 'Trưởng phòng Thu Mua',
+        ]);
+        User::factory()->create([
             'name' => 'Tạ Văn Toại',
             'email' => 'gd@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role' => 'Giám đốc',
         ]);
-        // User::factory()->create([
-        //     'name' => 'Nguyễn khôi Nguyên',
-        //     'email' => 'nguyenkhoinguyen@honghafeed.com.vn',
-        //     'password' => bcrypt('Hongha@123'),
-        //     'status' => 'On',
-        //     'role' => 'Giám đốc',
-        // ]);
+        User::factory()->create([
+            'name' => 'Nguyễn khôi Nguyên',
+            'email' => 'gd2@honghafeed.com.vn',
+            'password' => bcrypt('Hongha@123'),
+            'status' => 'On',
+            'role' => 'Giám đốc',
+        ]);
         $this->call(\Database\Seeders\SupplierSelectionReportSeeder::class);
     }
 }
