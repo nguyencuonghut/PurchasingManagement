@@ -37,9 +37,17 @@ class SupplierSelectionReportController extends Controller
      */
     public function index(Request $request)
     {
-        $reports = SupplierSelectionReport::with(['quotationFiles', 'creator'])
-            ->orderBy('id', 'desc')
-            ->get()
+        // Lấy quyền của người dùng hiện tại
+        $user = $request->user();
+
+        $query = SupplierSelectionReport::with(['quotationFiles', 'creator'])
+            ->orderBy('id', 'desc');
+
+        if ($user->role === 'Nhân viên Thu Mua') {
+            $query->where('creator_id', $user->id);
+        }
+
+        $reports = $query->get()
             ->map(function ($report) {
             return collect($report)->only(['id', 'code', 'description', 'file_path', 'image_url', 'status', 'creator_id', 'created_at'])
                 ->merge([
@@ -48,9 +56,6 @@ class SupplierSelectionReportController extends Controller
                     'formatted_created_at' => $report->created_at ? Carbon::parse($report->created_at)->format('d/m/Y H:i') : 'N/A'
                 ]);
         });
-
-        // Lấy quyền của người dùng hiện tại
-        $user = $request->user();
 
         $canCreate = $user->can('create', SupplierSelectionReport::class);
         $canUpdate = $user->role === 'Quản trị' || $user->role === 'Nhân viên Thu Mua' || $user->role === 'Trưởng phòng Thu Mua';
