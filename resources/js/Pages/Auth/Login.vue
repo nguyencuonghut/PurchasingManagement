@@ -4,6 +4,10 @@ import { ref } from 'vue';
 
 // 1. Thay đổi import useForm từ laravel-precognition-vue-inertia sang @inertiajs/vue3
 import { useForm } from '@inertiajs/vue3';
+import InputText from 'primevue/inputtext';
+import Password from 'primevue/password';
+import Checkbox from 'primevue/checkbox';
+import Button from 'primevue/button';
 
 // 2. Thay đổi cách khởi tạo useForm:
 // useForm của Inertia chỉ nhận object chứa các trường của form.
