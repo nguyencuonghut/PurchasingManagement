@@ -317,11 +317,27 @@ async function save() {
   form.code = String(v$.value.code.$model ?? form.code ?? '');
   form.description = String(v$.value.description.$model ?? form.description ?? '');
 
+  // ngay sau khi đã validate v$ và đồng bộ form.code/description...
+  const isNewImageBase64 = typeof form.file_path === 'string' && form.file_path.startsWith('data:image');
+  const isNewImageFile   = form.file_path instanceof File;
+  const wantRemoveImage  = !!form.file_path_removed;
+
+  // ❗ Nếu user xóa ảnh mà KHÔNG đính kèm ảnh mới -> chặn tại FE
+  if (wantRemoveImage && !isNewImageBase64 && !isNewImageFile) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Vui lòng đính kèm ảnh báo cáo trước khi lưu.',
+      life: 3500,
+    });
+    return;
+  }
+
   const hasNewInlineImage =
     typeof form.file_path === 'string' && form.file_path.startsWith('data:image');
   const hasUploadedFile =
     form.file_path instanceof File || (form.quotation_files?.length || 0) > 0;
-  const wantRemoveImage = !!form.file_path_removed;
+
   const hasDeletedExisting = (form.deleted_quotation_file_ids?.length || 0) > 0;
 
   const needsMultipart = hasNewInlineImage || hasUploadedFile || wantRemoveImage || hasDeletedExisting;

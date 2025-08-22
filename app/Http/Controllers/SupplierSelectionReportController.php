@@ -251,13 +251,22 @@ class SupplierSelectionReportController extends Controller
      */
     public function update(UpdateSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
-        Log::info('SSR.update payload', $request->all());
         $this->authorize('update', $supplierSelectionReport);
 
         // Lấy field text chuẩn
         $data = $request->safe()->only(['code', 'description']);
 
         $oldFilePath = $supplierSelectionReport->file_path;
+
+        if (
+            $request->boolean('file_path_removed') === true
+            && ! $request->hasFile('file_path')
+            && ! (is_string($request->file_path) && str_starts_with($request->file_path, 'data:image'))
+        ) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'file_path' => 'Vui lòng đính kèm ảnh báo cáo.',
+            ]);
+        }
 
         // ---- 1) Xử lý file_path (ảnh)
         // Ưu tiên xóa nếu người dùng ấn nút xóa
