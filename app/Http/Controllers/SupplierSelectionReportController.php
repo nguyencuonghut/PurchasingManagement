@@ -149,6 +149,56 @@ class SupplierSelectionReportController extends Controller
     }
 
     /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(SupplierSelectionReport $supplierSelectionReport)
+    {
+        $this->authorize('update', $supplierSelectionReport);
+
+        $report = $supplierSelectionReport->load('quotationFiles');
+
+        return Inertia::render('SupplierSelectionReportEdit', [
+            'report' => [
+                'id' => $report->id,
+                'code' => $report->code,
+                'description' => $report->description,
+                'file_path' => $report->file_path,
+                'image_url' => $report->image_url,
+                'status' => $report->status,
+                'manager_approved_result' => $report->manager_approved_result,
+                'manager_approved_notes' => $report->manager_approved_notes,
+                'auditor_audited_result' => $report->auditor_audited_result,
+                'auditor_audited_notes' => $report->auditor_audited_notes,
+                'director_approved_result' => $report->director_approved_result,
+                'director_approved_notes' => $report->director_approved_notes,
+                'creator_name' => $report->creator_name,
+                'manager_name' => $report->manager_name,
+                'auditor_name' => $report->auditor_name,
+                'director_name' => $report->director_name,
+                'creator_id' => $report->creator_id,
+                'manager_id' => $report->manager_id,
+                'auditor_id' => $report->auditor_id,
+                'director_id' => $report->director_id,
+                'manager_approved_at' => $report->manager_approved_at,
+                'auditor_audited_at' => $report->auditor_audited_at,
+                'director_approved_at' => $report->director_approved_at,
+                'created_at' => $report->created_at,
+                'updated_at' => $report->updated_at,
+                'quotation_files' => $report->quotationFiles->map(function ($file) {
+                    return [
+                        'id' => $file->id,
+                        'file_name' => $file->file_name,
+                        'file_url' => $file->file_url,
+                        'file_size_formatted' => $file->file_size_formatted,
+                        'file_type' => $file->file_type,
+                        'created_at' => $file->created_at,
+                    ];
+                })
+            ],
+        ]);
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(SupplierSelectionReport $supplierSelectionReport)
@@ -201,62 +251,113 @@ class SupplierSelectionReportController extends Controller
      */
     public function update(UpdateSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
+        Log::info('SSR.update payload', $request->all());
         $this->authorize('update', $supplierSelectionReport);
 
-        try {
-            $data = $request->validated();
-            $oldFilePath = $supplierSelectionReport->file_path;
+        // Lấy field text chuẩn
+        $data = $request->safe()->only(['code', 'description']);
 
-            // Xử lý file_path
-            if ($request->hasFile('file_path')) {
-                $data['file_path'] = $this->uploadFile($request->file('file_path'));
-                if ($oldFilePath && Storage::disk('public')->exists($oldFilePath)) {
-                    $this->deleteFile($oldFilePath);
-                }
-            } elseif (is_string($request->file_path) && str_starts_with($request->file_path, 'data:image')) {
-                $data['file_path'] = $this->saveBase64Image($request->file_path);
-                if ($oldFilePath && Storage::disk('public')->exists($oldFilePath)) {
-                    $this->deleteFile($oldFilePath);
-                }
-            } elseif (is_null($request->file_path)) {
-                $data['file_path'] = null;
-                if ($oldFilePath && Storage::disk('public')->exists($oldFilePath)) {
-                    $this->deleteFile($oldFilePath);
-                }
+        $oldFilePath = $supplierSelectionReport->file_path;
+
+        // ---- 1) Xử lý file_path (ảnh)
+        // Ưu tiên xóa nếu người dùng ấn nút xóa
+        if ($request->boolean('file_path_removed') === true) {
+            if ($oldFilePath && Storage::disk('public')->exists($oldFilePath)) {
+                Storage::disk('public')->delete($oldFilePath);
+            }
+            $data['file_path'] = null;
+
+        } elseif ($request->hasFile('file_path')) {
+            // Ảnh mới là file upload
+            $data['file_path'] = $this->uploadFile($request->file('file_path'));
+            if ($oldFilePath && Storage::disk('public')->exists($oldFilePath)) {
+                Storage::disk('public')->delete($oldFilePath);
             }
 
-            $supplierSelectionReport->update($data);
-
-            // Xử lý file báo giá trong update
-            if ($request->hasFile('quotation_files')) {
-                foreach ($request->file('quotation_files') as $file) {
-                    $quotationFile = new QuotationFile();
-                    $quotationFile->file_name = $file->getClientOriginalName();
-                    $quotationFile->file_path = $this->uploadFile($file);
-                    $quotationFile->file_type = $file->getClientMimeType();
-                    $quotationFile->file_size = $file->getSize();
-                    $quotationFile->supplier_selection_report_id = $supplierSelectionReport->id;
-                    $quotationFile->save();
-                }
+        } elseif (is_string($request->file_path) && str_starts_with($request->file_path, 'data:image')) {
+            // Ảnh mới dạng base64
+            $data['file_path'] = $this->saveBase64Image($request->file_path);
+            if ($oldFilePath && Storage::disk('public')->exists($oldFilePath)) {
+                Storage::disk('public')->delete($oldFilePath);
             }
 
-            return redirect()->back()->with('flash', [
-                'type' => 'success',
-                'message' => 'Báo cáo đã được cập nhật thành công!',
-            ]);
-        } catch (ValidationException $e) {
-            return redirect()->back()->withErrors($e->errors())->with('flash', [
-                'type' => 'error',
-                'message' => 'Có lỗi xảy ra trong quá trình xác thực dữ liệu.',
-            ]);
-        } catch (\Exception $e) {
-            Log::error("Lỗi khi cập nhật báo cáo: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return redirect()->back()->with('flash', [
-                'type' => 'error',
-                'message' => 'Đã xảy ra lỗi không mong muốn khi cập nhật báo cáo.',
-            ]);
+        } elseif ($request->filled('file_path') && is_string($request->file_path)) {
+            // Chuỗi URL ảnh cũ -> giữ nguyên (KHÔNG set $data['file_path'])
+            // no-op
+        } else {
+            // Không có key file_path trong request hoặc rỗng -> giữ nguyên
+            // no-op
         }
+
+        // ---- 2) Xử lý xoá file báo giá cũ (nếu người dùng đánh dấu)
+        $deletedIds = collect($request->input('deleted_quotation_file_ids', []))
+            ->filter(fn($id) => is_numeric($id))
+            ->map('intval')
+            ->values();
+
+        if ($deletedIds->isNotEmpty()) {
+            $filesToDelete = $supplierSelectionReport->quotationFiles()
+                ->whereIn('id', $deletedIds)
+                ->get();
+
+            foreach ($filesToDelete as $qf) {
+                if ($qf->file_path && Storage::disk('public')->exists($qf->file_path)) {
+                    Storage::disk('public')->delete($qf->file_path);
+                }
+                $qf->delete();
+            }
+        }
+
+        // ---- 3) Thêm file báo giá mới (nếu có)
+        if ($request->hasFile('quotation_files')) {
+            foreach ($request->file('quotation_files') as $file) {
+                $supplierSelectionReport->quotationFiles()->create([
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $this->uploadFile($file),
+                    'file_type' => $file->getClientMimeType(),
+                    'file_size' => $file->getSize(),
+                ]);
+            }
+        }
+
+        // ---- 4) Các ràng buộc bắt buộc (nếu nghiệp vụ yêu cầu)
+        // - file_path required?
+        // - Ít nhất 1 file báo giá?
+        $errors = [];
+
+        // Ví dụ: bắt buộc phải có ảnh file_path
+        if (
+            ($request->boolean('file_path_removed') === true && !$request->hasFile('file_path') && !(is_string($request->file_path) && str_starts_with($request->file_path, 'data:image')))
+            && empty($data['file_path']) // không set mới
+            && empty($oldFilePath)       // trước đó cũng không có
+        ) {
+            $errors['file_path'] = 'Vui lòng đính kèm ảnh báo cáo.';
+        }
+
+        // Ví dụ: yêu cầu phải còn ít nhất một file báo giá sau khi xử lý
+        $remainQuotation = $supplierSelectionReport->quotationFiles()
+            ->whereNotIn('id', $deletedIds)
+            ->count();
+        $addingQuotation = $request->hasFile('quotation_files') ? count($request->file('quotation_files')) : 0;
+
+        if (($remainQuotation + $addingQuotation) === 0) {
+            // Nếu nghiệp vụ yêu cầu bắt buộc có báo giá
+            // $errors['quotation_files'] = 'Vui lòng đính kèm ít nhất một file báo giá.';
+        }
+
+        if (!empty($errors)) {
+            throw \Illuminate\Validation\ValidationException::withMessages($errors);
+        }
+
+        // ---- 5) Lưu các field text + file_path (nếu có trong $data)
+        $supplierSelectionReport->fill($data)->save();
+
+        return redirect()->back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Báo cáo đã được cập nhật thành công!',
+        ]);
     }
+
 
     /**
      * Remove the specified resource from storage.
