@@ -89,7 +89,7 @@
             <Button label="Kiểm tra phiếu" icon="pi pi-search" @click="openAuditorModal" class="w-full" />
           </div>
           <div v-if="canDirectorApprove
-              && (report.status === 'auditor_approved' || report.status === 'director_approved' || report.status === 'rejected')">
+              && (report.status === 'pending_director_approval' || report.status === 'director_approved' || report.status === 'rejected')">
             <Button label="Duyệt phiếu" icon="pi pi-check" @click="openDirectorModal" class="w-full" />
           </div>
         </TabPanel>

@@ -97,9 +97,9 @@
                 </template>
             </Column>
 
-            <Column v-if="can.update_report || can.delete_report" :exportable="false" style="min-width: 15rem">
+            <Column :exportable="false" style="min-width: 15rem">
                 <template #body="slotProps">
-                    <!-- Gửi duyệt -->
+                    <!-- Gửi duyệt tới Trưởng phòng -->
                     <Button
                         v-if="($page.props.auth.user.id === slotProps.data.creator_id) && (slotProps.data.status === 'draft' || slotProps.data.status === 'pending_manager_approval')"
                         icon="pi pi-send"
@@ -108,6 +108,19 @@
                         severity="warn"
                         @click="requestManagerToApprove(slotProps.data)"
                         class="mr-2"
+                        v-tooltip.top="'Gửi Trưởng phòng duyệt'"
+                    />
+
+                    <!-- Gửi duyệt tới Giám đốc -->
+                    <Button
+                        v-if="$page.props.auth.user.role === 'Nhân viên Kiểm Soát' && (slotProps.data.status === 'auditor_approved' || slotProps.data.status === 'pending_director_approval')"
+                        icon="pi pi-send"
+                        outlined
+                        rounded
+                        severity="info"
+                        @click="requestDirectorToApprove(slotProps.data)"
+                        class="mr-2"
+                        v-tooltip.top="'Gửi Giám đốc duyệt'"
                     />
 
                     <!-- Sửa: điều hướng sang trang edit -->
@@ -162,6 +175,17 @@
             </template>
         </Dialog>
 
+        <Dialog v-model:visible="directorApproveDialog" :style="{ width: '450px' }" header="Giám đốc duyệt" :modal="true">
+            <div class="flex flex-col gap-4">
+                <label for="director" class="block font-bold">Chọn Giám đốc duyệt</label>
+                <Select id="director" v-model="selectedDirectorId" :options="directors" optionLabel="name" optionValue="id" placeholder="Chọn Giám đốc" class="w-full" />
+            </div>
+            <template #footer>
+                <Button label="Hủy" icon="pi pi-times" text @click="directorApproveDialog = false" />
+                <Button label="Gửi" icon="pi pi-check" @click="submitSendToDirector" :disabled="!selectedDirectorId" />
+            </template>
+        </Dialog>
+
         <!-- Modal xác nhận xóa -->
         <Dialog v-model:visible="deleteReportDialog" :style="{ width: '450px' }" header="Xác nhận xóa" :modal="true">
             <div class="confirmation-content">
@@ -206,6 +230,7 @@ defineProps({
     reports: Object,
     can: Object,
     managers: Array,
+    directors: Array,
 });
 
 const statuses = ref([
@@ -213,6 +238,7 @@ const statuses = ref([
     'pending_manager_approval',
     'manager_approved',
     'auditor_approved',
+    'pending_director_approval',
     'director_approved',
     'rejected'
 ]);
@@ -223,6 +249,7 @@ const getStatusSeverity = (status) => {
         case 'pending_manager_approval': return 'warn';
         case 'manager_approved':
         case 'auditor_approved': return 'info';
+        case 'pending_director_approval': return 'warn';
         case 'director_approved': return 'success';
         case 'rejected': return 'danger';
         default: return 'info';
@@ -311,6 +338,10 @@ const sendApproveDialog = ref(false);
 const selectedManagerId = ref(null);
 const reportToSend = ref(null);
 
+const directorApproveDialog = ref(false);
+const selectedDirectorId = ref(null);
+const reportToDirector = ref(null);
+
 const requestManagerToApprove = (report) => {
     reportToSend.value = report;
     selectedManagerId.value = null;
@@ -338,6 +369,37 @@ const submitSendToManager = () => {
         onError: (errors) => {
             console.error("Lỗi khi gửi yêu cầu duyệt báo cáo:", errors);
             toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi gửi yêu cầu duyệt báo cáo!', life: 3000 });
+        },
+    });
+};
+
+const requestDirectorToApprove = (report) => {
+    reportToDirector.value = report;
+    selectedDirectorId.value = null;
+    directorApproveDialog.value = true;
+};
+
+const submitSendToDirector = () => {
+    if (!reportToDirector.value) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không tìm thấy báo cáo để gửi.', life: 3000 });
+        return;
+    }
+    if (!selectedDirectorId.value) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn Giám đốc duyệt.', life: 3000 });
+        return;
+    }
+
+    router.put(`/supplier_selection_reports/${reportToDirector.value.id}/request-director-to-approve`, { director_id: selectedDirectorId.value }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            directorApproveDialog.value = false;
+            reportToDirector.value = null;
+            selectedDirectorId.value = null;
+            toast.add({ severity:'success', summary: 'Thành công', detail: 'Đã gửi yêu cầu duyệt tới Giám đốc.', life: 3000 });
+        },
+        onError: (errors) => {
+            console.error("Lỗi khi gửi yêu cầu duyệt Giám đốc:", errors);
+            toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lỗi khi gửi yêu cầu duyệt Giám đốc!', life: 3000 });
         },
     });
 };

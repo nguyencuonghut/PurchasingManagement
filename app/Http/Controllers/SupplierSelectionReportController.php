@@ -82,10 +82,16 @@ class SupplierSelectionReportController extends Controller
             ->orderBy('name')
             ->get();
 
+        $directors = User::where('role', 'Giám đốc')
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('SupplierSelectionReportIndex', [
             'reports' => $reports,
             'can' => $can,
             'managers' => $managers,
+            'directors' => $directors,
         ]);
     }
 
@@ -537,12 +543,7 @@ class SupplierSelectionReportController extends Controller
         $supplierSelectionReport->auditor_audited_at = now();
         $supplierSelectionReport->save();
 
-        if ($supplierSelectionReport->status === 'auditor_approved') {
-            $directors = User::where('role', 'Giám đốc')->get();
-            foreach ($directors as $director) {
-                Notification::route('mail', $director->email)->notify(new SupplierSelectionReportNeedDirectorApproval($supplierSelectionReport));
-            }
-        } else {
+        if ($supplierSelectionReport->status !== 'auditor_approved') {
             Notification::route('mail', $supplierSelectionReport->creator->email)->notify(new SupplierSelectionReportRejectedByAuditor($supplierSelectionReport));
         }
 
@@ -550,6 +551,46 @@ class SupplierSelectionReportController extends Controller
             ->with('flash', [
                 'type' => 'success',
                 'message' => 'Đã gửi review thành công!'
+            ]);
+    }
+
+    public function requestDirectorToApprove(Request $request, SupplierSelectionReport $supplierSelectionReport)
+    {
+        // Optional: Restrict to auditor or authorized roles. For now, just ensure status is auditor_approved
+        if ($supplierSelectionReport->status !== 'auditor_approved') {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'Chỉ có thể gửi duyệt Giám đốc sau khi đã được Kiểm Soát duyệt.'
+            ]);
+        }
+
+        $directorId = $request->input('director_id');
+        if (!$directorId) {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'Vui lòng chọn Giám đốc duyệt.'
+            ]);
+        }
+
+        $director = User::where('role', 'Giám đốc')->where('id', $directorId)->first();
+        if (!$director) {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'Người duyệt không hợp lệ.'
+            ]);
+        }
+
+        $supplierSelectionReport->update([
+            'status' => 'pending_director_approval',
+            'director_id' => $director->id,
+        ]);
+
+        Notification::route('mail', $director->email)->notify(new SupplierSelectionReportNeedDirectorApproval($supplierSelectionReport));
+
+        return redirect()->route('supplier_selection_reports.index')
+            ->with('flash', [
+                'type' => 'success',
+                'message' => 'Đã gửi yêu cầu duyệt tới Giám đốc.'
             ]);
     }
 
