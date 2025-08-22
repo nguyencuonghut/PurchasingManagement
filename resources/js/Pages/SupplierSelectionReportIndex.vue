@@ -101,7 +101,7 @@
                 <template #body="slotProps">
                     <!-- Gửi duyệt -->
                     <Button
-                        v-if="slotProps.data.status === 'draft' && $page.props.auth.user.id === slotProps.data.creator_id"
+                        v-if="($page.props.auth.user.id === slotProps.data.creator_id) && (slotProps.data.status === 'draft' || slotProps.data.status === 'pending_manager_approval')"
                         icon="pi pi-send"
                         outlined
                         rounded
