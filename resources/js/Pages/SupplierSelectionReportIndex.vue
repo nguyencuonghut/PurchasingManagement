@@ -20,6 +20,8 @@
             dataKey="id"
             filterDisplay="menu"
             :globalFilterFields="['code', 'description', 'file_path']"
+            :sortField="'created_at'"
+            :sortOrder="-1"
         >
             <template #header>
                 <div class="flex justify-between">
@@ -34,8 +36,6 @@
             </template>
 
             <template #empty> Không tìm thấy báo cáo. </template>
-
-            <Column field="id" header="Id" style="width: 20%; height: 44px"></Column>
 
             <Column field="code" header="Mã" sortable style="min-width: 14rem">
                 <template #body="{ data }">
