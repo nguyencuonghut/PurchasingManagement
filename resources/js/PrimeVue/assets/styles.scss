@@ -1,5 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
 @use './layout/layout.scss';
 @use 'primeicons/primeicons.css';
-@use './demo/demo.scss';
+// Removed demo styles to avoid bundling flags and demo assets
+// @use './demo/demo.scss';
 

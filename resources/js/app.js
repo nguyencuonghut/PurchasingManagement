@@ -10,29 +10,33 @@ import '@/PrimeVue/assets/styles.scss';
 import '@/PrimeVue/assets/tailwind.css';
 
 createInertiaApp({
-  resolve: name => {
-    const pages = import.meta.glob('./Pages/**/*.vue', { eager: true })
-    let page = pages[`./Pages/${name}.vue`]
-    if (page.default.layout === undefined) {
-        page.default.layout = AppLayout;
+  resolve: async (name) => {
+    const pages = import.meta.glob('./Pages/**/*.vue');
+    const importPage = pages[`./Pages/${name}.vue`];
+    if (!importPage) {
+      throw new Error(`Page not found: ${name}`);
     }
-    return page
+    const page = await importPage();
+    if (page.default.layout === undefined) {
+      page.default.layout = AppLayout;
+    }
+    return page;
   },
   setup({ el, App, props, plugin }) {
     createApp({ render: () => h(App, props) })
       .use(plugin)
       .use(PrimeVue, {
-            theme: {
-                preset: Aura,
-                options: {
-                    prefix: 'p',
-                    darkModeSelector: '.app-dark',
-                    cssLayer: false
-                }
-            }
+        theme: {
+          preset: Aura,
+          options: {
+            prefix: 'p',
+            darkModeSelector: '.app-dark',
+            cssLayer: false,
+          },
+        },
       })
       .use(ToastService)
       .use(ConfirmationService)
-      .mount(el)
+      .mount(el);
   },
 })
