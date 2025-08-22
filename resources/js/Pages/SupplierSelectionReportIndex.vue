@@ -72,12 +72,12 @@
                 </template>
             </Column>
 
-            <Column field="created_at" header="Ngày tạo" sortable style="min-width: 14rem">
+            <Column field="formatted_created_at" sortField="created_at" header="Ngày tạo" sortable style="min-width: 14rem">
                 <template #body="{ data }">
                     {{ data.formatted_created_at || 'N/A' }}
                 </template>
                 <template #filter="{ filterModel }">
-                    <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo ngày (dd/mm/yyyy)" />
+                    <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo ngày/giờ (dd/mm/yyyy hoặc HH:mm)" />
                 </template>
             </Column>
 
@@ -322,20 +322,7 @@ const initFilters = () => {
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
         code: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
         description: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        created_at: {
-            operator: FilterOperator.AND,
-            constraints: [{
-                value: null,
-                matchMode: FilterMatchMode.CUSTOM,
-                match: (value, filter) => {
-                    if (!filter) return true;
-                    if (!value) return false;
-
-                    const formattedDate = formatDateForSearch(value);
-                    return formattedDate.includes(filter);
-                }
-            }]
-        },
+        formatted_created_at: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
         status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
     };
 };
