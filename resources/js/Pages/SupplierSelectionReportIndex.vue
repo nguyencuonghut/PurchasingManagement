@@ -125,7 +125,7 @@
 
                     <!-- Sửa: điều hướng sang trang edit -->
                     <Button
-                        v-if="can.update_report && ($page.props.auth.user.role === 'Quản trị' || ($page.props.auth.user.id === slotProps.data.creator_id && slotProps.data.status === 'draft' || ($page.props.auth.user.id === slotProps.data.creator_id && 'Trưởng phòng Thu Mua' == $page.props.auth.user.role && slotProps.data.status === 'manager_approved')))"
+                        v-if="canEdit(slotProps.data)"
                         icon="pi pi-pencil"
                         outlined
                         rounded
@@ -135,7 +135,7 @@
 
                     <!-- Xóa -->
                     <Button
-                        v-if="can.delete_report && ($page.props.auth.user.role === 'Quản trị' || ($page.props.auth.user.id === slotProps.data.creator_id && slotProps.data.status === 'draft' || ($page.props.auth.user.id === slotProps.data.creator_id && 'Trưởng phòng Thu Mua' == $page.props.auth.user.role && slotProps.data.status === 'manager_approved')))"
+                        v-if="canDelete(slotProps.data)"
                         icon="pi pi-trash"
                         outlined
                         rounded
@@ -219,6 +219,15 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Tag from 'primevue/tag';
 import Select from 'primevue/select';
+
+// FE roles mapping to avoid magic strings
+const Roles = {
+    ADMIN: 'Quản trị',
+    PURCHASER: 'Nhân viên Thu Mua',
+    PM_MANAGER: 'Trưởng phòng Thu Mua',
+    AUDITOR: 'Nhân viên Kiểm Soát',
+    DIRECTOR: 'Giám đốc',
+};
 
 const toast = useToast();
 const dt = ref();
@@ -432,6 +441,29 @@ const clearFilter = () => { initFilters(); };
 
 const exportCSV = () => {
     dt.value.exportCSV();
+};
+
+// ==== Permission helpers ====
+const canEdit = (row) => {
+    const u = page.props.auth.user;
+    const can = page.props.can;
+    if (!can?.update_report) return false;
+    if (u.role === Roles.ADMIN) return true;
+    const isCreator = u.id === row.creator_id;
+    if (isCreator && row.status === 'draft') return true;
+    if (isCreator && u.role === Roles.PM_MANAGER && row.status === 'manager_approved') return true;
+    return false;
+};
+
+const canDelete = (row) => {
+    const u = page.props.auth.user;
+    const can = page.props.can;
+    if (!can?.delete_report) return false;
+    if (u.role === Roles.ADMIN) return true;
+    const isCreator = u.id === row.creator_id;
+    if (isCreator && row.status === 'draft') return true;
+    if (isCreator && u.role === Roles.PM_MANAGER && row.status === 'manager_approved') return true;
+    return false;
 };
 </script>
 

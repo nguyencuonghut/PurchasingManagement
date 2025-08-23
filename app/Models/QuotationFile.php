@@ -22,7 +22,7 @@ class QuotationFile extends Model
 
     public function getFileUrlAttribute()
     {
-        if ($this->file_path && Storage::disk('public')->exists($this->file_path)) {
+        if ($this->file_path) {
             return Storage::url($this->file_path);
         }
         return null;

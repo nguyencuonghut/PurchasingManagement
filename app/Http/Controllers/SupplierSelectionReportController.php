@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateSupplierSelectionReportRequest;
 use App\Models\QuotationFile;
 use App\Models\SupplierSelectionReport;
 use App\Models\User;
+use App\Enums\UserRoles;
+use App\Enums\ReportStatus;
 use App\Notifications\SupplierSelectionReportApprovedByDirector;
 use App\Notifications\SupplierSelectionReportApprovedByManager;
 use App\Notifications\SupplierSelectionReportCreated;
@@ -28,6 +30,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use App\Http\Resources\SupplierSelectionReportResource;
 
 class SupplierSelectionReportController extends Controller
 {
@@ -45,9 +48,9 @@ class SupplierSelectionReportController extends Controller
             ->withCount('quotationFiles')
             ->orderBy('id', 'desc');
 
-        if ($user->role === 'Nhân viên Thu Mua') {
+        if ($user->role === UserRoles::PURCHASER) {
             $query->where('creator_id', $user->id);
-        } elseif ($user->role === 'Trưởng phòng Thu Mua') {
+        } elseif ($user->role === UserRoles::PM_MANAGER) {
             $query->where(function($q) use ($user) {
                 $q->where('creator_id', $user->id)
                   ->orWhere(function($q2) use ($user) {
@@ -55,25 +58,17 @@ class SupplierSelectionReportController extends Controller
                          ->where('manager_id', $user->id);
                   });
             });
-        } elseif ($user->role === 'Nhân viên Kiểm Soát') {
-            $query->whereIn('status', ['manager_approved','auditor_approved','pending_director_approval']);
-        } elseif ($user->role === 'Giám đốc') {
+        } elseif ($user->role === UserRoles::AUDITOR) {
+            $query->whereIn('status', [ReportStatus::MANAGER_APPROVED, ReportStatus::AUDITOR_APPROVED, ReportStatus::PENDING_DIRECTOR]);
+        } elseif ($user->role === UserRoles::DIRECTOR) {
             $query->where('director_id', $user->id);
         }
 
-        $reports = $query->get()
-            ->map(function ($report) {
-            return collect($report)->only(['id', 'code', 'description', 'file_path', 'image_url', 'status', 'creator_id', 'created_at'])
-                ->merge([
-                    'quotation_files_count' => $report->quotation_files_count,
-                    'creator_name' => $report->creator_name,
-                    'formatted_created_at' => $report->created_at ? Carbon::parse($report->created_at)->format('d/m/Y H:i') : 'N/A'
-                ]);
-        });
+        $reports = SupplierSelectionReportResource::collection($query->get());
 
         $canCreate = $user->can('create', SupplierSelectionReport::class);
-        $canUpdate = $user->role === 'Quản trị' || $user->role === 'Nhân viên Thu Mua' || $user->role === 'Trưởng phòng Thu Mua';
-        $canDelete = $user->role === 'Quản trị' || $user->role === 'Nhân viên Thu Mua' || $user->role === 'Trưởng phòng Thu Mua';
+        $canUpdate = $user->role === UserRoles::ADMIN || $user->role === UserRoles::PURCHASER || $user->role === UserRoles::PM_MANAGER;
+        $canDelete = $user->role === UserRoles::ADMIN || $user->role === UserRoles::PURCHASER || $user->role === UserRoles::PM_MANAGER;
         $canExport = true;//Always can export
 
         $can = [
@@ -83,12 +78,12 @@ class SupplierSelectionReportController extends Controller
             'export_report' => $canExport,
         ];
 
-        $managers = User::where('role', 'Trưởng phòng Thu Mua')
+        $managers = User::where('role', UserRoles::PM_MANAGER)
             ->select('id', 'name', 'email')
             ->orderBy('name')
             ->get();
 
-        $directors = User::where('role', 'Giám đốc')
+        $directors = User::where('role', UserRoles::DIRECTOR)
             ->select('id', 'name', 'email')
             ->orderBy('name')
             ->get();
@@ -174,9 +169,9 @@ class SupplierSelectionReportController extends Controller
                 }
 
                 // Nếu người tạo là Trưởng phòng Thu Mua -> auto approve & notify
-                if ($request->user()->role === 'Trưởng phòng Thu Mua') {
+                if ($request->user()->role === UserRoles::PM_MANAGER) {
                     $report->update([
-                        'status' => 'manager_approved',
+                        'status' => ReportStatus::MANAGER_APPROVED,
                         'manager_id' => $request->user()->id,
                         'manager_approved_at' => now()
                     ]);
@@ -233,43 +228,7 @@ class SupplierSelectionReportController extends Controller
         $report = $supplierSelectionReport->load('quotationFiles');
 
         return Inertia::render('SupplierSelectionReportEdit', [
-            'report' => [
-                'id' => $report->id,
-                'code' => $report->code,
-                'description' => $report->description,
-                'file_path' => $report->file_path,
-                'image_url' => $report->image_url,
-                'status' => $report->status,
-                'manager_approved_result' => $report->manager_approved_result,
-                'manager_approved_notes' => $report->manager_approved_notes,
-                'auditor_audited_result' => $report->auditor_audited_result,
-                'auditor_audited_notes' => $report->auditor_audited_notes,
-                'director_approved_result' => $report->director_approved_result,
-                'director_approved_notes' => $report->director_approved_notes,
-                'creator_name' => $report->creator_name,
-                'manager_name' => $report->manager_name,
-                'auditor_name' => $report->auditor_name,
-                'director_name' => $report->director_name,
-                'creator_id' => $report->creator_id,
-                'manager_id' => $report->manager_id,
-                'auditor_id' => $report->auditor_id,
-                'director_id' => $report->director_id,
-                'manager_approved_at' => $report->manager_approved_at,
-                'auditor_audited_at' => $report->auditor_audited_at,
-                'director_approved_at' => $report->director_approved_at,
-                'created_at' => $report->created_at,
-                'updated_at' => $report->updated_at,
-                'quotation_files' => $report->quotationFiles->map(function ($file) {
-                    return [
-                        'id' => $file->id,
-                        'file_name' => $file->file_name,
-                        'file_url' => $file->file_url,
-                        'file_size_formatted' => $file->file_size_formatted,
-                        'file_type' => $file->file_type,
-                        'created_at' => $file->created_at,
-                    ];
-                })
-            ],
+            'report' => (new SupplierSelectionReportResource($report))->toArray(request()),
         ]);
     }
 
@@ -281,43 +240,7 @@ class SupplierSelectionReportController extends Controller
         $report = $supplierSelectionReport->load('quotationFiles');
 
         return Inertia::render('SupplierSelectionReportShow', [
-            'report' => [
-                'id' => $report->id,
-                'code' => $report->code,
-                'description' => $report->description,
-                'file_path' => $report->file_path,
-                'image_url' => $report->image_url,
-                'status' => $report->status,
-                'manager_approved_result' => $report->manager_approved_result,
-                'manager_approved_notes' => $report->manager_approved_notes,
-                'auditor_audited_result' => $report->auditor_audited_result,
-                'auditor_audited_notes' => $report->auditor_audited_notes,
-                'director_approved_result' => $report->director_approved_result,
-                'director_approved_notes' => $report->director_approved_notes,
-                'creator_name' => $report->creator_name,
-                'manager_name' => $report->manager_name,
-                'auditor_name' => $report->auditor_name,
-                'director_name' => $report->director_name,
-                'creator_id' => $report->creator_id,
-                'manager_id' => $report->manager_id,
-                'auditor_id' => $report->auditor_id,
-                'director_id' => $report->director_id,
-                'manager_approved_at' => $report->manager_approved_at,
-                'auditor_audited_at' => $report->auditor_audited_at,
-                'director_approved_at' => $report->director_approved_at,
-                'created_at' => $report->created_at,
-                'updated_at' => $report->updated_at,
-                'quotation_files' => $report->quotationFiles->map(function ($file) {
-                    return [
-                        'id' => $file->id,
-                        'file_name' => $file->file_name,
-                        'file_url' => $file->file_url,
-                        'file_size_formatted' => $file->file_size_formatted,
-                        'file_type' => $file->file_type,
-                        'created_at' => $file->created_at,
-                    ];
-                })
-            ],
+            'report' => (new SupplierSelectionReportResource($report))->toArray(request()),
         ]);
     }
 
@@ -521,7 +444,7 @@ class SupplierSelectionReportController extends Controller
     public function managerApprove(ManagerApproveSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
-        if ($user->role !== 'Trưởng phòng Thu Mua') {
+        if ($user->role !== UserRoles::PM_MANAGER) {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
                 'message' => 'Bạn không có quyền duyệt phiếu này.'
@@ -533,16 +456,16 @@ class SupplierSelectionReportController extends Controller
         $supplierSelectionReport->manager_approved_notes = $validated['manager_approved_notes'] ?? null;
 
         if ('approved' == $validated['manager_approved_result']) {
-            $supplierSelectionReport->status = 'manager_approved';
+            $supplierSelectionReport->status = ReportStatus::MANAGER_APPROVED;
         } else {
-            $supplierSelectionReport->status = 'rejected';
+            $supplierSelectionReport->status = ReportStatus::REJECTED;
         }
 
         $supplierSelectionReport->manager_id = Auth::id();
         $supplierSelectionReport->manager_approved_at = now();
         $supplierSelectionReport->save();
 
-        if ($supplierSelectionReport->status === 'manager_approved') {
+        if ($supplierSelectionReport->status === ReportStatus::MANAGER_APPROVED) {
             $auditors = User::where('role', 'Nhân viên Kiểm Soát')->get();
             foreach ($auditors as $auditor) {
                 Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorAudit($supplierSelectionReport));
@@ -565,7 +488,7 @@ class SupplierSelectionReportController extends Controller
     public function auditorAudit(AuditorAuditSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
-        if ($user->role !== 'Nhân viên Kiểm Soát') {
+        if ($user->role !== UserRoles::AUDITOR) {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
                 'message' => 'Bạn không có quyền review báo cáo này.'
@@ -578,15 +501,15 @@ class SupplierSelectionReportController extends Controller
         $supplierSelectionReport->auditor_id = Auth::id();
 
         if ($validated['auditor_audited_result'] === 'approved') {
-            $supplierSelectionReport->status = 'auditor_approved';
+            $supplierSelectionReport->status = ReportStatus::AUDITOR_APPROVED;
         } else {
-            $supplierSelectionReport->status = 'rejected';
+            $supplierSelectionReport->status = ReportStatus::REJECTED;
         }
 
         $supplierSelectionReport->auditor_audited_at = now();
         $supplierSelectionReport->save();
 
-        if ($supplierSelectionReport->status !== 'auditor_approved') {
+        if ($supplierSelectionReport->status !== ReportStatus::AUDITOR_APPROVED) {
             Notification::route('mail', $supplierSelectionReport->creator->email)->notify(new SupplierSelectionReportRejectedByAuditor($supplierSelectionReport));
         }
 
@@ -600,7 +523,7 @@ class SupplierSelectionReportController extends Controller
     public function requestDirectorToApprove(Request $request, SupplierSelectionReport $supplierSelectionReport)
     {
         // Optional: Restrict to auditor or authorized roles. For now, just ensure status is auditor_approved
-        if ($supplierSelectionReport->status !== 'auditor_approved') {
+        if ($supplierSelectionReport->status !== ReportStatus::AUDITOR_APPROVED) {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
                 'message' => 'Chỉ có thể gửi duyệt Giám đốc sau khi đã được Kiểm Soát duyệt.'
@@ -615,7 +538,7 @@ class SupplierSelectionReportController extends Controller
             ]);
         }
 
-        $director = User::where('role', 'Giám đốc')->where('id', $directorId)->first();
+        $director = User::where('role', UserRoles::DIRECTOR)->where('id', $directorId)->first();
         if (!$director) {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
@@ -624,7 +547,7 @@ class SupplierSelectionReportController extends Controller
         }
 
         $supplierSelectionReport->update([
-            'status' => 'pending_director_approval',
+            'status' => ReportStatus::PENDING_DIRECTOR,
             'director_id' => $director->id,
         ]);
 
@@ -643,7 +566,7 @@ class SupplierSelectionReportController extends Controller
     public function directorApprove(DirectorApproveSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
-        if ($user->role !== 'Giám đốc') {
+        if ($user->role !== UserRoles::DIRECTOR) {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
                 'message' => 'Bạn không có quyền duyệt phiếu này.'
@@ -657,9 +580,9 @@ class SupplierSelectionReportController extends Controller
         $supplierSelectionReport->director_approved_at = now();
 
         if ($validated['director_approved_result'] === 'approved') {
-            $supplierSelectionReport->status = 'director_approved';
+            $supplierSelectionReport->status = ReportStatus::DIRECTOR_APPROVED;
         } else {
-            $supplierSelectionReport->status = 'rejected';
+            $supplierSelectionReport->status = ReportStatus::REJECTED;
         }
 
         $supplierSelectionReport->save();
