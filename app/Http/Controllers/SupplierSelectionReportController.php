@@ -155,6 +155,7 @@ class SupplierSelectionReportController extends Controller
             if ($request->user()->role === 'Trưởng phòng Thu Mua') {
                 $report->update([
                     'status' => 'manager_approved',
+                    'manager_id' => $request->user()->id,
                     'manager_approved_at' => now()
                 ]);
 
