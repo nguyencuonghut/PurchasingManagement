@@ -143,17 +143,9 @@
               </Column>
               <Column field="user" header="Người thực hiện" style="min-width: 12rem" />
               <Column field="user_role" header="Vai trò" style="min-width: 10rem" />
-              <Column header="Chi tiết" style="min-width: 16rem">
+              <Column header="Chi tiết" style="min-width: 20rem">
                 <template #body="{ data }">
-                  <div v-if="data.properties && data.properties.notes"><b>Ghi chú:</b> {{ data.properties.notes }}</div>
-                  <div v-else-if="data.properties && data.properties.changed">
-                    <b>Thay đổi:</b>
-                    <ul class="list-disc ml-4">
-                      <li v-for="(v, k) in data.properties.changed" :key="k">{{ k }}</li>
-                    </ul>
-                  </div>
-                  <div v-else-if="data.properties">{{ JSON.stringify(data.properties) }}</div>
-                  <div v-else>-</div>
+                  {{ formatDetails(data) }}
                 </template>
               </Column>
             </DataTable>
@@ -261,6 +253,33 @@ const formatAction = (action) => {
     case 'director_rejected': return 'Giám đốc từ chối';
     default: return action;
   }
+};
+
+const fieldLabels = {
+  code: 'Mã',
+  description: 'Mô tả',
+  status: 'Trạng thái',
+  manager_approved_result: 'KQ Trưởng phòng',
+  manager_approved_notes: 'Ghi chú Trưởng phòng',
+  auditor_audited_result: 'KQ Kiểm Soát',
+  auditor_audited_notes: 'Ghi chú Kiểm Soát',
+  director_approved_result: 'KQ Giám đốc',
+  director_approved_notes: 'Ghi chú Giám đốc',
+};
+
+const formatDetails = (row) => {
+  const p = row?.properties || {};
+  if (p.notes) return `Ghi chú: ${p.notes}`;
+  if (row.action === 'submitted_to_manager' && p.manager_name) return `Gửi duyệt Trưởng phòng: ${p.manager_name}`;
+  if (row.action === 'submitted_to_director' && p.director_name) return `Gửi duyệt Giám đốc: ${p.director_name}`;
+  if (row.action === 'deleted') return `Đã xóa bản ghi ${p.code ? `(#${p.code})` : (p.id ? `(#${p.id})` : '')}`.trim();
+  if (p.changed && typeof p.changed === 'object') {
+    const keys = Object.keys(p.changed);
+    if (keys.length === 0) return '—';
+    const names = keys.map(k => fieldLabels[k] || k);
+    return `Thay đổi: ${names.join(', ')}`;
+  }
+  return '-';
 };
 import Dialog from 'primevue/dialog';
 import Tabs from 'primevue/tabs';
