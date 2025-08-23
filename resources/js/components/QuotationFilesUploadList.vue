@@ -29,7 +29,10 @@
             <i :class="getFileIcon(file.file_type)" class="text-xl text-blue-600"></i>
             <div>
               <a :href="file.file_url" target="_blank" class="font-medium text-sm text-blue-600 hover:underline">{{ file.file_name }}</a>
-              <p class="text-xs text-gray-500">{{ file.file_size_formatted }}</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="px-2 py-0.5 text-xs rounded bg-gray-200 text-gray-700 uppercase">{{ extFromExisting(file) }}</span>
+                <span class="px-2 py-0.5 text-xs rounded bg-gray-200 text-gray-700">{{ file.file_size_formatted }}</span>
+              </div>
             </div>
           </div>
           <Button :label="t('actions.delete')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" @click="confirmDeleteExisting(file.id)" />
@@ -46,7 +49,10 @@
             <i :class="getFileIcon(file.type)" class="text-xl"></i>
             <div>
               <p class="font-medium text-sm">{{ file.name }}</p>
-              <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="px-2 py-0.5 text-xs rounded bg-gray-200 text-gray-700 uppercase">{{ extFromNew(file) }}</span>
+                <span class="px-2 py-0.5 text-xs rounded bg-gray-200 text-gray-700">{{ formatFileSize(file.size) }}</span>
+              </div>
             </div>
           </div>
           <Button :label="t('actions.delete')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" @click="confirmRemoveNew(index)" />
@@ -92,6 +98,18 @@ function removeNew(index) {
   const updated = [...props.modelValue];
   updated.splice(index, 1);
   emit('update:modelValue', updated);
+}
+
+function extFromExisting(file) {
+  const name = file?.file_name || '';
+  const ext = name.includes('.') ? name.split('.').pop() : '';
+  return ext || (file?.file_type?.split('/')?.pop() || '').toUpperCase();
+}
+
+function extFromNew(file) {
+  const name = file?.name || '';
+  const ext = name.includes('.') ? name.split('.').pop() : '';
+  return ext || (file?.type?.split('/')?.pop() || '').toUpperCase();
 }
 
 function confirmDeleteExisting(id) {

@@ -51,7 +51,7 @@
 
       <div class="flex justify-end gap-2">
         <Button type="button" :label="t('actions.back')" icon="pi pi-arrow-left" outlined @click="goBack" />
-        <Button type="submit" :label="t('actions.save')" icon="pi pi-check" :disabled="form.processing" />
+        <Button type="submit" :label="saveButtonLabel" icon="pi pi-check" :disabled="form.processing" />
       </div>
 
       <div v-if="form.progress" class="mt-3">
@@ -115,6 +115,10 @@ const rules = computed(() => ({
 }));
 const v$ = useVuelidate(rules, { code, description });
 const submitted = ref(false);
+const saveButtonLabel = computed(() => {
+  const p = form.progress?.percentage;
+  return typeof p === 'number' ? `${t('actions.saving')} ${p}%` : t('actions.save');
+});
 
 // ----- Ảnh file_path
 const existingImageUrl = computed(() => (form.file_path && typeof form.file_path === 'string' && !form.file_path.startsWith('data:image')) ? form.file_path : props.report.image_url || null);
