@@ -242,6 +242,16 @@ function dataURLtoBlob(dataurl) {
   return new Blob([u8], { type: mime });
 }
 
+function buildErrorMessage(errors) {
+  try {
+    if (!errors) return 'Có lỗi xảy ra khi tạo.';
+    const msgs = Object.values(errors).flat().filter(Boolean);
+    return msgs.length ? msgs.join(' | ') : 'Có lỗi xảy ra khi tạo.';
+  } catch (e) {
+    return 'Có lỗi xảy ra khi tạo.';
+  }
+}
+
 function goBack() { router.visit('/supplier_selection_reports'); }
 
 // ----- Save
@@ -278,12 +288,12 @@ async function save() {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
-          toast.add({ severity: 'success', summary: 'Thành công', detail: flashMessage.value || 'Tạo báo cáo thành công', life: 2500 });
+          toast.add({ severity: 'success', summary: 'Thành công', detail: 'Tạo báo cáo thành công', life: 2500 });
           router.visit('/supplier_selection_reports');
         },
         onError: (errors) => {
           console.group('[Create] server errors (multipart)'); console.log(errors); console.groupEnd();
-          const msg = errors?.code?.[0] || errors?.description?.[0] || errors?.file_path?.[0] || errors?.quotation_files?.[0] || flashMessage.value || 'Có lỗi xảy ra khi tạo.';
+          const msg = buildErrorMessage(errors);
           toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 4000 });
         },
       });
@@ -297,12 +307,12 @@ async function save() {
       .post('/supplier_selection_reports', {
         preserveScroll: true,
         onSuccess: () => {
-          toast.add({ severity: 'success', summary: 'Thành công', detail: flashMessage.value || 'Tạo báo cáo thành công', life: 2500 });
+          toast.add({ severity: 'success', summary: 'Thành công', detail: 'Tạo báo cáo thành công', life: 2500 });
           router.visit('/supplier_selection_reports');
         },
         onError: (errors) => {
           console.group('[Create] server errors (no multipart)'); console.log(errors); console.groupEnd();
-          const msg = errors?.code?.[0] || errors?.description?.[0] || flashMessage.value || 'Có lỗi xảy ra khi tạo.';
+          const msg = buildErrorMessage(errors);
           toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 4000 });
         },
       });

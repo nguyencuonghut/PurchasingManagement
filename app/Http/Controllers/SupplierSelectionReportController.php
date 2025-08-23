@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -54,6 +55,8 @@ class SupplierSelectionReportController extends Controller
                          ->where('manager_id', $user->id);
                   });
             });
+        } elseif ($user->role === 'Nhân viên Kiểm Soát') {
+            $query->whereIn('status', ['manager_approved','auditor_approved','pending_director_approval']);
         } elseif ($user->role === 'Giám đốc') {
             $query->where('director_id', $user->id);
         }
@@ -125,46 +128,65 @@ class SupplierSelectionReportController extends Controller
             $data = $request->validated();
             $data['creator_id'] = $request->user()->id;
 
-            // Xử lý file_path cho báo cáo
+            // Chuẩn bị biến theo dõi file đã upload để có thể dọn nếu lỗi
+            $uploadedMainPath = null;
+            $storedQuotationFiles = [];
+
+            // Xử lý file_path cho báo cáo (upload trước, lưu DB sau)
             if ($request->hasFile('file_path')) {
                 $data['file_path'] = $this->uploadFile($request->file('file_path'));
+                $uploadedMainPath = $data['file_path'];
             } elseif ($request->file_path instanceof \Illuminate\Http\UploadedFile) {
                 $data['file_path'] = $this->uploadFile($request->file_path);
+                $uploadedMainPath = $data['file_path'];
             } elseif (is_string($request->file_path) && str_starts_with($request->file_path, 'data:image')) {
                 $data['file_path'] = $this->saveBase64Image($request->file_path);
+                $uploadedMainPath = $data['file_path'];
             } else {
                 $data['file_path'] = null;
             }
 
-            // Tạo bản ghi mới
-            $report = SupplierSelectionReport::create($data);
-
-            // Xử lý file báo giá
+            // Chuẩn bị file báo giá (upload trước, lưu DB sau)
             if ($request->hasFile('quotation_files')) {
                 foreach ($request->file('quotation_files') as $file) {
+                    $storedQuotationFiles[] = [
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $this->uploadFile($file),
+                        'file_type' => $file->getClientMimeType(),
+                        'file_size' => $file->getSize(),
+                    ];
+                }
+            }
+
+            // Tạo bản ghi trong transaction
+            $report = null;
+            DB::transaction(function () use (&$report, $data, $storedQuotationFiles, $request) {
+                $report = SupplierSelectionReport::create($data);
+
+                foreach ($storedQuotationFiles as $qf) {
                     $quotationFile = new QuotationFile();
-                    $quotationFile->file_name = $file->getClientOriginalName();
-                    $quotationFile->file_path = $this->uploadFile($file);
-                    $quotationFile->file_type = $file->getClientMimeType();
-                    $quotationFile->file_size = $file->getSize();
+                    $quotationFile->file_name = $qf['file_name'];
+                    $quotationFile->file_path = $qf['file_path'];
+                    $quotationFile->file_type = $qf['file_type'];
+                    $quotationFile->file_size = $qf['file_size'];
                     $quotationFile->supplier_selection_report_id = $report->id;
                     $quotationFile->save();
                 }
-            }
 
-            // Nếu người tạo là Trưởng phòng Thu Mua
-            if ($request->user()->role === 'Trưởng phòng Thu Mua') {
-                $report->update([
-                    'status' => 'manager_approved',
-                    'manager_id' => $request->user()->id,
-                    'manager_approved_at' => now()
-                ]);
+                // Nếu người tạo là Trưởng phòng Thu Mua -> auto approve & notify
+                if ($request->user()->role === 'Trưởng phòng Thu Mua') {
+                    $report->update([
+                        'status' => 'manager_approved',
+                        'manager_id' => $request->user()->id,
+                        'manager_approved_at' => now()
+                    ]);
 
-                $auditors = User::where('role', 'Nhân viên Kiểm Soát')->get();
-                foreach ($auditors as $auditor) {
-                    Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorAudit($report));
+                    $auditors = User::where('role', 'Nhân viên Kiểm Soát')->get();
+                    foreach ($auditors as $auditor) {
+                        Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorAudit($report));
+                    }
                 }
-            }
+            });
 
             return redirect()->route('supplier_selection_reports.index')->with('flash', [
                 'type' => 'success',
@@ -176,6 +198,23 @@ class SupplierSelectionReportController extends Controller
                 'message' => 'Có lỗi xảy ra trong quá trình xác thực dữ liệu.',
             ]);
         } catch (\Exception $e) {
+            // Dọn file đã upload nếu transaction/DB fail
+            try {
+                if (!empty($uploadedMainPath) && Storage::disk('public')->exists($uploadedMainPath)) {
+                    Storage::disk('public')->delete($uploadedMainPath);
+                }
+                if (!empty($storedQuotationFiles)) {
+                    foreach ($storedQuotationFiles as $qf) {
+                        if (!empty($qf['file_path']) && Storage::disk('public')->exists($qf['file_path'])) {
+                            Storage::disk('public')->delete($qf['file_path']);
+                        }
+                    }
+                }
+            } catch (\Throwable $cleanupEx) {
+                // noop: log cleanup error if needed
+                Log::warning('Cleanup uploaded files failed: '.$cleanupEx->getMessage());
+            }
+
             Log::error("Lỗi khi tạo báo cáo: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->with('flash', [
                 'type' => 'error',
