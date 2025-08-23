@@ -225,7 +225,7 @@ class SupplierSelectionReportController extends Controller
     {
         $this->authorize('update', $supplierSelectionReport);
 
-        $report = $supplierSelectionReport->load('quotationFiles');
+        $report = $supplierSelectionReport->load(['quotationFiles','creator','manager','auditor','director']);
 
         return Inertia::render('SupplierSelectionReportEdit', [
             'report' => (new SupplierSelectionReportResource($report))->toArray(request()),
@@ -237,7 +237,7 @@ class SupplierSelectionReportController extends Controller
      */
     public function show(SupplierSelectionReport $supplierSelectionReport)
     {
-        $report = $supplierSelectionReport->load('quotationFiles');
+        $report = $supplierSelectionReport->load(['quotationFiles','creator','manager','auditor','director']);
 
         return Inertia::render('SupplierSelectionReportShow', [
             'report' => (new SupplierSelectionReportResource($report))->toArray(request()),

@@ -3,13 +3,13 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Enums\UserRoles;
 
 class ManagerApproveSupplierSelectionReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Có thể kiểm tra quyền ở đây nếu muốn
-        return true;
+        return $this->user() && $this->user()->role === UserRoles::PM_MANAGER;
     }
 
     public function rules(): array

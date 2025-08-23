@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Enums\UserRoles;
 
 class DirectorApproveSupplierSelectionReportRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class DirectorApproveSupplierSelectionReportRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user() && $this->user()->role === UserRoles::DIRECTOR;
     }
 
     public function rules(): array

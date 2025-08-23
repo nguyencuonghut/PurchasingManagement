@@ -49,6 +49,9 @@ class SupplierSelectionReportResource extends JsonResource
 
             'quotation_files_count' => $this->when(isset($this->quotation_files_count), $this->quotation_files_count, $this->quotationFiles()->count()),
             'formatted_created_at' => $this->created_at ? Carbon::parse($this->created_at)->format('d/m/Y H:i') : 'N/A',
+            'formatted_manager_approved_at' => $this->manager_approved_at ? Carbon::parse($this->manager_approved_at)->format('d/m/Y H:i') : '',
+            'formatted_auditor_audited_at' => $this->auditor_audited_at ? Carbon::parse($this->auditor_audited_at)->format('d/m/Y H:i') : '',
+            'formatted_director_approved_at' => $this->director_approved_at ? Carbon::parse($this->director_approved_at)->format('d/m/Y H:i') : '',
 
             'quotation_files' => QuotationFileResource::collection($this->whenLoaded('quotationFiles')),
         ];

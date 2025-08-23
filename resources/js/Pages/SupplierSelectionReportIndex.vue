@@ -17,7 +17,7 @@
             ref="dt"
             v-model:filters="filters"
             v-model:selection="selectedReports"
-            :value="reports"
+            :value="reports && reports.data ? reports.data : []"
             paginator
             :rows="10"
             dataKey="id"
@@ -100,6 +100,7 @@
             <Column :exportable="false" style="min-width: 15rem">
                 <template #body="slotProps">
                     <!-- Gửi duyệt tới Trưởng phòng -->
+                    <!-- Gửi duyệt tới Trưởng phòng -->
                     <Button
                         v-if="($page.props.auth.user.id === slotProps.data.creator_id) && (slotProps.data.status === 'draft' || slotProps.data.status === 'pending_manager_approval')"
                         icon="pi pi-send"
@@ -108,10 +109,8 @@
                         severity="warn"
                         @click="requestManagerToApprove(slotProps.data)"
                         class="mr-2"
-                        v-tooltip.top="'Gửi Trưởng phòng duyệt'"
                     />
 
-                    <!-- Gửi duyệt tới Giám đốc -->
                     <Button
                         v-if="$page.props.auth.user.role === 'Nhân viên Kiểm Soát' && (slotProps.data.status === 'auditor_approved' || slotProps.data.status === 'pending_director_approval')"
                         icon="pi pi-send"
@@ -120,7 +119,6 @@
                         severity="info"
                         @click="requestDirectorToApprove(slotProps.data)"
                         class="mr-2"
-                        v-tooltip.top="'Gửi Giám đốc duyệt'"
                     />
 
                     <!-- Sửa: điều hướng sang trang edit -->
@@ -219,15 +217,7 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Tag from 'primevue/tag';
 import Select from 'primevue/select';
-
-// FE roles mapping to avoid magic strings
-const Roles = {
-    ADMIN: 'Quản trị',
-    PURCHASER: 'Nhân viên Thu Mua',
-    PM_MANAGER: 'Trưởng phòng Thu Mua',
-    AUDITOR: 'Nhân viên Kiểm Soát',
-    DIRECTOR: 'Giám đốc',
-};
+import { Roles, Statuses, getStatusSeverity as statusSeverity } from '@/utils/constants';
 
 const toast = useToast();
 const dt = ref();
@@ -236,34 +226,15 @@ const message = computed(() => page.props.auth.flash.message);
 
 defineProps({
     errors: { type: Object },
-    reports: Object,
+    reports: { type: Object, default: () => ({ data: [] }) },
     can: Object,
     managers: Array,
     directors: Array,
 });
 
-const statuses = ref([
-    'draft',
-    'pending_manager_approval',
-    'manager_approved',
-    'auditor_approved',
-    'pending_director_approval',
-    'director_approved',
-    'rejected'
-]);
+const statuses = ref(Statuses);
 
-const getStatusSeverity = (status) => {
-    switch (status) {
-        case 'draft': return 'secondary';
-        case 'pending_manager_approval': return 'warn';
-        case 'manager_approved':
-        case 'auditor_approved': return 'info';
-        case 'pending_director_approval': return 'warn';
-        case 'director_approved': return 'success';
-        case 'rejected': return 'danger';
-        default: return 'info';
-    }
-};
+const getStatusSeverity = (status) => statusSeverity(status);
 
 const formatDateTime = (dateString) => {
     if (!dateString) return 'N/A';

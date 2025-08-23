@@ -25,6 +25,6 @@ class SupplierSelectionReportNeedDirectorApproval extends Notification implement
         return (new MailMessage)
             ->subject('Yêu cầu Giám đốc duyệt phiếu BCLCNCC')
             ->line('Có một phiếu BCLCNCC đã được kiểm tra và cần Giám đốc duyệt: ' . $this->report->code)
-            ->action('Xem chi tiết', url('/supplier_selection_reports/' . $this->report->id));
+            ->action('Xem chi tiết', route('supplier_selection_reports.show', $this->report->id));
     }
 }

@@ -20,12 +20,12 @@
             </div>
             <div class="flex gap-4">
               <div style="width: 50%"><b>Trạng thái:</b> <Tag :value="report.status" :severity="getStatusSeverity(report.status)" /></div>
-              <div style="width: 50%" class="ml-6"><b>Người tạo:</b> {{ report.creator_name }} ({{ formatDate(report.created_at) }})</div>
+              <div style="width: 50%" class="ml-6"><b>Người tạo:</b> {{ report.creator_name }} ({{ report.formatted_created_at }})</div>
             </div>
             <div v-if="'pending' !== report.manager_approved_result" class="mt-2"><b>Trưởng phòng Thu Mua:</b>
               <div class="flex ml-6 gap-4">
                 <div style="width: 50%"><b>Người duyệt: </b>{{ report.manager_name }}</div>
-                <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.manager_approved_at) }}</div>
+                <div style="width: 50%"><b>Thời gian: </b>{{ report.formatted_manager_approved_at }}</div>
               </div>
               <div class="flex ml-6 gap-4">
                 <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.manager_approved_result" :severity="getResultsSeverity(report.manager_approved_result)" /></div>
@@ -35,7 +35,7 @@
             <div v-if="'pending' !== report.auditor_audited_result" class="mt-2"><b>Nhân viên Kiểm Soát:</b>
               <div class="flex ml-6 gap-4">
                 <div style="width: 50%"><b>Người duyệt: </b>{{ report.auditor_name }}</div>
-                <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.auditor_audited_at) }}</div>
+                <div style="width: 50%"><b>Thời gian: </b>{{ report.formatted_auditor_audited_at }}</div>
               </div>
               <div class="flex ml-6 gap-4">
                 <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.auditor_audited_result" :severity="getResultsSeverity(report.auditor_audited_result)" /></div>
@@ -45,7 +45,7 @@
             <div v-if="'pending' !== report.director_approved_result" class="mt-2"><b>Giám đốc:</b>
               <div class="flex ml-6 gap-4">
                 <div style="width: 50%"><b>Người duyệt: </b>{{ report.director_name }}</div>
-                <div style="width: 50%"><b>Thời gian: </b>{{ formatDate(report.director_approved_at) }}</div>
+                <div style="width: 50%"><b>Thời gian: </b>{{ report.formatted_director_approved_at }}</div>
               </div>
               <div class="flex ml-6 gap-4">
                 <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.director_approved_result" :severity="getResultsSeverity(report.director_approved_result)" /></div>
@@ -96,7 +96,7 @@
 
         <TabPanel value="1">
           <div class="p-4">
-            <DataTable ref="dtQuotation" v-model:filters="filtersQuotation" :value="report.quotation_files" paginator :rows="10" dataKey="id" filterDisplay="menu"
+            <DataTable ref="dtQuotation" v-model:filters="filtersQuotation" :value="report.quotation_files && report.quotation_files.data ? report.quotation_files.data : []" paginator :rows="10" dataKey="id" filterDisplay="menu"
                 :globalFilterFields="['file_name']">
               <template #header>
                 <div class="flex justify-between">
@@ -363,18 +363,6 @@ const getResultsSeverity = (result) => {
     }
 };
 
-const formatDate = (dateString) => {
-    if (!dateString) return '';
-
-    const date = new Date(dateString);
-    const day = date.getUTCDate().toString().padStart(2, '0');
-    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-    const year = date.getUTCFullYear();
-    const hours = date.getUTCHours().toString().padStart(2, '0');
-    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-};
 
 const getStatusSeverity = (status) => {
     switch (status) {

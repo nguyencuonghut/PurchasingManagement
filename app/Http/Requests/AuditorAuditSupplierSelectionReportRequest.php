@@ -3,13 +3,13 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Enums\UserRoles;
 
 class AuditorAuditSupplierSelectionReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Có thể kiểm tra quyền ở đây nếu muốn
-        return true;
+        return $this->user() && $this->user()->role === UserRoles::AUDITOR;
     }
 
     public function rules(): array
