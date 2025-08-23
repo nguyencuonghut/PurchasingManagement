@@ -156,7 +156,14 @@ function pickServerError(errors, fallback) {
 
 
 // ----- Quotation files
-const existingQuotationFiles = ref(props.report.quotation_files || []);
+function normalizeFiles(input) {
+  if (Array.isArray(input)) return input;
+  if (input && Array.isArray(input.data)) return input.data;
+  return [];
+}
+const existingQuotationFiles = ref(
+  normalizeFiles(props.report.quotation_files) || normalizeFiles(props.report.quotationFiles)
+);
 const uploadedQuotationFiles = ref([]);
 watch(uploadedQuotationFiles, (val) => {
   form.quotation_files = Array.isArray(val) ? [...val] : [];

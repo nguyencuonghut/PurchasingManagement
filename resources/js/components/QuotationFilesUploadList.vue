@@ -32,7 +32,7 @@
               <p class="text-xs text-gray-500">{{ file.file_size_formatted }}</p>
             </div>
           </div>
-          <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" @click="$emit('delete-existing', file.id)" />
+          <Button :label="t('actions.delete')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" @click="$emit('delete-existing', file.id)" />
         </div>
       </div>
     </div>
@@ -49,7 +49,7 @@
               <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
             </div>
           </div>
-          <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm" @click="removeNew(index)" />
+          <Button :label="t('actions.delete')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" @click="removeNew(index)" />
         </div>
       </div>
     </div>

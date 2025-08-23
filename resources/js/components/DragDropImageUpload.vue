@@ -28,7 +28,7 @@
       <span class="font-medium">{{ t('image_meta.current') }}</span>
       <span v-if="currentFile && currentFile.size" class="text-color-secondary">{{ (currentFile.size / 1024).toFixed(2) }} KB ({{ currentFile.name }})</span>
       <span v-else-if="!currentFile && (existingImageUrl && !removed)">{{ t('image_meta.using_saved') }}</span>
-      <Button :label="t('actions.delete_image')" icon="pi pi-times" class="p-button-danger p-button-text p-button-sm ml-auto" @click="onRemove" />
+      <Button :label="t('actions.delete')" icon="pi pi-trash" class="p-button-danger p-button-text p-button-sm ml-auto" @click="onRemove" />
     </div>
   </div>
 </template>

@@ -47,6 +47,7 @@ const vi = {
   },
   actions: {
     delete_image: 'Xóa ảnh',
+    delete: 'Xóa',
     back: 'Quay lại',
     save: 'Lưu',
   },
