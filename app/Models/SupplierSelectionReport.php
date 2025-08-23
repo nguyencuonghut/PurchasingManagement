@@ -36,7 +36,7 @@ class SupplierSelectionReport extends Model
             return $this->file_path;
         }
         // Nếu file_path là đường dẫn tới file đã lưu trên server
-        if ($this->file_path && Storage::disk('public')->exists($this->file_path)) {
+        if ($this->file_path) {
             return Storage::url($this->file_path);
         }
         return null; // Không có file hoặc file không tồn tại
@@ -89,6 +89,11 @@ class SupplierSelectionReport extends Model
 
     public function getQuotationFilesCountAttribute()
     {
+        // Ưu tiên dùng giá trị đã được withCount() nạp sẵn nếu có
+        if (array_key_exists('quotation_files_count', $this->attributes)) {
+            return $this->attributes['quotation_files_count'];
+        }
+        // Fallback: đếm trực tiếp (có thể gây N+1 nếu gọi theo danh sách)
         return $this->quotationFiles()->count();
     }
 }

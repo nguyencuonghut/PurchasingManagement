@@ -40,7 +40,8 @@ class SupplierSelectionReportController extends Controller
         // Lấy quyền của người dùng hiện tại
         $user = $request->user();
 
-        $query = SupplierSelectionReport::with(['quotationFiles', 'creator'])
+        $query = SupplierSelectionReport::with(['creator'])
+            ->withCount('quotationFiles')
             ->orderBy('id', 'desc');
 
         if ($user->role === 'Nhân viên Thu Mua') {
