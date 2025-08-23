@@ -35,11 +35,10 @@ class SupplierSelectionReportApprovedByManager extends Notification implements S
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $url = '/supplier_selection_reports/' . $this->report->id;
         return (new MailMessage)
-                    ->subject('Quản lý phòng Thu Mua đã duyệt báo cáo cáo lựa chọn nhà cung cấp số: ' . $this->report->code)
-                    ->line('Báo cáo lựa chọn nhà cung cấp số:' . $this->report->code . ' đã được phê duyệt bởi quản lý phòng Thu Mua.')
-                    ->action('Chi tiết', url($url))
+                    ->subject('Quản lý phòng Thu Mua đã duyệt báo cáo lựa chọn nhà cung cấp số: ' . $this->report->code)
+                    ->line('Báo cáo lựa chọn nhà cung cấp số: ' . $this->report->code . ' đã được phê duyệt bởi quản lý phòng Thu Mua.')
+                    ->action('Chi tiết', route('supplier_selection_reports.show', $this->report->id))
                     ->line('Xin cảm ơn!');
     }
 

@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\SupplierSelectionReport;
 use App\Models\User;
+use App\Enums\UserRoles;
 use Illuminate\Auth\Access\Response;
 
 class SupplierSelectionReportPolicy
@@ -29,7 +30,7 @@ class SupplierSelectionReportPolicy
      */
     public function create(User $user): bool
     {
-        return 'Quản trị' == $user->role || 'Trưởng phòng Thu Mua' == $user->role || 'Nhân viên Thu Mua' == $user->role;
+        return UserRoles::ADMIN === $user->role || UserRoles::PM_MANAGER === $user->role || UserRoles::PURCHASER === $user->role;
     }
 
     /**
@@ -37,7 +38,7 @@ class SupplierSelectionReportPolicy
      */
     public function update(User $user, SupplierSelectionReport $supplierSelectionReport): bool
     {
-        return 'Quản trị' == $user->role || $user->id === $supplierSelectionReport->creator_id;
+        return UserRoles::ADMIN === $user->role || $user->id === $supplierSelectionReport->creator_id;
     }
 
     /**
@@ -45,7 +46,7 @@ class SupplierSelectionReportPolicy
      */
     public function delete(User $user, SupplierSelectionReport $supplierSelectionReport): bool
     {
-        return 'Quản trị' == $user->role || $user->id === $supplierSelectionReport->creator_id;
+        return UserRoles::ADMIN === $user->role || $user->id === $supplierSelectionReport->creator_id;
     }
 
     /**
