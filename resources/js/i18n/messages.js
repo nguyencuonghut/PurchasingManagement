@@ -19,6 +19,9 @@ const vi = {
     success: 'Cập nhật thành công',
     error_generic: 'Có lỗi xảy ra khi cập nhật.',
   },
+  validation: {
+    image_required: 'Vui lòng đính kèm ảnh báo cáo trước khi lưu.',
+  },
 };
 
 export function t(key) {

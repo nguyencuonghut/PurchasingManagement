@@ -335,7 +335,7 @@ async function save() {
 
   // ❗ Nếu user xóa ảnh mà KHÔNG đính kèm ảnh mới -> chặn tại FE
   if (wantRemoveImage && !isNewImageFile) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: 'Vui lòng đính kèm ảnh báo cáo trước khi lưu.', life: 3500 });
+    toast.add({ severity: 'error', summary: t('common.error'), detail: t('validation.image_required'), life: 3500 });
     return;
   }
 

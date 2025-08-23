@@ -411,7 +411,7 @@ class SupplierSelectionReportController extends Controller
 
     public function requestManagerToApprove(Request $request, SupplierSelectionReport $supplierSelectionReport)
     {
-        if ($supplierSelectionReport->creator_id !== auth()->id()) {
+        if ($supplierSelectionReport->creator_id !== Auth::id()) {
             return redirect()->back()->withErrors('Bạn không có quyền!');
         }
 
