@@ -37,9 +37,9 @@ class SupplierSelectionReportRejectedByAuditor extends Notification implements S
     {
         $url = '/supplier_selection_reports/' . $this->report->id;
         return (new MailMessage)
-                    ->subject('Kiểm Soát Nội Bộ đã từ chối duyệt báo cáo cáo lựa chọn nhà cung cấp số: ' . $this->report->code)
-                    ->line('Báo cáo lựa chọn nhà cung cấp số:' . $this->report->code . ' đã bị từ chối bởi Kiểm Soát Nội Bộ.')
-                    ->line('Lý do từ chối: ' . $this->report->reviewer_notes)
+                    ->subject('Kiểm Soát Nội Bộ đã từ chối duyệt báo cáo lựa chọn nhà cung cấp số: ' . $this->report->code)
+                    ->line('Báo cáo lựa chọn nhà cung cấp số: ' . $this->report->code . ' đã bị từ chối bởi Kiểm Soát Nội Bộ.')
+                    ->line('Lý do từ chối: ' . ($this->report->auditor_audited_notes ?? 'Không có lý do cụ thể'))
                     ->action('Chi tiết', url($url))
                     ->line('Xin cảm ơn!');
     }
