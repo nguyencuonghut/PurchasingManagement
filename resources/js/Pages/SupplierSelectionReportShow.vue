@@ -8,6 +8,7 @@
       <TabList>
         <Tab value="0">Chi tiết</Tab>
         <Tab value="1">Báo giá</Tab>
+        <Tab value="2">Nhật ký</Tab>
       </TabList>
       <TabPanels>
         <TabPanel value="0">
@@ -131,6 +132,33 @@
             </DataTable>
           </div>
         </TabPanel>
+
+        <TabPanel value="2">
+          <div class="p-4">
+            <DataTable :value="activityLogs" paginator :rows="10" dataKey="id">
+              <template #empty> Chưa có nhật ký nào. </template>
+              <Column field="created_at" header="Thời gian" sortable style="min-width: 12rem" />
+              <Column field="action" header="Hành động" sortable style="min-width: 12rem">
+                <template #body="{ data }">{{ formatAction(data.action) }}</template>
+              </Column>
+              <Column field="user" header="Người thực hiện" style="min-width: 12rem" />
+              <Column field="user_role" header="Vai trò" style="min-width: 10rem" />
+              <Column header="Chi tiết" style="min-width: 16rem">
+                <template #body="{ data }">
+                  <div v-if="data.properties && data.properties.notes"><b>Ghi chú:</b> {{ data.properties.notes }}</div>
+                  <div v-else-if="data.properties && data.properties.changed">
+                    <b>Thay đổi:</b>
+                    <ul class="list-disc ml-4">
+                      <li v-for="(v, k) in data.properties.changed" :key="k">{{ k }}</li>
+                    </ul>
+                  </div>
+                  <div v-else-if="data.properties">{{ JSON.stringify(data.properties) }}</div>
+                  <div v-else>-</div>
+                </template>
+              </Column>
+            </DataTable>
+          </div>
+        </TabPanel>
       </TabPanels>
     </Tabs>
   </div>
@@ -217,6 +245,23 @@ const clearQuotationFilter = () => {
     file_name: { value: null, matchMode: FilterMatchMode.CONTAINS },
   };
 };
+
+const formatAction = (action) => {
+  switch (action) {
+    case 'created': return 'Tạo mới';
+    case 'updated': return 'Cập nhật';
+    case 'deleted': return 'Xóa';
+    case 'submitted_to_manager': return 'Gửi duyệt Trưởng phòng';
+    case 'manager_approved': return 'Trưởng phòng duyệt';
+    case 'manager_rejected': return 'Trưởng phòng từ chối';
+    case 'auditor_approved': return 'Kiểm Soát duyệt';
+    case 'auditor_rejected': return 'Kiểm Soát từ chối';
+    case 'submitted_to_director': return 'Gửi duyệt Giám đốc';
+    case 'director_approved': return 'Giám đốc duyệt';
+    case 'director_rejected': return 'Giám đốc từ chối';
+    default: return action;
+  }
+};
 import Dialog from 'primevue/dialog';
 import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
@@ -251,6 +296,7 @@ import { useToast } from 'primevue/usetoast';
 const page = usePage();
 const toast = useToast();
 const report = computed(() => page.props.report);
+const activityLogs = computed(() => page.props.activity_logs ?? []);
 const user = computed(() => page.props.auth.user);
 const canAudit = computed(() => user.value.role === 'Nhân viên Kiểm Soát');
 const canManagerApprove = computed(() => user.value.role === 'Trưởng phòng Thu Mua');

@@ -31,6 +31,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use App\Http\Resources\SupplierSelectionReportResource;
+use App\Services\ActivityLogger;
 
 class SupplierSelectionReportController extends Controller
 {
@@ -183,6 +184,14 @@ class SupplierSelectionReportController extends Controller
                 }
             });
 
+            // Log activity: created (guard null)
+            if ($report) {
+                ActivityLogger::log($request, 'created', $report, [
+                    'code' => $report->code,
+                    'id' => $report->id,
+                ]);
+            }
+
             return redirect()->route('supplier_selection_reports.index')->with('flash', [
                 'type' => 'success',
                 'message' => 'Báo cáo đã được tạo thành công!',
@@ -239,8 +248,26 @@ class SupplierSelectionReportController extends Controller
     {
         $report = $supplierSelectionReport->load(['quotationFiles','creator','manager','auditor','director']);
 
+        // Gather activity logs for this report
+        $logs = \App\Models\ActivityLog::with('user')
+            ->where('subject_type', SupplierSelectionReport::class)
+            ->where('subject_id', $supplierSelectionReport->id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'action' => $log->action,
+                    'user' => $log->user?->name,
+                    'user_role' => $log->user?->role,
+                    'properties' => $log->properties,
+                    'created_at' => $log->created_at?->toDateTimeString(),
+                ];
+            });
+
         return Inertia::render('SupplierSelectionReportShow', [
             'report' => (new SupplierSelectionReportResource($report))->toArray(request()),
+            'activity_logs' => $logs,
         ]);
     }
 
@@ -364,7 +391,18 @@ class SupplierSelectionReportController extends Controller
         }
 
         // ---- 5) Lưu các field text + file_path (nếu có trong $data)
-        $supplierSelectionReport->fill($data)->save();
+        // Chuẩn bị thông tin thay đổi để log
+        $original = $supplierSelectionReport->getOriginal();
+        $supplierSelectionReport->fill($data);
+        $dirty = $supplierSelectionReport->getDirty();
+        $supplierSelectionReport->save();
+
+        // Log activity: updated (nếu có thay đổi)
+        if (!empty($dirty)) {
+            ActivityLogger::log($request, 'updated', $supplierSelectionReport, [
+                'changed' => $dirty,
+            ]);
+        }
 
         return redirect()->back()->with('flash', [
             'type' => 'success',
@@ -394,7 +432,16 @@ class SupplierSelectionReportController extends Controller
                 Storage::disk('public')->delete($supplierSelectionReport->file_path);
             }
 
+            $id = $supplierSelectionReport->id;
+            $code = $supplierSelectionReport->code;
             $supplierSelectionReport->delete();
+
+            // Log activity: deleted
+            ActivityLogger::log(request(), 'deleted', null, [
+                'id' => $id,
+                'code' => $code,
+                'subject_type' => SupplierSelectionReport::class,
+            ]);
 
             return redirect()->back()->with('flash', [
                 'type' => 'success',
@@ -436,6 +483,11 @@ class SupplierSelectionReportController extends Controller
             'manager_id' => $manager->id,
         ]);
 
+        ActivityLogger::log($request, 'submitted_to_manager', $supplierSelectionReport, [
+            'manager_id' => $manager->id,
+            'manager_name' => $manager->name,
+        ]);
+
         Notification::route('mail', $manager->email)->notify(new SupplierSelectionReportCreated($supplierSelectionReport));
 
         return redirect()->route('supplier_selection_reports.index')
@@ -464,8 +516,14 @@ class SupplierSelectionReportController extends Controller
 
         if ('approved' == $validated['manager_approved_result']) {
             $supplierSelectionReport->status = ReportStatus::MANAGER_APPROVED;
+            ActivityLogger::log($request, 'manager_approved', $supplierSelectionReport, [
+                'notes' => $supplierSelectionReport->manager_approved_notes,
+            ]);
         } else {
             $supplierSelectionReport->status = ReportStatus::REJECTED;
+            ActivityLogger::log($request, 'manager_rejected', $supplierSelectionReport, [
+                'notes' => $supplierSelectionReport->manager_approved_notes,
+            ]);
         }
 
         $supplierSelectionReport->manager_id = Auth::id();
@@ -509,8 +567,14 @@ class SupplierSelectionReportController extends Controller
 
         if ($validated['auditor_audited_result'] === 'approved') {
             $supplierSelectionReport->status = ReportStatus::AUDITOR_APPROVED;
+            ActivityLogger::log($request, 'auditor_approved', $supplierSelectionReport, [
+                'notes' => $supplierSelectionReport->auditor_audited_notes,
+            ]);
         } else {
             $supplierSelectionReport->status = ReportStatus::REJECTED;
+            ActivityLogger::log($request, 'auditor_rejected', $supplierSelectionReport, [
+                'notes' => $supplierSelectionReport->auditor_audited_notes,
+            ]);
         }
 
         $supplierSelectionReport->auditor_audited_at = now();
@@ -558,6 +622,11 @@ class SupplierSelectionReportController extends Controller
             'director_id' => $director->id,
         ]);
 
+        ActivityLogger::log($request, 'submitted_to_director', $supplierSelectionReport, [
+            'director_id' => $director->id,
+            'director_name' => $director->name,
+        ]);
+
         Notification::route('mail', $director->email)->notify(new SupplierSelectionReportNeedDirectorApproval($supplierSelectionReport));
 
         return redirect()->route('supplier_selection_reports.index')
@@ -588,8 +657,14 @@ class SupplierSelectionReportController extends Controller
 
         if ($validated['director_approved_result'] === 'approved') {
             $supplierSelectionReport->status = ReportStatus::DIRECTOR_APPROVED;
+            ActivityLogger::log($request, 'director_approved', $supplierSelectionReport, [
+                'notes' => $supplierSelectionReport->director_approved_notes,
+            ]);
         } else {
             $supplierSelectionReport->status = ReportStatus::REJECTED;
+            ActivityLogger::log($request, 'director_rejected', $supplierSelectionReport, [
+                'notes' => $supplierSelectionReport->director_approved_notes,
+            ]);
         }
 
         $supplierSelectionReport->save();
