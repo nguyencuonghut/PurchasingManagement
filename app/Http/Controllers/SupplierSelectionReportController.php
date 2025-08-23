@@ -251,6 +251,13 @@ class SupplierSelectionReportController extends Controller
     {
         $this->authorize('update', $supplierSelectionReport);
 
+        // Nếu người dùng upload ảnh mới, kiểm tra kích thước <= 10MB
+        if ($request->hasFile('file_path')) {
+            $request->validate([
+                'file_path' => ['image', 'max:10240'], // 10MB
+            ]);
+        }
+
         // Lấy field text chuẩn
         $data = $request->safe()->only(['code', 'description']);
 

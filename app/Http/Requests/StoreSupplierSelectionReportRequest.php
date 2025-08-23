@@ -26,8 +26,8 @@ class StoreSupplierSelectionReportRequest extends FormRequest
             'code' => ['required', 'string', 'max:255', Rule::unique('supplier_selection_reports')],
             'description' => ['required', 'string', 'max:1000'],
 
-            // Cho phép gửi ảnh dạng multipart (file) hoặc không gửi
-            'file_path' => ['nullable', 'file', 'image', 'max:20480'],
+            // Cho phép gửi ảnh dạng multipart (file) hoặc không gửi (giới hạn 10MB)
+            'file_path' => ['nullable', 'file', 'image', 'max:10240'],
 
             // File báo giá có thể nhiều file
             'quotation_files' => ['sometimes','array'],
@@ -50,7 +50,7 @@ class StoreSupplierSelectionReportRequest extends FormRequest
             'description.max' => 'Mô tả không được vượt quá 1000 ký tự.',
 
             'file_path.image' => 'Ảnh báo cáo phải là một file ảnh hợp lệ.',
-            'file_path.max' => 'Ảnh báo cáo không được vượt quá 20MB.',
+            'file_path.max' => 'Ảnh báo cáo không được vượt quá 10MB.',
 
             'quotation_files.array' => 'Danh sách file báo giá phải là một m��ng.',
             'quotation_files.*.file' => 'Mỗi file báo giá phải là một file hợp lệ.',

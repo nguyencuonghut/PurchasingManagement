@@ -138,6 +138,7 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
 import { getFileIcon, formatFileSize, isAllowedMimeOrExt, fileFromPasteEvent, fileFromDropEvent, objectUrl } from '@/utils/file';
+import { t } from '@/i18n/messages';
 
 
 const props = defineProps({
@@ -237,15 +238,15 @@ function handlePaste(e) {
   showPlaceholder.value = false;
   const file = fileFromPasteEvent(e);
   if (!file) {
-    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không có ảnh nào được dán.', life: 2500 });
+    toast.add({ severity: 'warn', summary: t('common.warn'), detail: t('paste.no_image'), life: 2500 });
     return;
   }
   if (!file.type || !file.type.startsWith('image/')) {
-    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ chấp nhận file ảnh.', life: 2500 });
+    toast.add({ severity: 'warn', summary: t('common.warn'), detail: t('image.only_accept'), life: 2500 });
     return;
   }
   if (file.size > MAX_IMAGE_SIZE) {
-    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Ảnh vượt quá dung lượng tối đa 10MB.', life: 3000 });
+    toast.add({ severity: 'warn', summary: t('common.warn'), detail: t('image.too_large_10mb'), life: 3000 });
     return;
   }
   imageFile.value = file;
@@ -257,11 +258,11 @@ function handlePaste(e) {
 function handleDrop(e) {
   const file = fileFromDropEvent(e);
   if (!file || !file.type || !file.type.startsWith('image/')) {
-    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ chấp nhận file ảnh.', life: 2500 });
+    toast.add({ severity: 'warn', summary: t('common.warn'), detail: t('image.only_accept'), life: 2500 });
     return;
   }
   if (file.size > MAX_IMAGE_SIZE) {
-    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Ảnh vượt quá dung lượng tối đa 10MB.', life: 3000 });
+    toast.add({ severity: 'warn', summary: t('common.warn'), detail: t('image.too_large_10mb'), life: 3000 });
     return;
   }
   imageFile.value = file;
@@ -300,7 +301,7 @@ function handleQuotationFilesSelect(e) {
 }
 function addQuotationFiles(files) {
   const valid = files.filter((f) => isAllowedMimeOrExt(f) && (f.size || 0) <= MAX_DOC_SIZE);
-  if (valid.length !== files.length) toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Một số file không được hỗ trợ và đã bị bỏ qua.', life: 2500 });
+  if (valid.length !== files.length) toast.add({ severity: 'warn', summary: t('common.warn'), detail: t('files.some_invalid'), life: 2500 });
   uploadedQuotationFiles.value.push(...valid);
   form.quotation_files = [...uploadedQuotationFiles.value];
 }
@@ -334,12 +335,7 @@ async function save() {
 
   // ❗ Nếu user xóa ảnh mà KHÔNG đính kèm ảnh mới -> chặn tại FE
   if (wantRemoveImage && !isNewImageFile) {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Vui lòng đính kèm ảnh báo cáo trước khi lưu.',
-      life: 3500,
-    });
+    toast.add({ severity: 'error', summary: t('common.error'), detail: 'Vui lòng đính kèm ảnh báo cáo trước khi lưu.', life: 3500 });
     return;
   }
 
@@ -379,12 +375,12 @@ async function save() {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
-          toast.add({ severity: 'success', summary: 'Thành công', detail: flashMessage.value || 'Cập nhật thành công', life: 2500 });
-          router.visit(`/supplier_selection_reports/${props.report.id}`);
+          toast.add({ severity: 'success', summary: t('common.success'), detail: flashMessage.value || t('update.success'), life: 2500 });
+          router.visit('/supplier_selection_reports');
         },
         onError: (errors) => {
           console.group('[Save] server errors (multipart)'); console.log(errors); console.groupEnd();
-          toast.add({ severity: 'error', summary: 'Lỗi', detail: pickServerError(errors, flashMessage.value), life: 4000 });
+          toast.add({ severity: 'error', summary: t('common.error'), detail: pickServerError(errors, flashMessage.value) || t('update.error_generic'), life: 4000 });
         },
       });
   } else {
@@ -402,12 +398,12 @@ async function save() {
       .put(`/supplier_selection_reports/${props.report.id}`, {
         preserveScroll: true,
         onSuccess: () => {
-          toast.add({ severity: 'success', summary: 'Thành công', detail: flashMessage.value || 'Cập nhật thành công', life: 2500 });
-          router.visit(`/supplier_selection_reports/${props.report.id}`);
+          toast.add({ severity: 'success', summary: t('common.success'), detail: flashMessage.value || t('update.success'), life: 2500 });
+          router.visit('/supplier_selection_reports');
         },
         onError: (errors) => {
           console.group('[Save] server errors (no multipart)'); console.log(errors); console.groupEnd();
-          toast.add({ severity: 'error', summary: 'Lỗi', detail: pickServerError(errors, flashMessage.value), life: 4000 });
+          toast.add({ severity: 'error', summary: t('common.error'), detail: pickServerError(errors, flashMessage.value) || t('update.error_generic'), life: 4000 });
         },
       });
   }
