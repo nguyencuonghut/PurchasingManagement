@@ -26,12 +26,21 @@ class StoreSupplierSelectionReportRequest extends FormRequest
             'code' => ['required', 'string', 'max:255', Rule::unique('supplier_selection_reports')],
             'description' => ['required', 'string', 'max:1000'],
 
-            // Cho phép gửi ảnh dạng multipart (file) hoặc không gửi (giới hạn 10MB)
-            'file_path' => ['nullable', 'file', 'image', 'max:10240'],
+            // Ảnh: theo cấu hình uploads.image (mimes + max KB)
+            'file_path' => [
+                'nullable',
+                'file',
+                'mimes:' . implode(',', config('uploads.image.mimes', ['jpeg','jpg','png'])),
+                'max:' . (int) config('uploads.image.max_kb', 10240),
+            ],
 
-            // File báo giá có thể nhiều file
+            // File báo giá có thể nhiều file (theo cấu hình uploads.quotation)
             'quotation_files' => ['sometimes','array'],
-            'quotation_files.*' => ['file','mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png','max:20480'],
+            'quotation_files.*' => [
+                'file',
+                'mimes:' . implode(',', config('uploads.quotation.mimes', ['pdf','doc','docx','xls','xlsx','jpg','jpeg','png'])),
+                'max:' . (int) config('uploads.quotation.max_kb', 20480),
+            ],
         ];
     }
 

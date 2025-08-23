@@ -14,6 +14,7 @@ const vi = {
   },
   files: {
     some_invalid: 'Một số file không được hỗ trợ và đã bị bỏ qua.',
+    too_large_20mb: 'File vượt quá dung lượng tối đa 20MB.',
   },
   update: {
     success: 'Cập nhật thành công',

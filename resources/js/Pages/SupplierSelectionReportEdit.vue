@@ -44,6 +44,7 @@
           :max-size="MAX_DOC_SIZE"
           @delete-existing="markQuotationFileDeleted"
           @invalid-files="onInvalidQuotationFiles"
+          @oversize-files="onOversizeQuotationFiles"
         />
 
         <small v-if="submitted && form.errors.quotation_files" class="text-red-500">{{ form.errors.quotation_files }}</small>
@@ -179,6 +180,10 @@ function markQuotationFileDeleted(id) {
 
 function onInvalidQuotationFiles() {
   toast.add({ severity: 'warn', summary: t('common.warn'), detail: t('files.some_invalid'), life: 2500 });
+}
+
+function onOversizeQuotationFiles() {
+  toast.add({ severity: 'warn', summary: t('common.warn'), detail: t('files.too_large_20mb'), life: 3000 });
 }
 
 // getFileIcon, formatFileSize được import từ '@/utils/file'

@@ -38,12 +38,12 @@ import { ref, watch, onUnmounted } from 'vue';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
 import { t } from '@/i18n/messages';
-import { fileFromPasteEvent, fileFromDropEvent, objectUrl } from '@/utils/file';
+import { fileFromPasteEvent, fileFromDropEvent, objectUrl, ALLOWED_IMAGE_MIME_SET, MAX_IMAGE_BYTES } from '@/utils/file';
 
 const props = defineProps({
   modelValue: { type: [File, String, Object, null], default: null },
   existingImageUrl: { type: [String, null], default: null },
-  maxSize: { type: Number, default: 10 * 1024 * 1024 },
+  maxSize: { type: Number, default: MAX_IMAGE_BYTES },
   placeholderText: { type: String, default: '' },
   removed: { type: Boolean, default: false },
 });
@@ -96,7 +96,7 @@ function handleBlur() {
 }
 
 function acceptImageFile(file) {
-  if (!file || !file.type || !file.type.startsWith('image/')) {
+  if (!file || !file.type || !ALLOWED_IMAGE_MIME_SET.has(file.type)) {
     toast.add({ severity: 'warn', summary: t('common.warn'), detail: t('image.only_accept'), life: 2500 });
     return false;
   }

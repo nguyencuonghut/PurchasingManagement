@@ -24,8 +24,8 @@ export function formatFileSize(bytes) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
-// Check allowed by MIME type or extension
-const allowedMimes = new Set([
+// FE constants to mirror BE config/uploads.php
+export const ALLOWED_QUOTATION_MIME_SET = new Set([
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -35,13 +35,20 @@ const allowedMimes = new Set([
   'image/jpg',
   'image/png',
 ]);
-const allowedExts = new Set(['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png']);
+export const ALLOWED_QUOTATION_EXTS = new Set(['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png']);
+export const ALLOWED_IMAGE_MIME_SET = new Set(['image/jpeg', 'image/jpg', 'image/png']);
+export const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB
+export const MAX_QUOTATION_BYTES = 20 * 1024 * 1024; // 20MB
 
 export function isAllowedMimeOrExt(file) {
   if (!file) return false;
-  if (file.type && allowedMimes.has(file.type)) return true;
+  if (file.type && ALLOWED_QUOTATION_MIME_SET.has(file.type)) return true;
   const name = (file.name || '').toLowerCase();
-  return Array.from(allowedExts).some((ext) => name.endsWith(ext));
+  return Array.from(ALLOWED_QUOTATION_EXTS).some((ext) => name.endsWith(ext));
+}
+
+export function buildAcceptFromExts(extSet) {
+  return Array.from(extSet).join(',');
 }
 
 // Extract first image file from paste event

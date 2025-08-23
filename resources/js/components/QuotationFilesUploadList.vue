@@ -66,23 +66,31 @@
 import { ref } from 'vue';
 import Button from 'primevue/button';
 import { t } from '@/i18n/messages';
-import { getFileIcon, formatFileSize, isAllowedMimeOrExt } from '@/utils/file';
+import { getFileIcon, formatFileSize, isAllowedMimeOrExt, ALLOWED_QUOTATION_EXTS, MAX_QUOTATION_BYTES, buildAcceptFromExts } from '@/utils/file';
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] }, // File[]
   existingFiles: { type: Array, default: () => [] }, // [{id, file_url, file_name, file_type, file_size_formatted}]
-  maxSize: { type: Number, default: 20 * 1024 * 1024 },
-  accept: { type: String, default: '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png' },
+  maxSize: { type: Number, default: MAX_QUOTATION_BYTES },
+  accept: { type: String, default: buildAcceptFromExts(ALLOWED_QUOTATION_EXTS) },
 });
-const emit = defineEmits(['update:modelValue', 'delete-existing', 'invalid-files']);
+const emit = defineEmits(['update:modelValue', 'delete-existing', 'invalid-files', 'oversize-files']);
 
 const fileInput = ref(null);
 
 function addFiles(files) {
-  const before = files.length;
-  const valid = files.filter((f) => isAllowedMimeOrExt(f) && (f.size || 0) <= props.maxSize);
-  const invalidCount = before - valid.length;
-  if (invalidCount > 0) emit('invalid-files', invalidCount);
+  const valid = [];
+  let oversize = 0;
+  let unsupported = 0;
+  for (const f of files) {
+    const allowed = isAllowedMimeOrExt(f);
+    const sizeOk = (f.size || 0) <= props.maxSize;
+    if (allowed && sizeOk) valid.push(f);
+    else if (allowed && !sizeOk) oversize++;
+    else if (!allowed) unsupported++;
+  }
+  if (oversize > 0) emit('oversize-files', oversize);
+  if (unsupported > 0) emit('invalid-files', unsupported);
   const updated = [...props.modelValue, ...valid];
   emit('update:modelValue', updated);
 }

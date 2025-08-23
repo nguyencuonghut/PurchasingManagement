@@ -23,10 +23,15 @@ class UpdateSupplierSelectionReportRequest extends FormRequest
     public function rules()
     {
         // file_path có thể là: UploadedFile (multipart) hoặc string (URL/base64) hoặc null
-        // Nếu là UploadedFile: bắt buộc kiểm tra image và giới hạn 10MB
+        // Nếu là UploadedFile: kiểm tra theo cấu hình uploads.image (mimes + max KB)
         $filePathRules = ['nullable'];
         if ($this->hasFile('file_path')) {
-            $filePathRules = ['nullable', 'file', 'image', 'max:10240'];
+            $filePathRules = [
+                'nullable',
+                'file',
+                'mimes:' . implode(',', config('uploads.image.mimes', ['jpeg','jpg','png'])),
+                'max:' . (int) config('uploads.image.max_kb', 10240),
+            ];
         } else {
             // Cho phép URL/base64 string
             $filePathRules = ['nullable', 'string'];
@@ -40,7 +45,11 @@ class UpdateSupplierSelectionReportRequest extends FormRequest
             'file_path_removed' => ['sometimes','boolean'],
 
             'quotation_files' => ['sometimes','array'],
-            'quotation_files.*' => ['file','mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png','max:20480'],
+            'quotation_files.*' => [
+                'file',
+                'mimes:' . implode(',', config('uploads.quotation.mimes', ['pdf','doc','docx','xls','xlsx','jpg','jpeg','png'])),
+                'max:' . (int) config('uploads.quotation.max_kb', 20480),
+            ],
 
             'deleted_quotation_file_ids' => ['sometimes','array'],
             'deleted_quotation_file_ids.*' => ['integer','exists:quotation_files,id'],
