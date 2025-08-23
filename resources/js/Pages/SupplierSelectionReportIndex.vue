@@ -222,7 +222,7 @@ import { Roles, Statuses, getStatusSeverity as statusSeverity } from '@/utils/co
 const toast = useToast();
 const dt = ref();
 const page = usePage();
-const message = computed(() => page.props.auth.flash.message);
+const message = computed(() => page.props?.flash?.message ?? page.props?.auth?.flash?.message ?? '');
 
 defineProps({
     errors: { type: Object },
