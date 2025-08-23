@@ -43,6 +43,7 @@
           :existing-files="existingQuotationFiles"
           :max-size="MAX_DOC_SIZE"
           @delete-existing="markQuotationFileDeleted"
+          @invalid-files="onInvalidQuotationFiles"
         />
 
         <small v-if="submitted && form.errors.quotation_files" class="text-red-500">{{ form.errors.quotation_files }}</small>
@@ -51,6 +52,11 @@
       <div class="flex justify-end gap-2">
         <Button type="button" :label="t('actions.back')" icon="pi pi-arrow-left" outlined @click="goBack" />
         <Button type="submit" :label="t('actions.save')" icon="pi pi-check" :disabled="form.processing" />
+      </div>
+
+      <div v-if="form.progress" class="mt-3">
+        <ProgressBar :value="form.progress.percentage" />
+        <div class="mt-1 text-right text-sm text-gray-600">{{ form.progress.percentage }}%</div>
       </div>
     </form>
   </div>
@@ -63,6 +69,7 @@ import { useVuelidate } from '@vuelidate/core';
 import { required, maxLength, helpers } from '@vuelidate/validators';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
+import ProgressBar from 'primevue/progressbar';
 import { useToast } from 'primevue/usetoast';
 import DragDropImageUpload from '@/components/DragDropImageUpload.vue';
 import QuotationFilesUploadList from '@/components/QuotationFilesUploadList.vue';
@@ -120,6 +127,13 @@ function onImageRemove() {
   form.file_path = null;
 }
 
+// If user selects a new File, clear removal flag
+watch(() => form.file_path, (val) => {
+  if (val instanceof File) {
+    form.file_path_removed = false;
+  }
+});
+
 // Helper: lấy lỗi đầu (string hoặc array đều OK)
 function firstErr(val) {
   if (Array.isArray(val)) return val[0] || null;
@@ -150,6 +164,10 @@ watch(uploadedQuotationFiles, (val) => {
 function markQuotationFileDeleted(id) {
   if (!form.deleted_quotation_file_ids.includes(id)) form.deleted_quotation_file_ids.push(id);
   existingQuotationFiles.value = existingQuotationFiles.value.filter(f => f.id !== id);
+}
+
+function onInvalidQuotationFiles() {
+  toast.add({ severity: 'warn', summary: t('common.warn'), detail: t('files.some_invalid'), life: 2500 });
 }
 
 // getFileIcon, formatFileSize được import từ '@/utils/file'

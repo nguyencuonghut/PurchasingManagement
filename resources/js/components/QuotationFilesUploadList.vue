@@ -68,16 +68,15 @@ const props = defineProps({
   maxSize: { type: Number, default: 20 * 1024 * 1024 },
   accept: { type: String, default: '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png' },
 });
-const emit = defineEmits(['update:modelValue', 'delete-existing']);
+const emit = defineEmits(['update:modelValue', 'delete-existing', 'invalid-files']);
 
 const fileInput = ref(null);
 
 function addFiles(files) {
+  const before = files.length;
   const valid = files.filter((f) => isAllowedMimeOrExt(f) && (f.size || 0) <= props.maxSize);
-  if (valid.length !== files.length) {
-    // reuse a toast pattern would require injecting toast; keep minimal and silent or you can emit an event.
-    // For simplicity, we just drop invalid silently; parent already has a warn in previous implementation if desired.
-  }
+  const invalidCount = before - valid.length;
+  if (invalidCount > 0) emit('invalid-files', invalidCount);
   const updated = [...props.modelValue, ...valid];
   emit('update:modelValue', updated);
 }
