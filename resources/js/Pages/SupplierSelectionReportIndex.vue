@@ -22,7 +22,7 @@
             :rows="10"
             dataKey="id"
             filterDisplay="menu"
-            :globalFilterFields="['code', 'description', 'file_path', 'formatted_created_at']"
+            :globalFilterFields="['code', 'description', 'image_url', 'formatted_created_at']"
             :sortField="'created_at'"
             :sortOrder="-1"
         >

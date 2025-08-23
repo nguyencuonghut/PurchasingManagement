@@ -137,6 +137,7 @@ import { required, maxLength, helpers } from '@vuelidate/validators';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
+import { getFileIcon, formatFileSize, isAllowedMimeOrExt, fileFromPasteEvent, fileFromDropEvent, objectUrl } from '@/utils/file';
 
 
 const props = defineProps({
@@ -210,27 +211,33 @@ function handleFocus() { showPlaceholder.value = false; isContentEditable.value 
 function handleBlur() { if (!imagePreviewSrc.value && (!pasteAreaRef.value || pasteAreaRef.value.innerText.trim() === '')) showPlaceholder.value = true; }
 
 function handlePaste(e) {
-  e.preventDefault(); showPlaceholder.value = false;
-  const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items || [];
-  for (const item of items) {
-    if (item.type.indexOf('image') !== -1) {
-      const file = item.getAsFile();
-      imageFile.value = file;
-      const reader = new FileReader();
-      reader.onload = (ev) => { imagePreviewSrc.value = ev.target.result; form.file_path = ev.target.result; form.file_path_removed = false; };
-      reader.readAsDataURL(file);
-      return;
-    }
+  e.preventDefault();
+  showPlaceholder.value = false;
+  const file = fileFromPasteEvent(e);
+  if (!file) {
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không có ảnh nào được dán.', life: 2500 });
+    return;
   }
+  if (!file.type || !file.type.startsWith('image/')) {
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ chấp nhận file ảnh.', life: 2500 });
+    return;
+  }
+  imageFile.value = file;
+  imagePreviewSrc.value = objectUrl(file);
+  form.file_path = file;
+  form.file_path_removed = false;
 }
 
 function handleDrop(e) {
-  const file = e.dataTransfer.files?.[0];
-  if (!file || !file.type.startsWith('image/')) { toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ chấp nhận file ảnh.', life: 2500 }); return; }
+  const file = fileFromDropEvent(e);
+  if (!file || !file.type || !file.type.startsWith('image/')) {
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ chấp nhận file ảnh.', life: 2500 });
+    return;
+  }
   imageFile.value = file;
-  const reader = new FileReader();
-  reader.onload = (ev) => { imagePreviewSrc.value = ev.target.result; form.file_path = ev.target.result; form.file_path_removed = false; };
-  reader.readAsDataURL(file);
+  imagePreviewSrc.value = objectUrl(file);
+  form.file_path = file;
+  form.file_path_removed = false;
 }
 
 function removeImage() {
@@ -257,14 +264,7 @@ function handleQuotationFilesSelect(e) {
   addQuotationFiles(Array.from(e.target.files || []));
 }
 function addQuotationFiles(files) {
-  const valid = files.filter(f => [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'image/jpeg', 'image/jpg', 'image/png'
-  ].includes(f.type));
+  const valid = files.filter((f) => isAllowedMimeOrExt(f));
   if (valid.length !== files.length) toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Một số file không được hỗ trợ và đã bị bỏ qua.', life: 2500 });
   uploadedQuotationFiles.value.push(...valid);
   form.quotation_files = [...uploadedQuotationFiles.value];
@@ -278,31 +278,7 @@ function markQuotationFileDeleted(id) {
   existingQuotationFiles.value = existingQuotationFiles.value.filter(f => f.id !== id);
 }
 
-function getFileIcon(mime) {
-  const map = {
-    'application/pdf': 'pi pi-file-pdf text-red-500',
-    'application/msword': 'pi pi-file-word text-blue-500',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'pi pi-file-word text-blue-500',
-    'application/vnd.ms-excel': 'pi pi-file-excel text-green-500',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'pi pi-file-excel text-green-500',
-    'image/jpeg': 'pi pi-image text-purple-500',
-    'image/jpg': 'pi pi-image text-purple-500',
-    'image/png': 'pi pi-image text-purple-500',
-  };
-  return map[mime] || 'pi pi-file';
-}
-function formatFileSize(bytes) {
-  if (!bytes) return '0 Bytes';
-  const k = 1024; const sizes = ['Bytes','KB','MB','GB']; const i = Math.floor(Math.log(bytes)/Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k,i)).toFixed(2))} ${sizes[i]}`;
-}
-
-function dataURLtoBlob(dataurl) {
-  const arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1];
-  const bstr = atob(arr[1]); const len = bstr.length; const u8 = new Uint8Array(len);
-  for (let i=0;i<len;i++) u8[i] = bstr.charCodeAt(i);
-  return new Blob([u8], { type: mime });
-}
+// getFileIcon, formatFileSize được import từ '@/utils/file'
 
 function goBack() { router.visit('/supplier_selection_reports'); }
 
@@ -318,12 +294,11 @@ async function save() {
   form.description = String(v$.value.description.$model ?? form.description ?? '');
 
   // ngay sau khi đã validate v$ và đồng bộ form.code/description...
-  const isNewImageBase64 = typeof form.file_path === 'string' && form.file_path.startsWith('data:image');
   const isNewImageFile   = form.file_path instanceof File;
   const wantRemoveImage  = !!form.file_path_removed;
 
   // ❗ Nếu user xóa ảnh mà KHÔNG đính kèm ảnh mới -> chặn tại FE
-  if (wantRemoveImage && !isNewImageBase64 && !isNewImageFile) {
+  if (wantRemoveImage && !isNewImageFile) {
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
@@ -333,14 +308,12 @@ async function save() {
     return;
   }
 
-  const hasNewInlineImage =
-    typeof form.file_path === 'string' && form.file_path.startsWith('data:image');
   const hasUploadedFile =
     form.file_path instanceof File || (form.quotation_files?.length || 0) > 0;
 
   const hasDeletedExisting = (form.deleted_quotation_file_ids?.length || 0) > 0;
 
-  const needsMultipart = hasNewInlineImage || hasUploadedFile || wantRemoveImage || hasDeletedExisting;
+  const needsMultipart = hasUploadedFile || wantRemoveImage || hasDeletedExisting;
 
   if (needsMultipart) {
     // 🔁 Dùng POST + _method=PUT để PHP/Laravel parse multipart ổn định
@@ -360,8 +333,6 @@ async function save() {
         // file_path 4 nhánh
         if (data.file_path_removed) {
           out.file_path = null;
-        } else if (typeof data.file_path === 'string' && data.file_path.startsWith('data:image')) {
-          out.file_path = dataURLtoBlob(data.file_path); // base64 -> Blob
         } else if (data.file_path instanceof File) {
           out.file_path = data.file_path;
         } else if (typeof data.file_path === 'string') {
