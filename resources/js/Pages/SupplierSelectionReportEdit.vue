@@ -1,27 +1,27 @@
 <template>
-  <Head title="Sửa BCLCNCC" />
+  <Head :title="t('head.edit_title')" />
 
   <div class="card max-w-4xl mx-auto">
-    <h2 class="text-xl font-semibold mb-4">Chỉnh sửa báo cáo</h2>
+    <h2 class="text-xl font-semibold mb-4">{{ t('page.edit_heading') }}</h2>
 
     <form @submit.prevent="save" class="flex flex-col gap-6">
       <!-- Code -->
       <div>
-        <label for="code" class="block font-bold mb-2 required-field">Mã</label>
+        <label for="code" class="block font-bold mb-2 required-field">{{ t('form.code_label') }}</label>
         <InputText id="code" v-model="v$.code.$model" :invalid="submitted && v$.code.$invalid" fluid />
         <small v-if="submitted && v$.code.$invalid" class="text-red-500">{{ v$.code.$errors[0]?.$message }}</small>
       </div>
 
       <!-- Description -->
       <div>
-        <label for="description" class="block font-bold mb-2 required-field">Mô tả</label>
+        <label for="description" class="block font-bold mb-2 required-field">{{ t('form.description_label') }}</label>
         <InputText id="description" v-model.trim="v$.description.$model" :invalid="submitted && v$.description.$invalid" fluid />
         <small v-if="submitted && v$.description.$invalid" class="text-red-500">{{ v$.description.$errors[0]?.$message }}</small>
       </div>
 
       <!-- file_path - ảnh đính kèm chính -->
       <div>
-        <label class="block font-bold mb-2 required-field">File báo cáo (ảnh)</label>
+        <label class="block font-bold mb-2 required-field">{{ t('form.image_label') }}</label>
 
         <!-- Khu vực dán / kéo-thả ảnh -->
         <div
@@ -38,12 +38,10 @@
           @blur="handleBlur"
         >
           <div v-if="!imagePreviewSrc && showPlaceholder" class="paste-content-wrapper">
-              <p class="placeholder-text">
-              Dán ảnh (Ctrl+V) hoặc kéo thả ảnh vào đây.
-              </p>
+              <p class="placeholder-text">{{ t('placeholder.paste_or_drop_image') }}</p>
           </div>
           <div v-else-if="imagePreviewSrc" class="paste-content-wrapper">
-              <img :src="imagePreviewSrc" alt="Image Preview" class="pasted-image-preview" />
+              <img :src="imagePreviewSrc" :alt="t('image_meta.preview_alt')" class="pasted-image-preview" />
           </div>
         </div>
 
@@ -51,10 +49,10 @@
         <!-- Thông tin / nút xoá ảnh -->
         <div class="mt-3 flex items-center gap-3" v-if="imagePreviewSrc || existingImageUrl">
           <i class="pi pi-image text-xl"></i>
-          <span class="font-medium">Ảnh hiện tại</span>
+          <span class="font-medium">{{ t('image_meta.current') }}</span>
           <span v-if="imageFile" class="text-color-secondary">{{ (imageFile.size / 1024).toFixed(2) }} KB ({{ imageFile.name }})</span>
-          <span v-else-if="!imageFile && (existingImageUrl && !form.file_path_removed)">Đang dùng ảnh đã lưu</span>
-          <Button label="Xóa ảnh" icon="pi pi-times" class="p-button-danger p-button-text p-button-sm ml-auto" @click="removeImage" />
+          <span v-else-if="!imageFile && (existingImageUrl && !form.file_path_removed)">{{ t('image_meta.using_saved') }}</span>
+          <Button :label="t('actions.delete_image')" icon="pi pi-times" class="p-button-danger p-button-text p-button-sm ml-auto" @click="removeImage" />
         </div>
 
         <small v-if="submitted && form.errors.file_path" class="text-red-500">{{ form.errors.file_path }}</small>
@@ -62,7 +60,7 @@
 
       <!-- Quotation Files -->
       <div>
-        <label class="block font-bold mb-2">File báo giá</label>
+        <label class="block font-bold mb-2">{{ t('quotation.title') }}</label>
 
         <!-- Kéo thả / chọn file mới -->
         <div
@@ -72,8 +70,8 @@
           @click="$refs.quotationFilesInput.click()"
         >
           <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
-          <p class="text-gray-600 mb-1">Kéo thả file báo giá vào đây hoặc click để chọn</p>
-          <p class="text-sm text-gray-500">Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG</p>
+          <p class="text-gray-600 mb-1">{{ t('quotation.drop_hint') }}</p>
+          <p class="text-sm text-gray-500">{{ t('quotation.supported') }}</p>
           <input
             type="file"
             ref="quotationFilesInput"
@@ -86,7 +84,7 @@
 
         <!-- Danh sách file báo giá hiện có -->
         <div v-if="existingQuotationFiles.length > 0" class="mt-4">
-          <h4 class="font-semibold mb-2">File báo giá hiện có:</h4>
+          <h4 class="font-semibold mb-2">{{ t('quotation.existing_title') }}</h4>
           <div class="space-y-2">
             <div v-for="file in existingQuotationFiles" :key="file.id" class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div class="flex items-center space-x-3">
@@ -103,7 +101,7 @@
 
         <!-- Danh sách file báo giá mới upload -->
         <div v-if="uploadedQuotationFiles.length > 0" class="mt-4">
-          <h4 class="font-semibold mb-2">File mới thêm:</h4>
+          <h4 class="font-semibold mb-2">{{ t('quotation.new_title') }}</h4>
           <div class="space-y-2">
             <div v-for="(file, index) in uploadedQuotationFiles" :key="index" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div class="flex items-center space-x-3">
@@ -122,8 +120,8 @@
       </div>
 
       <div class="flex justify-end gap-2">
-        <Button type="button" label="Quay lại" icon="pi pi-arrow-left" outlined @click="goBack" />
-        <Button type="submit" label="Lưu" icon="pi pi-check" :disabled="form.processing" />
+        <Button type="button" :label="t('actions.back')" icon="pi pi-arrow-left" outlined @click="goBack" />
+        <Button type="submit" :label="t('actions.save')" icon="pi pi-check" :disabled="form.processing" />
       </div>
     </form>
   </div>
@@ -170,12 +168,12 @@ const { code, description } = toRefs(form);
 // ----- Vuelidate
 const rules = computed(() => ({
   code: {
-    required: helpers.withMessage('Mã báo cáo không được để trống.', required),
-    maxLength: helpers.withMessage('Mã báo cáo không được vượt quá 255 ký tự.', maxLength(255)),
+    required: helpers.withMessage(t('validation.code_required'), required),
+    maxLength: helpers.withMessage(t('validation.code_max_255'), maxLength(255)),
   },
   description: {
-    required: helpers.withMessage('Mô tả không được để trống.', required),
-    maxLength: helpers.withMessage('Mô tả không được vượt quá 1000 ký tự.', maxLength(1000)),
+    required: helpers.withMessage(t('validation.description_required'), required),
+    maxLength: helpers.withMessage(t('validation.description_max_1000'), maxLength(1000)),
   },
 }));
 const v$ = useVuelidate(rules, { code, description });
@@ -225,7 +223,7 @@ function pickServerError(errors, fallback) {
     firstErr(errors?.code) ||
     firstErr(errors?.description) ||
     fallback ||
-    'Có lỗi xảy ra khi cập nhật.'
+    t('update.error_generic')
   );
 }
 

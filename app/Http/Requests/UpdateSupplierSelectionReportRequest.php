@@ -22,11 +22,21 @@ class UpdateSupplierSelectionReportRequest extends FormRequest
      */
     public function rules()
     {
+        // file_path có thể là: UploadedFile (multipart) hoặc string (URL/base64) hoặc null
+        // Nếu là UploadedFile: bắt buộc kiểm tra image và giới hạn 10MB
+        $filePathRules = ['nullable'];
+        if ($this->hasFile('file_path')) {
+            $filePathRules = ['nullable', 'file', 'image', 'max:10240'];
+        } else {
+            // Cho phép URL/base64 string
+            $filePathRules = ['nullable', 'string'];
+        }
+
         return [
             'code' => ['required','string','max:255'],
             'description' => ['required','string','max:1000'],
 
-            'file_path' => ['nullable'], // có thể là file (multipart) hoặc base64 hoặc URL chuỗi
+            'file_path' => $filePathRules,
             'file_path_removed' => ['sometimes','boolean'],
 
             'quotation_files' => ['sometimes','array'],
@@ -51,6 +61,8 @@ class UpdateSupplierSelectionReportRequest extends FormRequest
             'description.max' => 'Mô tả không được vượt quá 1000 ký tự.',
 
             'file_path_removed.boolean' => 'Trường xóa file phải là giá trị boolean.',
+            'file_path.image' => 'Ảnh báo cáo phải là một file ảnh hợp lệ.',
+            'file_path.max' => 'Ảnh báo cáo không được vượt quá 10MB.',
 
             'quotation_files.array' => 'Danh sách file báo giá phải là một mảng.',
 

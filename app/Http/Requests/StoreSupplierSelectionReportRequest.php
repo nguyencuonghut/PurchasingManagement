@@ -52,7 +52,7 @@ class StoreSupplierSelectionReportRequest extends FormRequest
             'file_path.image' => 'Ảnh báo cáo phải là một file ảnh hợp lệ.',
             'file_path.max' => 'Ảnh báo cáo không được vượt quá 10MB.',
 
-            'quotation_files.array' => 'Danh sách file báo giá phải là một m��ng.',
+            'quotation_files.array' => 'Danh sách file báo giá phải là một mảng.',
             'quotation_files.*.file' => 'Mỗi file báo giá phải là một file hợp lệ.',
             'quotation_files.*.mimes' => 'File báo giá phải có định dạng: pdf, doc, docx, xls, xlsx, jpg, jpeg, png.',
             'quotation_files.*.max' => 'File báo giá không được vượt quá 20MB.',
