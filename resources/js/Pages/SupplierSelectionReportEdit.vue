@@ -131,7 +131,7 @@
 
 <script setup>
 import { Head, useForm, router, usePage } from '@inertiajs/vue3';
-import { ref, computed, toRefs } from 'vue';
+import { ref, computed, toRefs, onUnmounted } from 'vue';
 import { useVuelidate } from '@vuelidate/core';
 import { required, maxLength, helpers } from '@vuelidate/validators';
 import InputText from 'primevue/inputtext';
@@ -187,6 +187,28 @@ const existingImageUrl = computed(() => (form.file_path && typeof form.file_path
 const imageFile = ref(null);
 const showPlaceholder = ref(!imagePreviewSrc.value);
 const isContentEditable = ref(true);
+const lastObjectUrl = ref(null);
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_DOC_SIZE = 20 * 1024 * 1024;   // 20MB
+
+function setPreviewFromFile(file) {
+  // Revoke previous object URL if any
+  if (lastObjectUrl.value) {
+    try { URL.revokeObjectURL(lastObjectUrl.value); } catch (e) { /* ignore */ }
+    lastObjectUrl.value = null;
+  }
+  const url = objectUrl(file);
+  lastObjectUrl.value = url;
+  imagePreviewSrc.value = url;
+}
+
+onUnmounted(() => {
+  if (lastObjectUrl.value) {
+    try { URL.revokeObjectURL(lastObjectUrl.value); } catch (e) { /* ignore */ }
+    lastObjectUrl.value = null;
+  }
+});
 
 
 // Helper: lấy lỗi đầu (string hoặc array đều OK)
@@ -222,8 +244,12 @@ function handlePaste(e) {
     toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ chấp nhận file ảnh.', life: 2500 });
     return;
   }
+  if (file.size > MAX_IMAGE_SIZE) {
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Ảnh vượt quá dung lượng tối đa 10MB.', life: 3000 });
+    return;
+  }
   imageFile.value = file;
-  imagePreviewSrc.value = objectUrl(file);
+  setPreviewFromFile(file);
   form.file_path = file;
   form.file_path_removed = false;
 }
@@ -234,8 +260,12 @@ function handleDrop(e) {
     toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Chỉ chấp nhận file ảnh.', life: 2500 });
     return;
   }
+  if (file.size > MAX_IMAGE_SIZE) {
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Ảnh vượt quá dung lượng tối đa 10MB.', life: 3000 });
+    return;
+  }
   imageFile.value = file;
-  imagePreviewSrc.value = objectUrl(file);
+  setPreviewFromFile(file);
   form.file_path = file;
   form.file_path_removed = false;
 }
@@ -247,6 +277,11 @@ function removeImage() {
   imagePreviewSrc.value = null;
   showPlaceholder.value = true;
   isContentEditable.value = true;
+
+  if (lastObjectUrl.value) {
+    try { URL.revokeObjectURL(lastObjectUrl.value); } catch (e) { /* ignore */ }
+    lastObjectUrl.value = null;
+  }
 
   // ⚠️ Không đụng innerHTML nữa. Remount vùng editor để Vue tự quản lý DOM.
   editorKey.value++;
@@ -264,7 +299,7 @@ function handleQuotationFilesSelect(e) {
   addQuotationFiles(Array.from(e.target.files || []));
 }
 function addQuotationFiles(files) {
-  const valid = files.filter((f) => isAllowedMimeOrExt(f));
+  const valid = files.filter((f) => isAllowedMimeOrExt(f) && (f.size || 0) <= MAX_DOC_SIZE);
   if (valid.length !== files.length) toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Một số file không được hỗ trợ và đã bị bỏ qua.', life: 2500 });
   uploadedQuotationFiles.value.push(...valid);
   form.quotation_files = [...uploadedQuotationFiles.value];
