@@ -32,7 +32,7 @@
               <p class="text-xs text-gray-500">{{ file.file_size_formatted }}</p>
             </div>
           </div>
-          <Button :label="t('actions.delete')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" @click="$emit('delete-existing', file.id)" />
+          <Button :label="t('actions.delete')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" @click="confirmDeleteExisting(file.id)" />
         </div>
       </div>
     </div>
@@ -49,7 +49,7 @@
               <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
             </div>
           </div>
-          <Button :label="t('actions.delete')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" @click="removeNew(index)" />
+          <Button :label="t('actions.delete')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" @click="confirmRemoveNew(index)" />
         </div>
       </div>
     </div>
@@ -92,5 +92,15 @@ function removeNew(index) {
   const updated = [...props.modelValue];
   updated.splice(index, 1);
   emit('update:modelValue', updated);
+}
+
+function confirmDeleteExisting(id) {
+  if (!window.confirm(t('confirm.delete_file'))) return;
+  emit('delete-existing', id);
+}
+
+function confirmRemoveNew(index) {
+  if (!window.confirm(t('confirm.delete_file'))) return;
+  removeNew(index);
 }
 </script>

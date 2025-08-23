@@ -50,6 +50,11 @@ const vi = {
     delete: 'Xóa',
     back: 'Quay lại',
     save: 'Lưu',
+    saving: 'Đang lưu',
+  },
+  confirm: {
+    delete_image: 'Bạn có chắc muốn xóa ảnh này?',
+    delete_file: 'Bạn có chắc muốn xóa file này?',
   },
   quotation: {
     title: 'File báo giá',

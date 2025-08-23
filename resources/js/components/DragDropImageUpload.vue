@@ -130,6 +130,7 @@ function handleDrop(e) {
 }
 
 function onRemove() {
+  if (!window.confirm(t('confirm.delete_image'))) return;
   // clear preview and signal removal
   emit('remove');
   currentFile.value = null;
