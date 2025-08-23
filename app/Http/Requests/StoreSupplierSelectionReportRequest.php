@@ -25,8 +25,13 @@ class StoreSupplierSelectionReportRequest extends FormRequest
         return [
             'code' => ['required', 'string', 'max:255', Rule::unique('supplier_selection_reports')],
             'description' => ['required', 'string', 'max:1000'],
-            'file_path' => ['nullable', 'string'], // Hoặc rules cho file upload nếu bạn gửi file trực tiếp
-            // Thêm các rules khác nếu có
+
+            // Cho phép gửi ảnh dạng multipart (file) hoặc không gửi
+            'file_path' => ['nullable', 'file', 'image', 'max:20480'],
+
+            // File báo giá có thể nhiều file
+            'quotation_files' => ['sometimes','array'],
+            'quotation_files.*' => ['file','mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png','max:20480'],
         ];
     }
 
@@ -43,7 +48,14 @@ class StoreSupplierSelectionReportRequest extends FormRequest
             'code.max' => 'Mã báo cáo không được vượt quá 255 ký tự.',
             'description.required' => 'Mô tả không được để trống.',
             'description.max' => 'Mô tả không được vượt quá 1000 ký tự.',
-            // Thêm các thông báo lỗi khác
+
+            'file_path.image' => 'Ảnh báo cáo phải là một file ảnh hợp lệ.',
+            'file_path.max' => 'Ảnh báo cáo không được vượt quá 20MB.',
+
+            'quotation_files.array' => 'Danh sách file báo giá phải là một m��ng.',
+            'quotation_files.*.file' => 'Mỗi file báo giá phải là một file hợp lệ.',
+            'quotation_files.*.mimes' => 'File báo giá phải có định dạng: pdf, doc, docx, xls, xlsx, jpg, jpeg, png.',
+            'quotation_files.*.max' => 'File báo giá không được vượt quá 20MB.',
         ];
     }
 }
