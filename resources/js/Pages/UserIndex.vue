@@ -6,8 +6,8 @@
     <div class="card">
         <Toolbar v-if="can.create_user || can.delete_user || can.import_user || can.export_user" class="mb-6">
             <template #start>
-                <Button v-if="can.create_user" label="New" icon="pi pi-plus" class="mr-2" @click="openNew" />
-                <Button v-if="can.delete_user" label="Delete" icon="pi pi-trash" severity="danger" outlined @click="confirmDeleteSelected" :disabled="!selectedUsers || !selectedUsers.length" />
+                <Button v-if="can.create_user" label="Thêm" icon="pi pi-plus" class="mr-2" @click="openNew" />
+                <Button v-if="can.delete_user" label="Xóa" icon="pi pi-trash" severity="danger" outlined @click="confirmDeleteSelected" :disabled="!selectedUsers || !selectedUsers.length" />
             </template>
 
             <template #end>
