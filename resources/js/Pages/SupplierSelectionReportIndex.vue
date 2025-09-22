@@ -6,7 +6,7 @@
     <div class="card">
         <Toolbar v-if="can.create_report || can.delete_report || can.import_report || can.export_report" class="mb-6">
             <template #start>
-                <Button v-if="can.create_report" label="New" icon="pi pi-plus" class="mr-2" @click="openNew" />
+                <Button v-if="can.create_report" label="Thêm" icon="pi pi-plus" class="mr-2" @click="openNew" />
             </template>
             <template #end>
                 <Button v-if="can.export_report" label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" />
