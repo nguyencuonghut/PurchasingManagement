@@ -86,12 +86,12 @@
 
             <Column header="Trạng thái" field="status" sortable :filterMenuStyle="{ width: '14rem' }" style="min-width: 12rem">
                 <template #body="{ data }">
-                    <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+                    <Tag :value="statusToVietnameseFn(data.status)" :severity="getStatusSeverity(data.status)" />
                 </template>
                 <template #filter="{ filterModel }">
                     <Select v-model="filterModel.value" :options="statuses" placeholder="Chọn" showClear>
                         <template #option="slotProps">
-                            <Tag :value="slotProps.option" :severity="getStatusSeverity(slotProps.option)" />
+                            <Tag :value="statusToVietnameseFn(slotProps.option)" :severity="getStatusSeverity(slotProps.option)" />
                         </template>
                     </Select>
                 </template>
@@ -217,7 +217,10 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Tag from 'primevue/tag';
 import Select from 'primevue/select';
-import { Roles, Statuses, getStatusSeverity as statusSeverity } from '@/utils/constants';
+import { Roles, Statuses, getStatusSeverity as statusSeverity, statusToVietnamese } from '@/utils/constants';
+
+// Đảm bảo statusToVietnamese khả dụng trong template
+const statusToVietnameseFn = statusToVietnamese;
 
 const toast = useToast();
 const dt = ref();

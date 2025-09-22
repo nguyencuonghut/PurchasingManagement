@@ -18,6 +18,20 @@ export const Statuses = [
   'rejected',
 ];
 
+export const StatusesVi = {
+  draft: 'Nháp',
+  pending_manager_approval: 'Chờ Trưởng phòng duyệt',
+  manager_approved: 'Trưởng phòng đã duyệt',
+  auditor_approved: 'Kiểm soát đã duyệt',
+  pending_director_approval: 'Chờ Giám đốc duyệt',
+  director_approved: 'Giám đốc đã duyệt',
+  rejected: 'Từ chối',
+};
+
+export function statusToVietnamese(status) {
+  return StatusesVi[status] || status;
+}
+
 export function getStatusSeverity(status) {
   switch (status) {
     case 'draft':
