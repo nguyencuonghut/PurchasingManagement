@@ -45,7 +45,7 @@
             <Column field="description" header="Mô tả" />
             <Column field="status" header="Trạng thái">
               <template #body="{ data }">
-                <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+                <Tag :value="getStatusVi(data.status)" :severity="getStatusSeverity(data.status)" />
               </template>
             </Column>
             <Column field="created_at" header="Ngày tạo">
@@ -68,7 +68,7 @@
             <Column field="description" header="Mô tả" />
             <Column field="status" header="Trạng thái">
               <template #body="{ data }">
-                <Tag :value="data.status" :severity="getStatusSeverity(data.status)" />
+                <Tag :value="getStatusVi(data.status)" :severity="getStatusSeverity(data.status)" />
               </template>
             </Column>
             <Column field="created_at" header="Ngày tạo">
@@ -118,7 +118,15 @@ const statusSeverityMap = {
 };
 const getStatusSeverity = (status) => statusSeverityMap[status] || 'info';
 
-
+const statusViMap = {
+  draft: 'Nháp',
+  pending_manager_approval: 'Đang chờ duyệt',
+  manager_approved: 'Quản lý đã duyệt',
+  auditor_approved: 'Kiểm soát đã duyệt',
+  director_approved: 'Giám đốc đã duyệt',
+  rejected: 'Từ chối',
+};
+const getStatusVi = (status) => statusViMap[status] || status;
 
 // Format ngày dd/mm/yyyy H:i
 const formatDate = (dateString) => {
@@ -139,10 +147,7 @@ const monthlyChartData = computed(() => page.props.monthlyChartData ?? {});
 const recentReports = computed(() => page.props.recentReports ?? []);
 const pendingReports = computed(() => page.props.pendingReports ?? []);
 const notifications = computed(() => page.props.notifications ?? []);
-// const chartOptions = {
-//   plugins: { legend: { position: 'bottom' } },
-//   responsive: true,
-// };
+
 const barchartOptions = {
   responsive: true,
   maintainAspectRatio: false,
