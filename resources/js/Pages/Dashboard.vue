@@ -6,7 +6,7 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
   <Card v-for="stat in stats" :key="stat.label" class="text-center">
         <template #title>
-          <i :class="stat.icon" class="text-2xl mb-2"></i>
+          <i :class="stat.icon" class="text-2xl mb-2 text-blue-500"></i>
           <div class="font-bold text-lg mt-2">{{ stat.value }}</div>
         </template>
         <template #content>
@@ -18,13 +18,17 @@
       <Card>
         <template #title>Trạng thái phiếu (Biểu đồ)</template>
         <template #content>
-          <Chart type="pie" :data="statusChartData" :options="chartOptions" />
+      <div class="h-96 p-4">
+        <Chart type="pie" :data="statusChartData" :options="pieChartOptions" style="height:100%;width:100%;" />
+      </div>
         </template>
       </Card>
       <Card>
         <template #title>Số lượng phiếu theo tháng</template>
         <template #content>
-          <Chart type="bar" :data="monthlyChartData" :options="chartOptions" />
+      <div class="h-96 p-4">
+        <Chart type="bar" :data="monthlyChartData" :options="barchartOptions" style="height:100%;width:100%;" />
+      </div>
         </template>
       </Card>
     </div>
@@ -76,7 +80,7 @@
         </template>
       </Card>
     </div>
-    <div class="mb-6">
+    <div v-if="notifications.length" class="mb-6">
       <Card>
         <template #title>Thông báo</template>
         <template #content>
@@ -102,24 +106,17 @@ import Column from 'primevue/column';
 
 import Tag from 'primevue/tag';
 
-// Copy getStatusSeverity logic from SupplierSelectionReportIndex.vue
-const getStatusSeverity = (status) => {
-  switch (status) {
-    case 'draft':
-      return 'secondary';
-    case 'pending_manager_approval':
-      return 'warn';
-    case 'manager_approved':
-    case 'auditor_approved':
-      return 'info';
-    case 'director_approved':
-      return 'success';
-    case 'rejected':
-      return 'danger';
-    default:
-      return 'info';
-  }
+
+// Tối ưu hóa getStatusSeverity bằng object mapping
+const statusSeverityMap = {
+  draft: 'secondary',
+  pending_manager_approval: 'warn',
+  manager_approved: 'info',
+  auditor_approved: 'info',
+  director_approved: 'success',
+  rejected: 'danger',
 };
+const getStatusSeverity = (status) => statusSeverityMap[status] || 'info';
 
 
 
@@ -142,10 +139,83 @@ const monthlyChartData = computed(() => page.props.monthlyChartData ?? {});
 const recentReports = computed(() => page.props.recentReports ?? []);
 const pendingReports = computed(() => page.props.pendingReports ?? []);
 const notifications = computed(() => page.props.notifications ?? []);
-const chartOptions = {
-  plugins: { legend: { position: 'bottom' } },
+// const chartOptions = {
+//   plugins: { legend: { position: 'bottom' } },
+//   responsive: true,
+// };
+const barchartOptions = {
   responsive: true,
-};
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom',
+      labels: {
+        usePointStyle: true,
+        padding: 20,
+        font: {
+          size: 12
+        }
+      }
+    },
+    tooltip: {
+      mode: 'index',
+      intersect: false,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      titleColor: '#fff',
+      bodyColor: '#fff',
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+      borderWidth: 1
+    }
+  },
+  scales: {
+    x: {
+      grid: {
+        display: false
+      },
+      ticks: {
+        font: {
+          size: 11
+        }
+      }
+    },
+    y: {
+      beginAtZero: true,
+      grid: {
+        display: false
+      },
+      ticks: {
+        stepSize: 1,
+        font: {
+          size: 11
+        }
+      }
+    }
+  },
+  interaction: {
+    mode: 'nearest',
+    axis: 'x',
+    intersect: false
+  },
+  elements: {
+    line: {
+      tension: 0.4
+    },
+    point: {
+      radius: 4,
+      hoverRadius: 6
+    }
+  }
+}
+
+const pieChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom'
+    }
+  }
+}
 </script>
 
 <style scoped>
