@@ -13,7 +13,8 @@ const model = computed(() => {
             label: 'Home',
             items: [
                 { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
-                { label: 'BCLCNCC', icon: 'pi pi-fw pi-file-check', to: '/supplier_selection_reports' }
+                { label: 'BCLCNCC', icon: 'pi pi-fw pi-file-check', to: '/supplier_selection_reports' },
+                { label: 'Hồ sơ', icon: 'pi pi-fw pi-id-card', to: '/profile' }
             ]
         }
     ];

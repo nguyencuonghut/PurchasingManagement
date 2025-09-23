@@ -47,4 +47,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function activityLogs()
+    {
+        return $this->hasMany(\App\Models\ActivityLog::class, 'user_id');
+    }
 }

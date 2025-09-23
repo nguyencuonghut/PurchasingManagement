@@ -71,14 +71,6 @@ const user_name = computed(() => page.props.auth.user.name)
 
             <div class="layout-topbar-menu hidden lg:block">
                 <div class="layout-topbar-menu-content">
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-calendar"></i>
-                        <span>Calendar</span>
-                    </button>
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-user"></i>
-                        <span>Profile</span>
-                    </button>
                     <button @click="logout" type="button" class="layout-topbar-action">
                         <i class="pi pi-power-off"></i>
                         <span>Logout</span>
