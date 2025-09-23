@@ -20,7 +20,7 @@
             </div>
             </div>
             <div class="flex gap-4">
-              <div style="width: 50%"><b>Trạng thái:</b> <Tag :value="report.status" :severity="getStatusSeverity(report.status)" /></div>
+              <div style="width: 50%"><b>Trạng thái:</b> <Tag :value="getStatusLabel(report.status)" :severity="getStatusSeverity(report.status)" /></div>
               <div style="width: 50%" class="ml-6"><b>Người tạo:</b> {{ report.creator_name }} ({{ report.formatted_created_at }})</div>
             </div>
             <div v-if="'pending' !== report.manager_approved_result" class="mt-2"><b>Trưởng phòng Thu Mua:</b>
@@ -29,7 +29,7 @@
                 <div style="width: 50%"><b>Thời gian: </b>{{ report.formatted_manager_approved_at }}</div>
               </div>
               <div class="flex ml-6 gap-4">
-                <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.manager_approved_result" :severity="getResultsSeverity(report.manager_approved_result)" /></div>
+                <div style="width: 50%"><b>Kết quả: </b><Tag :value="getResultLabel(report.manager_approved_result)" :severity="getResultsSeverity(report.manager_approved_result)" /></div>
                 <div v-if="report.manager_approved_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.manager_approved_notes }}</div>
               </div>
             </div>
@@ -39,7 +39,7 @@
                 <div style="width: 50%"><b>Thời gian: </b>{{ report.formatted_auditor_audited_at }}</div>
               </div>
               <div class="flex ml-6 gap-4">
-                <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.auditor_audited_result" :severity="getResultsSeverity(report.auditor_audited_result)" /></div>
+                <div style="width: 50%"><b>Kết quả: </b><Tag :value="getResultLabel(report.auditor_audited_result)" :severity="getResultsSeverity(report.auditor_audited_result)" /></div>
                 <div v-if="report.auditor_audited_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.auditor_audited_notes }}</div>
               </div>
             </div>
@@ -49,7 +49,7 @@
                 <div style="width: 50%"><b>Thời gian: </b>{{ report.formatted_director_approved_at }}</div>
               </div>
               <div class="flex ml-6 gap-4">
-                <div style="width: 50%"><b>Kết quả: </b><Tag :value="report.director_approved_result" :severity="getResultsSeverity(report.director_approved_result)" /></div>
+                <div style="width: 50%"><b>Kết quả: </b><Tag :value="getResultLabel(report.director_approved_result)" :severity="getResultsSeverity(report.director_approved_result)" /></div>
                 <div v-if="report.director_approved_notes" style="width: 50%"><b>Ghi chú: </b>{{ report.director_approved_notes }}</div>
               </div>
             </div>
@@ -161,7 +161,7 @@
     <div class="flex flex-col gap-4">
       <div>
         <label class="block mb-2 font-semibold">Kết quả duyệt</label>
-        <Select v-model="manager_approved_result" :options="['approved', 'rejected']" placeholder="Chọn kết quả" class="w-full" />
+        <Select v-model="manager_approved_result" :options="[{ label: 'Đồng ý', value: 'approved' }, { label: 'Từ chối', value: 'rejected' }]" optionLabel="label" optionValue="value" placeholder="Chọn kết quả" class="w-full" />
       </div>
       <div>
         <label class="block mb-2 font-semibold">Ghi chú</label>
@@ -181,7 +181,7 @@
     <div class="flex flex-col gap-4">
       <div>
         <label class="block mb-2 font-semibold">Kết quả kiểm tra</label>
-        <Select v-model="auditor_audited_result" :options="['approved', 'rejected']" placeholder="Chọn kết quả" class="w-full" />
+        <Select v-model="auditor_audited_result" :options="[{ label: 'Đồng ý', value: 'approved' }, { label: 'Từ chối', value: 'rejected' }]" optionLabel="label" optionValue="value" placeholder="Chọn kết quả" class="w-full" />
       </div>
       <div>
         <label class="block mb-2 font-semibold">Ghi chú</label>
@@ -201,7 +201,7 @@
     <div class="flex flex-col gap-4">
       <div>
         <label class="block mb-2 font-semibold">Kết quả duyệt</label>
-        <Select v-model="director_approved_result" :options="['approved', 'rejected']" placeholder="Chọn kết quả" class="w-full" />
+        <Select v-model="director_approved_result" :options="[{ label: 'Đồng ý', value: 'approved' }, { label: 'Từ chối', value: 'rejected' }]" optionLabel="label" optionValue="value" placeholder="Chọn kết quả" class="w-full" />
       </div>
       <div>
         <label class="block mb-2 font-semibold">Ghi chú</label>
@@ -449,6 +449,43 @@ const getStatusSeverity = (status) => {
         default:
             return 'info';
     }
+};
+
+
+// Chuyển đổi trạng thái sang tiếng Việt
+const getStatusLabel = (status) => {
+  switch (status) {
+    case 'draft':
+      return 'Nháp';
+    case 'pending_manager_approval':
+      return 'Chờ trưởng phòng duyệt';
+    case 'manager_approved':
+      return 'Đã trưởng phòng duyệt';
+    case 'auditor_approved':
+      return 'Đã kiểm soát duyệt';
+    case 'pending_director_approval':
+      return 'Chờ giám đốc duyệt';
+    case 'director_approved':
+      return 'Đã giám đốc duyệt';
+    case 'rejected':
+      return 'Từ chối';
+    default:
+      return status;
+  }
+};
+
+// Chuyển đổi kết quả duyệt sang tiếng Việt
+const getResultLabel = (result) => {
+  switch (result) {
+    case 'approved':
+      return 'Đồng ý';
+    case 'rejected':
+      return 'Từ chối';
+    case 'pending':
+      return 'Chờ duyệt';
+    default:
+      return result;
+  }
 };
 
 const submitAuditorAudit = () => {
