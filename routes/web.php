@@ -6,6 +6,7 @@ use App\Http\Controllers\QuotationFileController;
 use App\Http\Controllers\SupplierSelectionReportController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ChangePasswordController;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,7 @@ Route::group(['middleware'=>'auth:web'], function() {
 
     //Profile routes
     Route::get('/profile', [ProfileController::class, 'profile'])->name('profile');
+    Route::post('/change-password', ChangePasswordController::class)->name('change-password');
 
     //User routes
     Route::post('users/bulkDelete', [UserController::class, 'bulkDelete']);

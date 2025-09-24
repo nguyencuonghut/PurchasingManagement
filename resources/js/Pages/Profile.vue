@@ -49,24 +49,27 @@
         <div class="p-fluid">
           <div class="field">
             <label>Mật khẩu hiện tại</label>
-            <Password v-model="passwords.current" toggleMask class="w-full" inputClass="w-full" />
+            <Password v-model="passwordForm.current_password" toggleMask class="w-full" inputClass="w-full" />
+            <small v-if="passwordForm.errors.current_password" class="text-red-500">{{ passwordForm.errors.current_password }}</small>
           </div>
           <div class="field">
             <label>Mật khẩu mới</label>
-            <Password v-model="passwords.new" toggleMask class="w-full" inputClass="w-full" />
+            <Password v-model="passwordForm.new_password" toggleMask class="w-full" inputClass="w-full" />
+            <small v-if="passwordForm.errors.new_password" class="text-red-500">{{ passwordForm.errors.new_password }}</small>
           </div>
           <div class="field">
             <label>Nhập lại mật khẩu mới</label>
-            <Password v-model="passwords.confirm" toggleMask class="w-full" inputClass="w-full" />
+            <Password v-model="passwordForm.new_password_confirmation" toggleMask class="w-full" inputClass="w-full" />
+            <small v-if="passwordForm.errors.new_password_confirmation" class="text-red-500">{{ passwordForm.errors.new_password_confirmation }}</small>
           </div>
-          <Button label="Cập nhật" icon="pi pi-check" class="mt-2 w-full" @click="updatePassword" />
+          <Button label="Cập nhật" icon="pi pi-check" class="mt-2 w-full" @click="updatePassword" :loading="passwordForm.processing" />
         </div>
       </Dialog>
     </div>
 </template>
 
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
@@ -82,11 +85,28 @@ const activityLogs = computed(() => page.props.activityLogs ?? []);
 const reportCodesById = computed(() => page.props.reportCodesById ?? {});
 
 const changePassword = ref(false);
-const passwords = ref({ current: '', new: '', confirm: '' });
+const passwordForm = useForm({
+  current_password: '',
+  new_password: '',
+  new_password_confirmation: '',
+});
 
 function updatePassword() {
-  // TODO: Gọi API đổi mật khẩu
-  changePassword.value = false;
+  // Clear previous errors before submitting
+  passwordForm.clearErrors();
+  passwordForm.post('/change-password', {
+    onSuccess: () => {
+      changePassword.value = false;
+      passwordForm.reset();
+    },
+    onError: (errors) => {
+      if (errors && errors.message) {
+        alert(errors.message);
+      } else {
+        console.log('Có lỗi xảy ra, vui lòng thử lại.');
+      }
+    }
+  });
 }
 function formatDate(dateString) {
   if (!dateString) return '';
