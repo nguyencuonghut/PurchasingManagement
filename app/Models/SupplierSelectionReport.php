@@ -10,6 +10,7 @@ class SupplierSelectionReport extends Model
     protected $fillable = [
         'code',
         'description',
+        'adm_id',
         'file_path',
         'creator_id',
         'status',
@@ -24,7 +25,8 @@ class SupplierSelectionReport extends Model
         'director_approved_result',
         'director_approved_notes',
         'director_id',
-        'director_approved_at',    ];
+        'director_approved_at',
+    ];
 
     // Accessor để tự động thêm URL công khai cho file_path khi truy vấn
     protected $appends = ['image_url']; // Thêm 'image_url' vào thuộc tính sẽ được tự động thêm vào JSON
@@ -96,4 +98,16 @@ class SupplierSelectionReport extends Model
         // Fallback: đếm trực tiếp (có thể gây N+1 nếu gọi theo danh sách)
         return $this->quotationFiles()->count();
     }
+
+    // --- Liên kết Admin Thu Mua ---
+    public function adminThuMua()
+    {
+        return $this->belongsTo(User::class, 'adm_id');
+    }
+
+    public function getAdminThuMuaNameAttribute()
+    {
+        return $this->adminThuMua ? $this->adminThuMua->name : null;
+    }
+
 }

@@ -33,6 +33,8 @@ Route::group(['middleware'=>'auth:web'], function() {
 
     //SupplierSelectionReport routes
     Route::resource('/supplier_selection_reports', SupplierSelectionReportController::class);
+    // API lấy danh sách Admin Thu Mua
+    Route::get('/api/admin-thu-mua-users', [SupplierSelectionReportController::class, 'getAdminThuMuaUsers'])->name('api.admin_thu_mua_users');
     Route::put('/supplier_selection_reports/{supplier_selection_report}/request-manager-to-approve',
         [SupplierSelectionReportController::class, 'requestManagerToApprove'])
         ->name('supplier_selection_reports.requestManagerToApprove');

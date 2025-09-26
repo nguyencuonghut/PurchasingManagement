@@ -26,6 +26,9 @@ class StoreSupplierSelectionReportRequest extends FormRequest
             'code' => ['required', 'string', 'max:255', Rule::unique('supplier_selection_reports')],
             'description' => ['required', 'string', 'max:1000'],
 
+            // Admin Thu Mua (nullable, phải là id user hợp lệ nếu có)
+            'admin_thu_mua_id' => ['nullable', 'exists:users,id'],
+
             // Ảnh: theo cấu hình uploads.image (mimes + max KB)
             'file_path' => [
                 'nullable',
@@ -57,6 +60,8 @@ class StoreSupplierSelectionReportRequest extends FormRequest
             'code.max' => 'Mã báo cáo không được vượt quá 255 ký tự.',
             'description.required' => 'Mô tả không được để trống.',
             'description.max' => 'Mô tả không được vượt quá 1000 ký tự.',
+
+            'admin_thu_mua_id.exists' => 'Admin Thu Mua không hợp lệ.',
 
             'file_path.image' => 'Ảnh báo cáo phải là một file ảnh hợp lệ.',
             'file_path.max' => 'Ảnh báo cáo không được vượt quá 10MB.',

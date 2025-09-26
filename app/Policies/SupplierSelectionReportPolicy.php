@@ -30,7 +30,7 @@ class SupplierSelectionReportPolicy
      */
     public function create(User $user): bool
     {
-        return in_array(optional($user->role)->name, ['Quản trị', 'Trưởng phòng Thu Mua', 'Nhân viên Thu Mua']);
+        return true;//return in_array(optional($user->role)->name, ['Quản trị', 'Trưởng phòng Thu Mua', 'Nhân viên Thu Mua']);
     }
 
     /**

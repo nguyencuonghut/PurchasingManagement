@@ -110,13 +110,12 @@ class SupplierSelectionReportController extends Controller
     public function create(Request $request)
     {
         $this->authorize('create', SupplierSelectionReport::class);
-
-        // You can pass any initial props needed for the create page here
+        $adminThuMuaUsers = $this->getAdminThuMuaUsers($request->user());
         return Inertia::render('SupplierSelectionReportCreate', [
-            // Example: permissions or defaults
             'can' => [
                 'create_report' => $request->user()->can('create', SupplierSelectionReport::class),
             ],
+            'admin_thu_mua_users' => $adminThuMuaUsers,
         ]);
     }
 
@@ -130,6 +129,9 @@ class SupplierSelectionReportController extends Controller
         try {
             $data = $request->validated();
             $data['creator_id'] = $request->user()->id;
+            // Lưu adm_id nếu có (ép về null nếu rỗng, ép về int nếu có)
+            $adminId = $request->input('admin_thu_mua_id');
+            $data['adm_id'] = ($adminId === '' || $adminId === null) ? null : (int)$adminId;
 
             // Chuẩn bị biến theo dõi file đã upload để có thể dọn nếu lỗi
             $uploadedMainPath = null;
@@ -242,11 +244,11 @@ class SupplierSelectionReportController extends Controller
     public function edit(SupplierSelectionReport $supplierSelectionReport)
     {
         $this->authorize('update', $supplierSelectionReport);
-
         $report = $supplierSelectionReport->load(['quotationFiles','creator','manager','auditor','director']);
-
+        $adminThuMuaUsers = $this->getAdminThuMuaUsers(request()->user());
         return Inertia::render('SupplierSelectionReportEdit', [
             'report' => (new SupplierSelectionReportResource($report))->toArray(request()),
+            'admin_thu_mua_users' => $adminThuMuaUsers,
         ]);
     }
 
@@ -285,6 +287,7 @@ class SupplierSelectionReportController extends Controller
      */
     public function update(UpdateSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
+        \Log::info($request->all());
         $this->authorize('update', $supplierSelectionReport);
 
         // Nếu người dùng upload ảnh mới, kiểm tra kích thước <= 10MB
@@ -296,6 +299,9 @@ class SupplierSelectionReportController extends Controller
 
         // Lấy field text chuẩn
         $data = $request->safe()->only(['code', 'description']);
+        // Lưu adm_id nếu có (ép về null nếu rỗng, ép về int nếu có)
+        $adminId = $request->input('admin_thu_mua_id');
+        $data['adm_id'] = ($adminId === '' || $adminId === null) ? null : (int)$adminId;
 
         $oldFilePath = $supplierSelectionReport->file_path;
 
@@ -751,5 +757,26 @@ class SupplierSelectionReportController extends Controller
             return Storage::disk('public')->delete($filePath);
         }
         return false;
+    }
+    /**
+     * Lấy danh sách Admin Thu Mua (và thêm user login nếu là Nhân viên Thu Mua)
+     */
+    private function getAdminThuMuaUsers($user)
+    {
+        $admins = User::whereHas('role', function($q) {
+            $q->where('name', 'Admin Thu Mua');
+        })
+        ->select('id', 'name', 'email')
+        ->get();
+
+        // Nếu user login là Nhân viên Thu Mua, thêm vào danh sách nếu chưa có
+        if (optional($user->role)->name === 'Nhân viên Thu Mua') {
+            $exists = $admins->contains('id', $user->id);
+            if (!$exists) {
+                $admins->push($user->only(['id', 'name', 'email']));
+            }
+        }
+
+        return $admins;
     }
 }

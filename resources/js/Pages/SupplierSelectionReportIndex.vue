@@ -69,9 +69,16 @@
                 </template>
             </Column>
 
+
             <Column field="creator_name" header="Người tạo" sortable style="min-width: 12rem">
                 <template #body="{ data }">
                     {{ data.creator_name || 'N/A' }}
+                </template>
+            </Column>
+
+            <Column field="admin_thu_mua_name" header="Admin Thu Mua" sortable style="min-width: 12rem">
+                <template #body="{ data }">
+                    {{ data.admin_thu_mua_name || '-' }}
                 </template>
             </Column>
 

@@ -35,6 +35,8 @@ class SupplierSelectionReportResource extends JsonResource
             'manager_name' => $this->manager_name,
             'auditor_name' => $this->auditor_name,
             'director_name' => $this->director_name,
+            'admin_thu_mua_id' => $this->adm_id,
+            'admin_thu_mua_name' => $this->admin_thu_mua_name,
 
             'manager_id' => $this->manager_id,
             'auditor_id' => $this->auditor_id,

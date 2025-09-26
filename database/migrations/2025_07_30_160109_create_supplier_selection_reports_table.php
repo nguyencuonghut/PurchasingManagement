@@ -37,6 +37,10 @@ return new class extends Migration
             $table->longText('director_approved_notes')->nullable();
             $table->timestamp('director_approved_at')->nullable();
             $table->foreignId('director_id')->nullable()->constrained('users')->nullOnDelete();
+
+            // Admin Thu Mua (adm_id) - nullable foreign key to users
+            $table->foreignId('adm_id')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
         });
     }

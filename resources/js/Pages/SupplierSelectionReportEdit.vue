@@ -12,11 +12,31 @@
         <small v-if="submitted && v$.code.$invalid" class="text-red-500">{{ v$.code.$errors[0]?.$message }}</small>
       </div>
 
+
       <!-- Description -->
       <div>
         <label for="description" class="block font-bold mb-2 required-field">{{ t('form.description_label') }}</label>
         <InputText id="description" v-model.trim="v$.description.$model" :invalid="submitted && v$.description.$invalid" fluid />
         <small v-if="submitted && v$.description.$invalid" class="text-red-500">{{ v$.description.$errors[0]?.$message }}</small>
+      </div>
+
+      <!-- Admin Thu Mua -->
+      <div>
+        <label for="admin_thu_mua_id" class="block font-bold mb-2 required-field">Admin Thu Mua</label>
+        <Select
+          id="admin_thu_mua_id"
+          v-model="form.admin_thu_mua_id"
+          :options="adminThuMuaUsers"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Chọn Admin Thu Mua"
+          class="w-full"
+        >
+          <template #option="slotProps">
+            {{ slotProps.option.name }} ({{ slotProps.option.email }})
+          </template>
+        </Select>
+        <small v-if="submitted && !form.admin_thu_mua_id" class="text-red-500">Vui lòng chọn Admin Thu Mua</small>
       </div>
 
       <!-- file_path - ảnh đính kèm chính -->
@@ -70,6 +90,7 @@ import { useVuelidate } from '@vuelidate/core';
 import { required, maxLength, helpers } from '@vuelidate/validators';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
+import Select from 'primevue/select';
 import ProgressBar from 'primevue/progressbar';
 import { useToast } from 'primevue/usetoast';
 import DragDropImageUpload from '@/components/DragDropImageUpload.vue';
@@ -79,7 +100,9 @@ import { t } from '@/i18n/messages';
 
 const props = defineProps({
   report: { type: Object, required: true },
+  admin_thu_mua_users: { type: Array, default: () => [] },
 });
+const adminThuMuaUsers = computed(() => props.admin_thu_mua_users || []);
 
 const toast = useToast();
 
@@ -87,6 +110,9 @@ const toast = useToast();
 const form = useForm({
   code: props.report.code || '',
   description: props.report.description || '',
+  admin_thu_mua_id: props.report.admin_thu_mua_id !== undefined && props.report.admin_thu_mua_id !== null && props.report.admin_thu_mua_id !== ''
+    ? Number(props.report.admin_thu_mua_id)
+    : '',
   file_path: props.report.image_url || null, // có thể là URL, base64, File hoặc null
   quotation_files: [], // File[] mới
   deleted_quotation_file_ids: [], // id[] file báo giá cũ đánh dấu xóa
@@ -113,8 +139,11 @@ const rules = computed(() => ({
     required: helpers.withMessage(t('validation.description_required'), required),
     maxLength: helpers.withMessage(t('validation.description_max_1000'), maxLength(1000)),
   },
+  admin_thu_mua_id: {
+    required: helpers.withMessage('Vui lòng chọn Admin Thu Mua.', required),
+  },
 }));
-const v$ = useVuelidate(rules, { code, description });
+const v$ = useVuelidate(rules, form);
 const submitted = ref(false);
 const saveButtonLabel = computed(() => {
   const p = form.progress?.percentage;
@@ -196,7 +225,7 @@ async function save() {
   form.clearErrors();
 
   const ok = await v$.value.$validate();
-  if (!ok) return;
+  if (!ok) return
 
   form.code = String(v$.value.code.$model ?? form.code ?? '');
   form.description = String(v$.value.description.$model ?? form.description ?? '');
@@ -226,6 +255,7 @@ async function save() {
           _method: 'PUT',                         // 👈 quan trọng
           code: String(data.code ?? ''),
           description: String(data.description ?? ''),
+          admin_thu_mua_id: data.admin_thu_mua_id,
           file_path_removed: !!data.file_path_removed,
           deleted_quotation_file_ids: Array.isArray(data.deleted_quotation_file_ids)
             ? data.deleted_quotation_file_ids
@@ -260,6 +290,7 @@ async function save() {
     form
       .transform((data) => ({
         code: String(data.code ?? ''),
+        admin_thu_mua_id: data.admin_thu_mua_id,
         description: String(data.description ?? ''),
         file_path: typeof data.file_path === 'string' ? data.file_path : '',
         // 👇 THÊM DÒNG NÀY
