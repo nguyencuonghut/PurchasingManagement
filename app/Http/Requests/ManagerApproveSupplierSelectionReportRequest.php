@@ -9,7 +9,7 @@ class ManagerApproveSupplierSelectionReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->role === UserRoles::PM_MANAGER;
+        return $this->user() && optional($this->user()->role)->name === 'Trưởng phòng Thu Mua';
     }
 
     public function rules(): array

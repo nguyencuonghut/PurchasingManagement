@@ -17,16 +17,24 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::orderBy('id', 'desc')->get()->map(function ($user) {
-            return collect($user)->only(['id', 'name', 'email', 'status', 'role']);
+        $users = User::with('role')->orderBy('id', 'desc')->get()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'status' => $user->status,
+                'role' => optional($user->role)->name,
+                'role_id' => $user->role_id,
+            ];
         });
 
+        $isAdmin = optional(Auth::user()->role)->name === 'Quản trị';
         $can = [
-            'create_user' => 'Quản trị' ==  Auth::user()->role,
-            'update_user' => 'Quản trị' ==  Auth::user()->role,
-            'delete_user' => 'Quản trị' ==  Auth::user()->role,
-            'import_user' => 'Quản trị' ==  Auth::user()->role,
-            'export_user' => 'Quản trị' ==  Auth::user()->role,
+            'create_user' => $isAdmin,
+            'update_user' => $isAdmin,
+            'delete_user' => $isAdmin,
+            'import_user' => $isAdmin,
+            'export_user' => $isAdmin,
         ];
 
         return Inertia::render('UserIndex', [
@@ -49,21 +57,20 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         //Check authorize
-        if ('Quản trị' != Auth::user()->role) {
-            $request->session()->flash('message', 'Bạn không có quyền!');
+        if (optional(Auth::user()->role)->name !== 'Quản trị') {
+            session()->flash('message', 'Bạn không có quyền!');
             return redirect()->back()->withErrors('Bạn không có quyền!');
         }
 
         $user = new User();
-
         $user->name = $request->name;
         $user->email = $request->email;
         $user->status = $request->status;
         $user->password = bcrypt($request->password);
-        $user->role = $request->role;
+        $user->role_id = $request->role_id;
         $user->save();
 
-        $request->session()->flash('message', 'Tạo xong người dùng!');
+    session()->flash('message', 'Tạo xong người dùng!');
         return redirect()->route('users.index');
     }
 
@@ -89,18 +96,18 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user)
     {
         //Check authorize
-        if ('Quản trị' != Auth::user()->role) {
-            $request->session()->flash('message', 'Bạn không có quyền!');
+        if (optional(Auth::user()->role)->name !== 'Quản trị') {
+            session()->flash('message', 'Bạn không có quyền!');
             return redirect()->back()->withErrors('Bạn không có quyền!');
         }
 
         $user->name = $request->name;
         $user->email = $request->email;
         $user->status = $request->status;
-        $user->role = $request->role;
+        $user->role_id = $request->role_id;
         $user->save();
 
-        $request->session()->flash('message', 'Sửa xong người dùng!');
+    session()->flash('message', 'Sửa xong người dùng!');
         return redirect()->route('users.index');
     }
 
@@ -110,8 +117,8 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         //Check authorize
-        if ('Quản trị' != Auth::user()->role) {
-            $request->session()->flash('message', 'Bạn không có quyền!');
+        if (optional(Auth::user()->role)->name !== 'Quản trị') {
+            Session::flash('message', 'Bạn không có quyền!');
             return redirect()->back()->withErrors('Bạn không có quyền!');
         }
 
@@ -123,8 +130,8 @@ class UserController extends Controller
     public function bulkDelete(Request $request)
     {
         //Check authorize
-        if ('Quản trị' != Auth::user()->role) {
-            $request->session()->flash('message', 'Bạn không có quyền!');
+        if (optional(Auth::user()->role)->name !== 'Quản trị') {
+            session()->flash('message', 'Bạn không có quyền!');
             return redirect()->back()->withErrors('Bạn không có quyền!');
         }
 
@@ -136,7 +143,7 @@ class UserController extends Controller
             }
         }
 
-        $request->session()->flash('message', 'Xóa xong người dùng!');
+    session()->flash('message', 'Xóa xong người dùng!');
         return redirect()->route('users.index');
     }
 }

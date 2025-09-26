@@ -12,7 +12,7 @@ class QuotationFilePolicy
      */
     public function delete(User $user, QuotationFile $quotationFile): bool
     {
-        if ($user->role === 'Quản trị') {
+        if (optional($user->role)->name === 'Quản trị') {
             return true;
         }
 

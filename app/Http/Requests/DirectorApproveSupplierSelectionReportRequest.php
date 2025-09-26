@@ -12,7 +12,7 @@ class DirectorApproveSupplierSelectionReportRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->role === UserRoles::DIRECTOR;
+        return $this->user() && optional($this->user()->role)->name === 'Giám đốc';
     }
 
     public function rules(): array

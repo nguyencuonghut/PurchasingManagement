@@ -49,9 +49,10 @@ class SupplierSelectionReportController extends Controller
             ->withCount('quotationFiles')
             ->orderBy('id', 'desc');
 
-        if ($user->role === UserRoles::PURCHASER) {
+        $roleName = optional($user->role)->name;
+        if ($roleName === 'Nhân viên Thu Mua') {
             $query->where('creator_id', $user->id);
-        } elseif ($user->role === UserRoles::PM_MANAGER) {
+        } elseif ($roleName === 'Trưởng phòng Thu Mua') {
             $query->where(function($q) use ($user) {
                 $q->where('creator_id', $user->id)
                   ->orWhere(function($q2) use ($user) {
@@ -59,17 +60,17 @@ class SupplierSelectionReportController extends Controller
                          ->where('manager_id', $user->id);
                   });
             });
-        } elseif ($user->role === UserRoles::AUDITOR) {
+        } elseif ($roleName === 'Nhân viên Kiểm Soát') {
             $query->whereIn('status', [ReportStatus::MANAGER_APPROVED, ReportStatus::AUDITOR_APPROVED, ReportStatus::PENDING_DIRECTOR]);
-        } elseif ($user->role === UserRoles::DIRECTOR) {
+        } elseif ($roleName === 'Giám đốc') {
             $query->where('director_id', $user->id);
         }
 
         $reports = SupplierSelectionReportResource::collection($query->get());
 
-        $canCreate = $user->can('create', SupplierSelectionReport::class);
-        $canUpdate = $user->role === UserRoles::ADMIN || $user->role === UserRoles::PURCHASER || $user->role === UserRoles::PM_MANAGER;
-        $canDelete = $user->role === UserRoles::ADMIN || $user->role === UserRoles::PURCHASER || $user->role === UserRoles::PM_MANAGER;
+    $canCreate = $user->can('create', SupplierSelectionReport::class);
+    $canUpdate = in_array($roleName, ['Quản trị', 'Nhân viên Thu Mua', 'Trưởng phòng Thu Mua']);
+    $canDelete = in_array($roleName, ['Quản trị', 'Nhân viên Thu Mua', 'Trưởng phòng Thu Mua']);
         $canExport = true;//Always can export
 
         $can = [
@@ -79,12 +80,16 @@ class SupplierSelectionReportController extends Controller
             'export_report' => $canExport,
         ];
 
-        $managers = User::where('role', UserRoles::PM_MANAGER)
+        $managers = User::whereHas('role', function($q) {
+                $q->where('name', 'Trưởng phòng Thu Mua');
+            })
             ->select('id', 'name', 'email')
             ->orderBy('name')
             ->get();
 
-        $directors = User::where('role', UserRoles::DIRECTOR)
+        $directors = User::whereHas('role', function($q) {
+                $q->where('name', 'Giám đốc');
+            })
             ->select('id', 'name', 'email')
             ->orderBy('name')
             ->get();
@@ -170,14 +175,16 @@ class SupplierSelectionReportController extends Controller
                 }
 
                 // Nếu người tạo là Trưởng phòng Thu Mua -> auto approve & notify
-                if ($request->user()->role === UserRoles::PM_MANAGER) {
+                if (optional($request->user()->role)->name === 'Trưởng phòng Thu Mua') {
                     $report->update([
                         'status' => ReportStatus::MANAGER_APPROVED,
                         'manager_id' => $request->user()->id,
                         'manager_approved_at' => now()
                     ]);
 
-                    $auditors = User::where('role', 'Nhân viên Kiểm Soát')->get();
+                    $auditors = User::whereHas('role', function($q) {
+                        $q->where('name', 'Nhân viên Kiểm Soát');
+                    })->get();
                     foreach ($auditors as $auditor) {
                         Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorAudit($report));
                     }
@@ -470,7 +477,9 @@ class SupplierSelectionReportController extends Controller
             ]);
         }
 
-        $manager = User::where('role', 'Trưởng phòng Thu Mua')->where('id', $managerId)->first();
+        $manager = User::whereHas('role', function($q) {
+                $q->where('name', 'Trưởng phòng Thu Mua');
+            })->where('id', $managerId)->first();
         if (!$manager) {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
@@ -503,7 +512,7 @@ class SupplierSelectionReportController extends Controller
     public function managerApprove(ManagerApproveSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
-        if ($user->role !== UserRoles::PM_MANAGER) {
+    if (optional($user->role)->name !== 'Trưởng phòng Thu Mua') {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
                 'message' => 'Bạn không có quyền duyệt phiếu này.'
@@ -531,7 +540,9 @@ class SupplierSelectionReportController extends Controller
         $supplierSelectionReport->save();
 
         if ($supplierSelectionReport->status === ReportStatus::MANAGER_APPROVED) {
-            $auditors = User::where('role', 'Nhân viên Kiểm Soát')->get();
+            $auditors = User::whereHas('role', function($q) {
+                $q->where('name', 'Nhân viên Kiểm Soát');
+            })->get();
             foreach ($auditors as $auditor) {
                 Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportNeedAuditorAudit($supplierSelectionReport));
             }
@@ -553,7 +564,7 @@ class SupplierSelectionReportController extends Controller
     public function auditorAudit(AuditorAuditSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
-        if ($user->role !== UserRoles::AUDITOR) {
+    if (optional($user->role)->name !== 'Nhân viên Kiểm Soát') {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
                 'message' => 'Bạn không có quyền review báo cáo này.'
@@ -609,7 +620,9 @@ class SupplierSelectionReportController extends Controller
             ]);
         }
 
-        $director = User::where('role', UserRoles::DIRECTOR)->where('id', $directorId)->first();
+        $director = User::whereHas('role', function($q) {
+                $q->where('name', 'Giám đốc');
+            })->where('id', $directorId)->first();
         if (!$director) {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
@@ -642,7 +655,7 @@ class SupplierSelectionReportController extends Controller
     public function directorApprove(DirectorApproveSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
-        if ($user->role !== UserRoles::DIRECTOR) {
+    if (optional($user->role)->name !== 'Giám đốc') {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
                 'message' => 'Bạn không có quyền duyệt phiếu này.'

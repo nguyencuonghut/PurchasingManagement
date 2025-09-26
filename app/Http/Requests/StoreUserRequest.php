@@ -25,7 +25,7 @@ class StoreUserRequest extends FormRequest
             'name' => 'required',
             'email' => 'required|email|unique:users',
             'password' => 'required|confirmed|min:6',
-            'role' => 'required',
+            'role_id' => 'required|exists:roles,id',
             'status' => 'required',
         ];
     }
@@ -40,7 +40,8 @@ class StoreUserRequest extends FormRequest
             'password.required' => 'Bạn phải nhập mật khẩu.',
             'password.confirmed' => 'Mật khẩu không khớp.',
             'password.min' => 'Mật khẩu phải dài ít nhất 6 ký tự.',
-            'role.required' => 'Bạn phải nhập vai trò.',
+            'role_id.required' => 'Bạn phải nhập vai trò.',
+            'role_id.exists' => 'Vai trò không hợp lệ.',
             'status.required' => 'Bạn phải nhập trạng thái.',
         ];
     }

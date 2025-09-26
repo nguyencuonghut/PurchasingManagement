@@ -9,7 +9,7 @@ class AuditorAuditSupplierSelectionReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->role === UserRoles::AUDITOR;
+        return $this->user() && optional($this->user()->role)->name === 'Nhân viên Kiểm Soát';
     }
 
     public function rules(): array

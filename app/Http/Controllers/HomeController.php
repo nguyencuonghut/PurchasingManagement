@@ -11,16 +11,16 @@ class HomeController extends Controller
     public function home()
     {
         $user = Auth::user();
-        $role = $user->role;
+        $roleName = optional($user->role)->name;
 
         // Query base
         $query = \App\Models\SupplierSelectionReport::query();
-        if (in_array($role, ['Trưởng phòng Thu Mua'])) {
+        if ($roleName === 'Trưởng phòng Thu Mua') {
             $query = $query->where(function($q) use ($user) {
                 $q->where('creator_id', $user->id)
                   ->orWhere('manager_id', $user->id);
             });
-        } elseif (in_array($role, ['Nhân viên Thu Mua'])) {
+        } elseif ($roleName === 'Nhân viên Thu Mua') {
             $query = $query->where('creator_id', $user->id);
         }
         // Các role còn lại xem được toàn bộ

@@ -30,7 +30,7 @@ class SupplierSelectionReportPolicy
      */
     public function create(User $user): bool
     {
-        return UserRoles::ADMIN === $user->role || UserRoles::PM_MANAGER === $user->role || UserRoles::PURCHASER === $user->role;
+    return in_array(optional($user->role)->name, ['Quản trị', 'Trưởng phòng Thu Mua', 'Nhân viên Thu Mua']);
     }
 
     /**
@@ -38,7 +38,7 @@ class SupplierSelectionReportPolicy
      */
     public function update(User $user, SupplierSelectionReport $supplierSelectionReport): bool
     {
-        return UserRoles::ADMIN === $user->role || $user->id === $supplierSelectionReport->creator_id;
+    return (optional($user->role)->name === 'Quản trị') || $user->id === $supplierSelectionReport->creator_id;
     }
 
     /**
@@ -46,7 +46,7 @@ class SupplierSelectionReportPolicy
      */
     public function delete(User $user, SupplierSelectionReport $supplierSelectionReport): bool
     {
-        return UserRoles::ADMIN === $user->role || $user->id === $supplierSelectionReport->creator_id;
+    return (optional($user->role)->name === 'Quản trị') || $user->id === $supplierSelectionReport->creator_id;
     }
 
     /**
