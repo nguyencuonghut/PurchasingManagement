@@ -39,12 +39,12 @@
                     <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo tên" />
                 </template>
             </Column>
-            <Column field="department" header="Phòng ban" sortable style="min-width: 12rem">
+            <Column field="department_id" header="Phòng ban" sortable style="min-width: 12rem">
                 <template #body="{ data }">
-                    {{ data.department || '-' }}
+                    {{ getDepartmentName(data.department_id) }}
                 </template>
                 <template #filter="{ filterModel }">
-                    <Select v-model="filterModel.value" :options="departments" placeholder="Chọn phòng ban" showClear />
+                    <Select v-model="filterModel.value" :options="departments" optionLabel="label" optionValue="value" placeholder="Chọn phòng ban" showClear />
                 </template>
             </Column>
             <Column field="email" header="Email" sortable style="min-width: 14rem">
@@ -396,9 +396,14 @@ const selectedUsers = ref();
 const filters = ref();
 const roles = ref(['Quản trị', 'Người dùng']);
 const departments = ref([]);
-// Nếu dùng Inertia truyền props, lấy từ page.props
 if (page.props && page.props.departments) {
-    departments.value = page.props.departments.map(dep => ({ label: dep.name, value: dep.name }));
+    departments.value = page.props.departments.map(dep => ({ label: dep.name, value: dep.id }));
+}
+
+function getDepartmentName(id) {
+    if (!id) return '-';
+    const found = departments.value.find(dep => String(dep.value) === String(id));
+    return found ? found.label : '-';
 }
 const statuses = ref(['On', 'Off']);
 
@@ -407,6 +412,7 @@ const initFilters = () => {
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
         name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
         email: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+    department_id: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
         role: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
         status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
     };
