@@ -17,7 +17,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('role')->orderBy('id', 'desc')->get()->map(function ($user) {
+        $users = User::with(['role', 'department'])->orderBy('id', 'desc')->get()->map(function ($user) {
             return [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -25,6 +25,8 @@ class UserController extends Controller
                 'status' => $user->status,
                 'role' => optional($user->role)->name,
                 'role_id' => $user->role_id,
+                'department' => optional($user->department)->name,
+                'department_id' => $user->department_id,
             ];
         });
 
@@ -37,9 +39,11 @@ class UserController extends Controller
             'export_user' => $isAdmin,
         ];
 
+        $departments = \App\Models\Department::all(['id', 'name']);
         return Inertia::render('UserIndex', [
             'users' => $users,
             'can' => $can,
+            'departments' => $departments,
         ]);
     }
 
@@ -68,6 +72,7 @@ class UserController extends Controller
         $user->status = $request->status;
         $user->password = bcrypt($request->password);
         $user->role_id = $request->role_id;
+        $user->department_id = $request->department_id;
         $user->save();
 
         session()->flash('message', 'Tạo xong người dùng!');
@@ -101,11 +106,12 @@ class UserController extends Controller
             return redirect()->back()->withErrors('Bạn không có quyền!');
         }
 
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->status = $request->status;
-        $user->role_id = $request->role_id;
-        $user->save();
+    $user->name = $request->name;
+    $user->email = $request->email;
+    $user->status = $request->status;
+    $user->role_id = $request->role_id;
+    $user->department_id = $request->department_id;
+    $user->save();
 
         session()->flash('message', 'Sửa xong người dùng!');
         return redirect()->route('users.index');

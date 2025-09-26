@@ -23,7 +23,12 @@ class User extends Authenticatable
         'password',
         'role_id',
         'status',
+        'department_id',
     ];
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
     public function role()
     {
         return $this->belongsTo(Role::class);

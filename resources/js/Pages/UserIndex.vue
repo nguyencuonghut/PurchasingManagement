@@ -39,6 +39,14 @@
                     <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo tên" />
                 </template>
             </Column>
+            <Column field="department" header="Phòng ban" sortable style="min-width: 12rem">
+                <template #body="{ data }">
+                    {{ data.department || '-' }}
+                </template>
+                <template #filter="{ filterModel }">
+                    <Select v-model="filterModel.value" :options="departments" placeholder="Chọn phòng ban" showClear />
+                </template>
+            </Column>
             <Column field="email" header="Email" sortable style="min-width: 14rem">
                 <template #body="{ data }">
                     {{ data.email }}
@@ -387,6 +395,11 @@ const deleteSelectedUsers = () => {
 const selectedUsers = ref();
 const filters = ref();
 const roles = ref(['Quản trị', 'Người dùng']);
+const departments = ref([]);
+// Nếu dùng Inertia truyền props, lấy từ page.props
+if (page.props && page.props.departments) {
+    departments.value = page.props.departments.map(dep => ({ label: dep.name, value: dep.name }));
+}
 const statuses = ref(['On', 'Off']);
 
 const initFilters = () => {
@@ -423,7 +436,7 @@ const roleSeverityMap = {
   'Trưởng phòng Thu Mua': 'secondary',
   'Nhân viên Kiểm Soát': 'warn',
   'Giám đốc': 'danger',
-  'Kế toán': 'help',
+  'Kế toán': 'secondary',
   'Admin Thu Mua': 'secondary',
 };
 

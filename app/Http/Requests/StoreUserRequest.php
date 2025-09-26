@@ -27,6 +27,7 @@ class StoreUserRequest extends FormRequest
             'password' => 'required|confirmed|min:6',
             'role_id' => 'required|exists:roles,id',
             'status' => 'required',
+            'department_id' => 'nullable|exists:departments,id',
         ];
     }
 
@@ -43,6 +44,7 @@ class StoreUserRequest extends FormRequest
             'role_id.required' => 'Bạn phải nhập vai trò.',
             'role_id.exists' => 'Vai trò không hợp lệ.',
             'status.required' => 'Bạn phải nhập trạng thái.',
+                'department_id.exists' => 'Phòng ban không hợp lệ.',
         ];
     }
 }

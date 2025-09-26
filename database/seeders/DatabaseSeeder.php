@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         //User::factory(100)->create();
         $this->call([
             RoleSeeder::class,
+            DepartmentSeeder::class,
         ]);
 
         User::factory()->create([
@@ -24,6 +25,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 1, // Quản trị
+            'department_id' => 5, // BP IT
         ]);
         User::factory()->create([
             'name' => 'Phạm Thị Trang',
@@ -31,6 +33,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 2, // Nhân viên Thu Mua
+            'department_id' => 1, // Phòng Thu Mua
         ]);
         User::factory()->create([
             'name' => 'Bùi Thị Nụ',
@@ -38,6 +41,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 4, // Nhân viên Kiểm Soát
+            'department_id' => 2, // Phòng Kiểm Soát
         ]);
         User::factory()->create([
             'name' => 'Lê Thị Hồng',
@@ -45,6 +49,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 3, // Trưởng phòng Thu Mua
+            'department_id' => 1, // Phòng Thu Mua
         ]);
         User::factory()->create([
             'name' => 'Vũ Hoàng Giang',
@@ -52,6 +57,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 3, // Trưởng phòng Thu Mua
+            'department_id' => 1, // Phòng Thu Mua
         ]);
         User::factory()->create([
             'name' => 'Tạ Văn Toại',
@@ -59,6 +65,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 5, // Giám đốc
+            'department_id' => 4, // Ban Giám Đốc
         ]);
         User::factory()->create([
             'name' => 'Nguyễn khôi Nguyên',
@@ -66,6 +73,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 5, // Giám đốc
+            'department_id' => 4, // Ban Giám Đốc
         ]);
         User::factory()->create([
             'name' => 'Nguyễn Thị Hồng Đào',
@@ -73,6 +81,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 6, // Kế toán
+            'department_id' => 3, // Phòng Kế Toán
         ]);
         User::factory()->create([
             'name' => 'Trần Thị Thu Huyền',
@@ -80,6 +89,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 7, // Admin Thu Mua
+            'department_id' => 1, // Phòng Thu Mua
         ]);
         $this->call(\Database\Seeders\SupplierSelectionReportSeeder::class);
     }
