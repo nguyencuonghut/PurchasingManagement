@@ -158,13 +158,6 @@
                 <p v-else>Không có ảnh để hiển thị.</p>
             </div>
             <template #footer>
-                <Button
-                    label="Xem full màn hình"
-                    icon="pi pi-external-link"
-                    @click="openFullscreen"
-                    class="p-button-outlined"
-                    v-if="currentImageSrc"
-                />
                 <Button label="Đóng" icon="pi pi-times" @click="imageModalVisible = false" />
             </template>
         </Dialog>
@@ -280,16 +273,6 @@ const imageRef = ref(null);
 const openImageModal = (imageUrl) => {
     currentImageSrc.value = imageUrl;
     imageModalVisible.value = true;
-};
-
-const openFullscreen = () => {
-    if (imageRef.value && imageRef.value.requestFullscreen) {
-        imageRef.value.requestFullscreen();
-    } else if (imageRef.value && imageRef.value.webkitRequestFullscreen) {
-        imageRef.value.webkitRequestFullscreen();
-    } else if (imageRef.value && imageRef.value.msRequestFullscreen) {
-        imageRef.value.msRequestFullscreen();
-    }
 };
 
 // ==== Delete flow ====
