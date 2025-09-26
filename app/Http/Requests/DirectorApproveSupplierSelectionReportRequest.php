@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Enums\UserRoles;
 
 class DirectorApproveSupplierSelectionReportRequest extends FormRequest
 {
