@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateSupplierSelectionReportRequest;
 use App\Models\QuotationFile;
 use App\Models\SupplierSelectionReport;
 use App\Models\User;
-use App\Enums\UserRoles;
 use App\Enums\ReportStatus;
 use App\Notifications\SupplierSelectionReportApprovedByDirector;
 use App\Notifications\SupplierSelectionReportApprovedByManager;
@@ -287,7 +286,6 @@ class SupplierSelectionReportController extends Controller
      */
     public function update(UpdateSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
-        \Log::info($request->all());
         $this->authorize('update', $supplierSelectionReport);
 
         // Nếu người dùng upload ảnh mới, kiểm tra kích thước <= 10MB
