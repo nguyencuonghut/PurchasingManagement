@@ -416,22 +416,20 @@ const getStatusSeverity = (status) => {
     }
 };
 
-const getRoleSeverity = (role) => { // Đổi tên tham số từ status thành role cho rõ ràng
-    switch (role) {
-        case 'Quản trị':
-            return 'success';
-        case 'Nhân viên Thu Mua':
-            return 'info';
-        case 'Nhân viên Kiểm Soát':
-            return 'warn';
-        case 'Trưởng phòng Thu Mua':
-            return 'secondary';
-        case 'Giám đốc':
-            return 'danger';
-        default:
-            return null; // Handle default case if role is not 'Quản trị' or 'Người dùng'
-    }
+// Map roles to severity levels
+const roleSeverityMap = {
+  'Quản trị': 'success',
+  'Nhân viên Thu Mua': 'info',
+  'Trưởng phòng Thu Mua': 'secondary',
+  'Nhân viên Kiểm Soát': 'warn',
+  'Giám đốc': 'danger',
+  'Kế toán': 'help',
+  'Admin Thu Mua': 'secondary',
 };
+
+function getRoleSeverity(role) {
+  return roleSeverityMap[role] || 'secondary';
+}
 </script>
 
 <style scoped>

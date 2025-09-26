@@ -64,13 +64,15 @@ class SupplierSelectionReportController extends Controller
             $query->whereIn('status', [ReportStatus::MANAGER_APPROVED, ReportStatus::AUDITOR_APPROVED, ReportStatus::PENDING_DIRECTOR]);
         } elseif ($roleName === 'Giám đốc') {
             $query->where('director_id', $user->id);
+        } elseif ($roleName === 'Kế toán' || $roleName === 'Admin Thu Mua') {
+            $query->where('status', ReportStatus::DIRECTOR_APPROVED);
         }
 
         $reports = SupplierSelectionReportResource::collection($query->get());
 
-    $canCreate = $user->can('create', SupplierSelectionReport::class);
-    $canUpdate = in_array($roleName, ['Quản trị', 'Nhân viên Thu Mua', 'Trưởng phòng Thu Mua']);
-    $canDelete = in_array($roleName, ['Quản trị', 'Nhân viên Thu Mua', 'Trưởng phòng Thu Mua']);
+        $canCreate = $user->can('create', SupplierSelectionReport::class);
+        $canUpdate = in_array($roleName, ['Quản trị', 'Nhân viên Thu Mua', 'Trưởng phòng Thu Mua']);
+        $canDelete = in_array($roleName, ['Quản trị', 'Nhân viên Thu Mua', 'Trưởng phòng Thu Mua']);
         $canExport = true;//Always can export
 
         $can = [

@@ -18,6 +18,8 @@ class RoleSeeder extends Seeder
             'Trưởng phòng Thu Mua',
             'Nhân viên Kiểm Soát',
             'Giám đốc',
+            'Kế toán',
+            'Admin Thu Mua'
         ];
 
         foreach ($roles as $role) {

@@ -70,7 +70,7 @@ class UserController extends Controller
         $user->role_id = $request->role_id;
         $user->save();
 
-    session()->flash('message', 'Tạo xong người dùng!');
+        session()->flash('message', 'Tạo xong người dùng!');
         return redirect()->route('users.index');
     }
 
@@ -107,7 +107,7 @@ class UserController extends Controller
         $user->role_id = $request->role_id;
         $user->save();
 
-    session()->flash('message', 'Sửa xong người dùng!');
+        session()->flash('message', 'Sửa xong người dùng!');
         return redirect()->route('users.index');
     }
 
@@ -143,7 +143,7 @@ class UserController extends Controller
             }
         }
 
-    session()->flash('message', 'Xóa xong người dùng!');
+        session()->flash('message', 'Xóa xong người dùng!');
         return redirect()->route('users.index');
     }
 }

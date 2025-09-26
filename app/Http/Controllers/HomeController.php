@@ -22,6 +22,8 @@ class HomeController extends Controller
             });
         } elseif ($roleName === 'Nhân viên Thu Mua') {
             $query = $query->where('creator_id', $user->id);
+        } elseif ($roleName === 'Kế toán' || $roleName === 'Admin Thu Mua') {
+            $query = $query->where('status', 'director_approved');
         }
         // Các role còn lại xem được toàn bộ
 
