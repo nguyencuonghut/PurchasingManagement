@@ -104,7 +104,7 @@
                 </template>
             </Column>
 
-            <Column :exportable="false" style="min-width: 15rem">
+            <Column :exportable="false" style="min-width: 13rem">
                 <template #body="slotProps">
                     <!-- Gửi duyệt tới Trưởng phòng -->
                     <!-- Gửi duyệt tới Trưởng phòng -->
