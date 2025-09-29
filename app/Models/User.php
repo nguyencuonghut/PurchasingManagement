@@ -61,4 +61,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\ActivityLog::class, 'user_id');
     }
+
+    public function supplierSelectionReports()
+    {
+        return $this->hasMany(\App\Models\SupplierSelectionReport::class, 'creator_id');
+    }
 }

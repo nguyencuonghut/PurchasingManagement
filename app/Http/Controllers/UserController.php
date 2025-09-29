@@ -64,8 +64,11 @@ class UserController extends Controller
     {
         //Check authorize
         if (optional(Auth::user()->role)->name !== 'Quản trị') {
-            session()->flash('message', 'Bạn không có quyền!');
-            return redirect()->back()->withErrors('Bạn không có quyền!');
+            session()->flash('flash', [
+                'type' => 'error',
+                'message' => 'Bạn không có quyền!',
+            ]);
+            return redirect()->back();
         }
 
         $user = new User();
@@ -77,7 +80,10 @@ class UserController extends Controller
         $user->department_id = $request->department_id;
         $user->save();
 
-        session()->flash('message', 'Tạo xong người dùng!');
+        session()->flash('flash', [
+            'type' => 'success',
+            'message' => 'Tạo xong người dùng!',
+        ]);
         return redirect()->route('users.index');
     }
 
@@ -104,18 +110,24 @@ class UserController extends Controller
     {
         //Check authorize
         if (optional(Auth::user()->role)->name !== 'Quản trị') {
-            session()->flash('message', 'Bạn không có quyền!');
-            return redirect()->back()->withErrors('Bạn không có quyền!');
+            session()->flash('flash', [
+                'type' => 'error',
+                'message' => 'Bạn không có quyền!',
+            ]);
+            return redirect()->back();
         }
 
-    $user->name = $request->name;
-    $user->email = $request->email;
-    $user->status = $request->status;
-    $user->role_id = $request->role_id;
-    $user->department_id = $request->department_id;
-    $user->save();
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->status = $request->status;
+        $user->role_id = $request->role_id;
+        $user->department_id = $request->department_id;
+        $user->save();
 
-        session()->flash('message', 'Sửa xong người dùng!');
+        session()->flash('flash', [
+            'type' => 'success',
+            'message' => 'Cập nhật xong người dùng!',
+        ]);
         return redirect()->route('users.index');
     }
 
@@ -126,12 +138,42 @@ class UserController extends Controller
     {
         //Check authorize
         if (optional(Auth::user()->role)->name !== 'Quản trị') {
-            Session::flash('message', 'Bạn không có quyền!');
-            return redirect()->back()->withErrors('Bạn không có quyền!');
+            Session::flash('flash', [
+                'type' => 'error',
+                'message' => 'Bạn không có quyền!',
+            ]);
+            return redirect()->back();
         }
 
+        // Kiểm tra nếu người dùng đang cố xóa chính họ
+        if (Auth::id() === $user->id) {
+            Session::flash('flash', [
+                'type' => 'error',
+                'message' => 'Bạn không thể xóa chính mình!',
+            ]);
+            return redirect()->back();
+        }
+
+        // Kiểm tra nếu user liên quan đến bất kỳ báo cáo nào (creator, manager, auditor, director, admin thu mua)
+        $hasRelatedReport = \App\Models\SupplierSelectionReport::where(function($q) use ($user) {
+            $q->where('creator_id', $user->id)
+              ->orWhere('manager_id', $user->id)
+              ->orWhere('auditor_id', $user->id)
+              ->orWhere('director_id', $user->id)
+              ->orWhere('adm_id', $user->id);
+        })->exists();
+        if ($hasRelatedReport) {
+            Session::flash('flash', [
+                'type' => 'error',
+                'message' => 'Không thể xóa người dùng đang liên quan đến báo cáo lựa chọn nhà cung cấp!',
+            ]);
+            return redirect()->back();
+        }
         $user->delete();
-        Session::flash('message', 'Xóa xong người dùng!');
+        Session::flash('flash', [
+            'type' => 'success',
+            'message' => 'Xóa xong người dùng!',
+        ]);
         return redirect()->route('users.index');
     }
 
@@ -139,8 +181,31 @@ class UserController extends Controller
     {
         //Check authorize
         if (optional(Auth::user()->role)->name !== 'Quản trị') {
-            session()->flash('message', 'Bạn không có quyền!');
-            return redirect()->back()->withErrors('Bạn không có quyền!');
+            session()->flash('flash', [
+                'type' => 'error',
+                'message' => 'Bạn không có quyền!',
+            ]);
+            return redirect()->back();
+        }
+
+        // Kiểm tra nếu có người dùng nào trong danh sách đang cố xóa chính họ
+        $userIds = collect($request->users)->pluck('id')->toArray();
+        if (in_array(Auth::id(), $userIds)) {
+            session()->flash('flash', [
+                'type' => 'error',
+                'message' => 'Bạn không thể xóa chính mình!',
+            ]);
+            return redirect()->back();
+        }
+
+        // Kiểm tra nếu có người dùng nào trong danh sách đang có Supplier Selection Reports
+        $usersWithReports = User::whereIn('id', $userIds)->whereHas('supplierSelectionReports')->get(['id', 'name']);
+        if ($usersWithReports->isNotEmpty()) {
+            $names = $usersWithReports->pluck('name')->toArray();
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'Không thể xóa các người dùng đang có báo cáo lựa chọn nhà cung cấp: ' . implode(', ', $names)
+            ]);
         }
 
         $users = $request->users;
@@ -151,7 +216,10 @@ class UserController extends Controller
             }
         }
 
-        session()->flash('message', 'Xóa xong người dùng!');
+        session()->flash('flash', [
+            'type' => 'success',
+            'message' => 'Xóa xong người dùng đã chọn!',
+        ]);
         return redirect()->route('users.index');
     }
 }

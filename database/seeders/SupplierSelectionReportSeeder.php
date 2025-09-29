@@ -11,7 +11,7 @@ class SupplierSelectionReportSeeder extends Seeder
 {
     public function run()
     {
-        $users = User::pluck('id');
+        $users = User::whereIn('role_id', [1, 2, 3])->pluck('id'); // Lấy ID của người dùng có vai trò Quản trị, Nhân viên Thu Mua, Trưởng phòng Thu Mua
         $statuses = [
             'pending_manager_approval',
             'manager_approved',

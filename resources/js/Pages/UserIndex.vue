@@ -174,7 +174,7 @@
 
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3'; // Đổi useForm từ Precognition sang @inertiajs/vue3
-import { ref, computed } from 'vue'; // Import computed
+import { ref, computed, watch } from 'vue'; // Import computed
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { usePage } from '@inertiajs/vue3'
@@ -202,7 +202,18 @@ import FileUpload from 'primevue/fileupload';
 const toast = useToast();
 const dt = ref();
 const page = usePage();
-const message = computed(() => page.props.auth.flash.message);
+const flash = computed(() => page.props.auth.flash);
+
+watch(flash, (val) => {
+  if (val?.message) {
+    toast.add({
+      severity: val.type === 'error' ? 'error' : 'success',
+      summary: val.type === 'error' ? 'Lỗi' : 'Thành công',
+      detail: val.message,
+      life: 3000
+    });
+  }
+});
 
 defineProps({
     errors: {
@@ -303,12 +314,10 @@ const saveUser = async () => {
                 form.reset();
                 v$.value.$reset(); // Reset Vuelidate
                 userDialog.value = false;
-                toast.add({severity:'success', summary: 'Thành công', detail: message.value, life: 3000});
             },
             onError: (errors) => {
                 // InertiaJS tự động điền errors vào form.errors
                 console.error("Lỗi khi tạo người dùng:", errors);
-                toast.add({severity: 'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi tạo người dùng.', life: 3000});
             },
         });
     } else {
@@ -318,12 +327,10 @@ const saveUser = async () => {
                 form.reset();
                 v$.value.$reset(); // Reset Vuelidate
                 userDialog.value = false;
-                toast.add({severity: 'success', summary: 'Thành công', detail: message.value, life: 3000});
             },
             onError: (errors) => {
                 // InertiaJS tự động điền errors vào form.errors
                 console.error("Lỗi khi cập nhật người dùng:", errors);
-                toast.add({severity: 'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi cập nhật.', life: 3000});
             },
         });
     }
@@ -348,12 +355,10 @@ const deleteUser = () => {
         onSuccess: () => {
             form.reset();
             deleteUserDialog.value = false;
-            toast.add({severity:'success', summary: 'Thành công', detail: message.value, life: 3000});
         },
         onError: (errors) => {
             console.error("Lỗi khi xóa người dùng:", errors);
             deleteUserDialog.value = false;
-            toast.add({severity:'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi xóa người dùng.', life: 3000});
         },
     });
 };
@@ -381,13 +386,11 @@ const deleteSelectedUsers = () => {
         onSuccess: () => {
             deleteUsersDialog.value = false;
             selectedUsers.value = null;
-            toast.add({severity:'success', summary: 'Thành công', detail: message.value, life: 3000});
         },
         onError: (errors) => {
             console.error("Lỗi khi xóa nhiều người dùng:", errors);
             deleteUsersDialog.value = false;
             selectedUsers.value = null;
-            toast.add({severity:'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi xóa nhiều người dùng.', life: 3000});
         },
     });
 };
