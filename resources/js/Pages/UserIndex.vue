@@ -116,10 +116,16 @@
                         <small v-else-if="form.errors.password_confirmation" class="text-red-500">{{ form.errors.password_confirmation }}</small>
                     </div>
                     <div>
+                        <label for="department" class="block font-bold mb-3 required-field">Phòng ban</label>
+                        <Select id="department" v-model="form.department_id" @blur="v$.department_id.$touch" :options="departments" optionLabel="label" optionValue="value" class="w-full" placeholder="Chọn phòng ban" :invalid="v$.department_id.$error || form.errors.department_id" />
+                        <small v-if="v$.department_id.$error" class="text-red-500">{{ v$.department_id.$errors[0].$message }}</small>
+                        <small v-else-if="form.errors.department_id" class="text-red-500">{{ form.errors.department_id }}</small>
+                    </div>
+                    <div>
                         <label for="role" class="block font-bold mb-3 required-field">Vai trò</label>
-                        <Select id="role" v-model="form.role" @blur="v$.role.$touch" :options="roles" class="w-full" placeholder="Chọn vai trò" :invalid="v$.role.$error || form.errors.role" />
-                        <small v-if="v$.role.$error" class="text-red-500">{{ v$.role.$errors[0].$message }}</small>
-                        <small v-else-if="form.errors.role" class="text-red-500">{{ form.errors.role }}</small>
+                        <Select id="role" v-model="form.role_id" @blur="v$.role_id.$touch" :options="roles" optionLabel="label" optionValue="value" class="w-full" placeholder="Chọn vai trò" :invalid="v$.role_id.$error || form.errors.role_id" />
+                        <small v-if="v$.role_id.$error" class="text-red-500">{{ v$.role_id.$errors[0].$message }}</small>
+                        <small v-else-if="form.errors.role_id" class="text-red-500">{{ form.errors.role_id }}</small>
                     </div>
                     <div>
                         <span class="block font-bold mb-4 required-field">Trạng thái</span>
@@ -140,7 +146,7 @@
             </form>
             <template #footer>
                 <Button label="Hủy" icon="pi pi-times" text @click="hideDialog" />
-                <Button type="submit" label="Lưu" icon="pi pi-check" :disabled="v$.$invalid || form.processing" />
+                <Button label="Lưu" icon="pi pi-check" :disabled="v$.$invalid || form.processing" @click="saveUser" />
             </template>
         </Dialog>
 
@@ -227,13 +233,14 @@ const userDialog = ref(false);
 const deleteUserDialog = ref(false);
 const deleteUsersDialog = ref(false);
 
-const form = useForm({ // useForm từ @inertiajs/vue3 không nhận method và url trong khởi tạo
-    id: null, // Sử dụng null thay vì rỗng cho ID
+const form = useForm({
+    id: null,
     name: '',
     email: '',
     password: '',
     password_confirmation: '',
-    role: '',
+    role_id: '',
+    department_id: '',
     status: '',
 });
 
@@ -251,8 +258,11 @@ const rules = computed(() => {
             required: helpers.withMessage('Email không được để trống.', required),
             email: helpers.withMessage('Email sai định dạng.', email),
         },
-        role: {
+        role_id: {
             required: helpers.withMessage('Vai trò không được để trống.', required),
+        },
+        department_id: {
+            required: helpers.withMessage('Phòng ban không được để trống.', required),
         },
         status: {
             required: helpers.withMessage('Trạng thái không được để trống.', required),
@@ -298,6 +308,7 @@ const hideDialog = () => {
 };
 
 const saveUser = async () => {
+    console.log("Form data before save:", form);
     submitted.value = true;
     const isFormValid = await v$.value.$validate(); // Chạy validation frontend
 
@@ -367,10 +378,11 @@ const setUser = (usr) => {
     form.id = usr.id;
     form.name = usr.name;
     form.email = usr.email;
-    form.role = usr.role;
+    form.role_id = usr.role_id;
+    form.department_id = usr.department_id;
     form.status = usr.status;
-    form.password = ''; // Đảm bảo password trống khi edit
-    form.password_confirmation = ''; // Đảm bảo password_confirmation trống khi edit
+    form.password = '';
+    form.password_confirmation = '';
 };
 
 const exportCSV = () => {
