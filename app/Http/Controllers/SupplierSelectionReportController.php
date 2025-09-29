@@ -204,15 +204,18 @@ class SupplierSelectionReportController extends Controller
                 ]);
             }
 
-            return redirect()->route('supplier_selection_reports.index')->with('flash', [
+            session()->flash('flash', [
                 'type' => 'success',
                 'message' => 'Báo cáo đã được tạo thành công!',
             ]);
+
+            return redirect()->route('supplier_selection_reports.index');
         } catch (ValidationException $e) {
-            return redirect()->back()->withErrors($e->errors())->with('flash', [
+            session()->flash('flash', [
                 'type' => 'error',
                 'message' => 'Có lỗi xảy ra trong quá trình xác thực dữ liệu.',
             ]);
+            return redirect()->back();
         } catch (\Exception $e) {
             // Dọn file đã upload nếu transaction/DB fail
             try {
@@ -232,10 +235,11 @@ class SupplierSelectionReportController extends Controller
             }
 
             Log::error("Lỗi khi tạo báo cáo: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return redirect()->back()->with('flash', [
+            session()->flash('flash', [
                 'type' => 'error',
-                'message' => 'Đã xảy ra lỗi không mong muốn khi tạo báo cáo.',
+                'message' => 'Có lỗi xảy ra trong quá trình tạo báo cáo.',
             ]);
+            return redirect()->back();
         }
     }
 

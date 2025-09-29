@@ -201,7 +201,7 @@
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch , onMounted } from 'vue';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { usePage } from '@inertiajs/vue3';
@@ -225,7 +225,33 @@ const statusToVietnameseFn = statusToVietnamese;
 const toast = useToast();
 const dt = ref();
 const page = usePage();
-const message = computed(() => page.props?.flash?.message ?? page.props?.auth?.flash?.message ?? '');
+const flash = computed(() => page.props.auth.flash);
+
+onMounted(() => {
+  if (flash && flash.message) {
+    toast.add({
+      severity: flash.value.type === 'error' ? 'error' : 'success',
+      summary: flash.value.type === 'error' ? 'Lỗi' : 'Thành công',
+      detail: flash.value.message,
+      life: 3000
+    });
+  }
+});
+
+watch(
+  () => usePage().props.auth.flash,
+  (val) => {
+    if (val && val.message) {
+      toast.add({
+        severity: val.type === 'error' ? 'error' : 'success',
+        summary: val.type === 'error' ? 'Lỗi' : 'Thành công',
+        detail: val.message,
+        life: 3000
+      });
+    }
+  },
+  { immediate: true }
+);
 
 defineProps({
     errors: { type: Object },
@@ -295,13 +321,11 @@ const deleteReport = () => {
     router.delete(`/supplier_selection_reports/${selectedReportId.value}`, {
         onSuccess: () => {
             deleteReportDialog.value = false;
-            toast.add({ severity:'success', summary: 'Thành công', detail: message.value, life: 3000 });
             selectedReportId.value = null;
             selectedReportCode.value = '';
         },
         onError: (errors) => {
             console.error("Lỗi khi xóa báo cáo:", errors);
-            toast.add({ severity: 'error', summary: 'Lỗi', detail: message.value || 'Có lỗi xảy ra khi xóa báo cáo.', life: 3000 });
         },
     });
 };
@@ -337,7 +361,7 @@ const submitSendToManager = () => {
             sendApproveDialog.value = false;
             reportToSend.value = null;
             selectedManagerId.value = null;
-            toast.add({ severity:'success', summary: 'Thành công', detail: 'Báo cáo đã được gửi duyệt.', life: 3000 });
+
         },
         onError: (errors) => {
             console.error("Lỗi khi gửi yêu cầu duyệt báo cáo:", errors);
@@ -368,7 +392,7 @@ const submitSendToDirector = () => {
             directorApproveDialog.value = false;
             reportToDirector.value = null;
             selectedDirectorId.value = null;
-            toast.add({ severity:'success', summary: 'Thành công', detail: 'Đã gửi yêu cầu duyệt tới Giám đốc.', life: 3000 });
+
         },
         onError: (errors) => {
             console.error("Lỗi khi gửi yêu cầu duyệt Giám đốc:", errors);

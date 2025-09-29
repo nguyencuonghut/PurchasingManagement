@@ -10,6 +10,7 @@
         <label for="code" class="block font-bold mb-2 required-field">Mã</label>
         <InputText id="code" v-model="v$.code.$model" :invalid="submitted && v$.code.$invalid" fluid />
         <small v-if="submitted && v$.code.$invalid" class="text-red-500">{{ v$.code.$errors[0]?.$message }}</small>
+        <small v-if="submitted && form.errors.code" class="text-red-500">{{ form.errors.code }}</small>
       </div>
 
 
@@ -41,7 +42,7 @@
 
       <!-- file_path - ảnh đính kèm chính -->
       <div>
-        <label class="block font-bold mb-2">Ảnh báo cáo (tùy chọn)</label>
+        <label class="block font-bold mb-2 required-field">Ảnh báo cáo</label>
 
         <!-- Khu vực dán / kéo-thả ảnh -->
         <div
@@ -79,7 +80,7 @@
 
       <!-- Quotation Files -->
       <div>
-        <label class="block font-bold mb-2">File báo giá (tùy chọn)</label>
+        <label class="block font-bold mb-2 required-field">File báo giá</label>
 
         <!-- Kéo thả / chọn file mới -->
         <div
@@ -123,7 +124,7 @@
 
       <div class="flex justify-end gap-2">
         <Button type="button" label="Quay lại" icon="pi pi-arrow-left" outlined @click="goBack" />
-        <Button type="submit" label="Lưu" icon="pi pi-check" :disabled="form.processing" />
+        <Button label="Lưu" icon="pi pi-check" :disabled="v$.$invalid || form.processing" @click="save" />
       </div>
     </form>
   </div>
@@ -151,10 +152,6 @@ const form = useForm({
   file_path: null,           // có thể là URL, base64, File hoặc null
   quotation_files: [],       // File[] mới
 });
-
-// Lấy flash message
-const flash = computed(() => page.props?.auth?.flash ?? null);
-const flashMessage = computed(() => flash.value?.message ?? page.props?.flash?.message ?? '');
 
 const editorKey = ref(0);
 
@@ -268,17 +265,7 @@ function dataURLtoBlob(dataurl) {
   return new Blob([u8], { type: mime });
 }
 
-function buildErrorMessage(errors) {
-  try {
-    if (!errors) return 'Có lỗi xảy ra khi tạo.';
-    const msgs = Object.values(errors).flat().filter(Boolean);
-    return msgs.length ? msgs.join(' | ') : 'Có lỗi xảy ra khi tạo.';
-  } catch (e) {
-    return 'Có lỗi xảy ra khi tạo.';
-  }
-}
-
-function goBack() { router.visit('/supplier_selection_reports'); }
+function goBack() { router.replace('/supplier_selection_reports'); }
 
 // ----- Save
 async function save() {
@@ -315,13 +302,12 @@ async function save() {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
-          toast.add({ severity: 'success', summary: 'Thành công', detail: 'Tạo báo cáo thành công', life: 2500 });
-          router.visit('/supplier_selection_reports');
+          form.reset();
         },
         onError: (errors) => {
+          form.errors = errors;
+          submitted.value = true;
           console.group('[Create] server errors (multipart)'); console.log(errors); console.groupEnd();
-          const msg = buildErrorMessage(errors);
-          toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 4000 });
         },
       });
   } else {
@@ -335,13 +321,12 @@ async function save() {
       .post('/supplier_selection_reports', {
         preserveScroll: true,
         onSuccess: () => {
-          toast.add({ severity: 'success', summary: 'Thành công', detail: 'Tạo báo cáo thành công', life: 2500 });
-          router.visit('/supplier_selection_reports');
+          form.reset();
         },
         onError: (errors) => {
+          form.errors = errors;
+          submitted.value = true;
           console.group('[Create] server errors (no multipart)'); console.log(errors); console.groupEnd();
-          const msg = buildErrorMessage(errors);
-          toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 4000 });
         },
       });
   }
