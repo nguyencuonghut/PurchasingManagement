@@ -275,7 +275,7 @@ class SupplierSelectionReportController extends Controller
                     'id' => $log->id,
                     'action' => $log->action,
                     'user' => $log->user?->name,
-                    'user_role' => $log->user?->role,
+                    'user_role' => $log->user?->role?->name,
                     'properties' => $log->properties,
                     'created_at' => $log->created_at?->toDateTimeString(),
                 ];
