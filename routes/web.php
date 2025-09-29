@@ -36,6 +36,10 @@ Route::group(['middleware'=>'auth:web'], function() {
     Route::resource('roles', RoleController::class)->except(['show', 'create', 'edit']);
     Route::post('roles/bulkDelete', [RoleController::class, 'bulkDelete']);
 
+    // Department routes
+    Route::resource('departments', \App\Http\Controllers\DepartmentController::class)->except(['show', 'create', 'edit']);
+    Route::post('departments/bulkDelete', [\App\Http\Controllers\DepartmentController::class, 'bulkDelete']);
+
     //SupplierSelectionReport routes
     Route::resource('/supplier_selection_reports', SupplierSelectionReportController::class);
     // API lấy danh sách Admin Thu Mua

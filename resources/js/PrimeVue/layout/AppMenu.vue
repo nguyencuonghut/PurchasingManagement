@@ -23,6 +23,7 @@ const model = computed(() => {
             label: 'HỆ THỐNG',
             items: [
                 { label: 'Vai trò', icon: 'pi pi-fw pi-user-edit', to: '/roles' },
+                { label: 'Phòng ban', icon: 'pi pi-fw pi-sitemap', to: '/departments' },
                 { label: 'Người dùng', icon: 'pi pi-fw pi-users', to: '/users' },
             ]
         });
