@@ -44,7 +44,28 @@ class HandleInertiaRequests extends Middleware
                     'role' => optional(Auth::user()->role)->name,
                     'role_id' => Auth::user()->role_id,
                 ],
-                'flash' => fn () => $request->session()->get('flash') ?? ['type' => null, 'message' => $request->session()->get('message')],
+                'flash' => function () use ($request) {
+                    $flash = $request->session()->get('flash');
+                    $message = $request->session()->get('message');
+                    // Nếu có flash là array thì luôn trả về type và message
+                    if (is_array($flash)) {
+                        return [
+                            'type' => $flash['type'] ?? null,
+                            'message' => $flash['message'] ?? $message,
+                        ];
+                    }
+                    // Nếu chỉ có message thì mặc định type là null
+                    if ($message) {
+                        return [
+                            'type' => null,
+                            'message' => $message,
+                        ];
+                    }
+                    return [
+                        'type' => null,
+                        'message' => null,
+                    ];
+                },
             ] : null
         ]);
     }

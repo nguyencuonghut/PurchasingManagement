@@ -5,6 +5,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\QuotationFileController;
 use App\Http\Controllers\SupplierSelectionReportController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChangePasswordController;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
@@ -30,6 +31,10 @@ Route::group(['middleware'=>'auth:web'], function() {
     //User routes
     Route::post('users/bulkDelete', [UserController::class, 'bulkDelete']);
     Route::resource('users', UserController::class);
+
+    // Role routes
+    Route::resource('roles', RoleController::class)->except(['show', 'create', 'edit']);
+    Route::post('roles/bulkDelete', [RoleController::class, 'bulkDelete']);
 
     //SupplierSelectionReport routes
     Route::resource('/supplier_selection_reports', SupplierSelectionReportController::class);

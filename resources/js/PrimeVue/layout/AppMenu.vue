@@ -22,6 +22,7 @@ const model = computed(() => {
         base.push({
             label: 'HỆ THỐNG',
             items: [
+                { label: 'Vai trò', icon: 'pi pi-fw pi-user-edit', to: '/roles' },
                 { label: 'Người dùng', icon: 'pi pi-fw pi-users', to: '/users' },
             ]
         });
