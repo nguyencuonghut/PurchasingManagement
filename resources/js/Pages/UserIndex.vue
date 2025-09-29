@@ -60,9 +60,9 @@
                     <Tag :value="data.role" :severity="getRoleSeverity(data.role)" />
                 </template>
                 <template #filter="{ filterModel }">
-                    <Select v-model="filterModel.value" :options="roles" placeholder="Chọn" showClear>
+                    <Select v-model="filterModel.value" :options="roles" optionLabel="label" optionValue="value" placeholder="Chọn" showClear>
                         <template #option="slotProps">
-                            <Tag :value="slotProps.option" :severity="getRoleSeverity(slotProps.option)" />
+                            <Tag :value="slotProps.option.label" :severity="getRoleSeverity(slotProps.option.label)" />
                         </template>
                     </Select>
                 </template>
@@ -394,7 +394,16 @@ const deleteSelectedUsers = () => {
 
 const selectedUsers = ref();
 const filters = ref();
-const roles = ref(['Quản trị', 'Người dùng']);
+const roles = ref([]);
+if (page.props && page.props.roles) {
+    roles.value = page.props.roles.map(role => ({ label: role.name, value: role.id }));
+}
+function getRoleName(id) {
+    if (!id) return '-';
+    const found = roles.value.find(role => String(role.value) === String(id));
+    return found ? found.label : '-';
+}
+
 const departments = ref([]);
 if (page.props && page.props.departments) {
     departments.value = page.props.departments.map(dep => ({ label: dep.name, value: dep.id }));
@@ -439,7 +448,7 @@ const getStatusSeverity = (status) => {
 const roleSeverityMap = {
   'Quản trị': 'success',
   'Nhân viên Thu Mua': 'info',
-  'Trưởng phòng Thu Mua': 'secondary',
+  'Trưởng phòng Thu Mua': 'success',
   'Nhân viên Kiểm Soát': 'warn',
   'Giám đốc': 'danger',
   'Kế toán': 'secondary',

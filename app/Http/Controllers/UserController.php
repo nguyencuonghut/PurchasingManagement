@@ -40,10 +40,12 @@ class UserController extends Controller
         ];
 
         $departments = \App\Models\Department::all(['id', 'name']);
+        $roles = \App\Models\Role::all(['id', 'name']);
         return Inertia::render('UserIndex', [
             'users' => $users,
             'can' => $can,
             'departments' => $departments,
+            'roles' => $roles,
         ]);
     }
 
