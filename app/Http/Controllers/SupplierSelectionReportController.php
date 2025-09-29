@@ -696,11 +696,15 @@ class SupplierSelectionReportController extends Controller
 
         $creator = $supplierSelectionReport->creator;
         $auditor = $supplierSelectionReport->auditor;
+        $adminThuMua = $supplierSelectionReport->adminThuMua;
 
         if ($validated['director_approved_result'] === 'approved') {
             Notification::route('mail', $creator->email)->notify(new SupplierSelectionReportApprovedByDirector($supplierSelectionReport));
             if ($auditor) {
                 Notification::route('mail', $auditor->email)->notify(new SupplierSelectionReportApprovedByDirector($supplierSelectionReport));
+            }
+            if ($adminThuMua) {
+                Notification::route('mail', $adminThuMua->email)->notify(new SupplierSelectionReportApprovedByDirector($supplierSelectionReport));
             }
         } else {
             Notification::route('mail', $creator->email)->notify(new SupplierSelectionReportRejectedByDirector($supplierSelectionReport));
