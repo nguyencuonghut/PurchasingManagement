@@ -222,15 +222,39 @@ const uploadedQuotationFiles = ref([]);
 function handleQuotationFilesDrop(e) { addQuotationFiles(Array.from(e.dataTransfer.files || [])); }
 function handleQuotationFilesSelect(e) { addQuotationFiles(Array.from(e.target.files || [])); }
 function addQuotationFiles(files) {
-  const valid = files.filter(f => [
+  const allowedTypes = [
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.ms-excel',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'image/jpeg', 'image/jpg', 'image/png'
-  ].includes(f.type));
-  if (valid.length !== files.length) toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Một số file không được hỗ trợ và đã bị bỏ qua.', life: 2500 });
+  ];
+  const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'];
+  const valid = [];
+  const invalid = [];
+  files.forEach(f => {
+    let ok = false;
+    const ext = f.name && f.name.lastIndexOf('.') !== -1 ? f.name.slice(f.name.lastIndexOf('.')).toLowerCase() : '';
+    // Chấp nhận nếu đúng mime type hoặc đúng extension
+    if (allowedTypes.includes(f.type)) {
+      ok = true;
+    } else if (
+      (f.type === 'application/octet-stream' || f.type === '' || f.type.startsWith('application/'))
+      && allowedExtensions.includes(ext)
+    ) {
+      ok = true;
+    }
+    if (ok) {
+      valid.push(f);
+    } else {
+      invalid.push(f);
+    }
+  });
+  if (invalid.length > 0) {
+    console.warn('[QuotationFiles] Các file bị loại:', invalid.map(f => f.name));
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Một số file không được hỗ trợ và đã bị bỏ qua.', life: 2500 });
+  }
   uploadedQuotationFiles.value.push(...valid);
   form.quotation_files = [...uploadedQuotationFiles.value];
 }
