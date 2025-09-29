@@ -23,7 +23,7 @@ class StoreSupplierSelectionReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string', 'max:255', Rule::unique('supplier_selection_reports')],
+            // 'code' => ['required', ...] // bỏ validate code, BE sẽ tự sinh
             'description' => ['required', 'string', 'max:1000'],
 
             // Admin Thu Mua (nullable, phải là id user hợp lệ nếu có)

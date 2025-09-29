@@ -25,6 +25,9 @@
             :globalFilterFields="['code', 'description', 'image_url', 'formatted_created_at']"
             :sortField="'created_at'"
             :sortOrder="-1"
+            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+            :rowsPerPageOptions="[10, 15, 25]"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
         >
             <template #header>
                 <div class="flex justify-between">

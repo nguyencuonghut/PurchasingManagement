@@ -11,7 +11,7 @@ class SupplierSelectionReportSeeder extends Seeder
 {
     public function run()
     {
-        $users = User::whereIn('role_id', [1, 2, 3])->pluck('id'); // Lấy ID của người dùng có vai trò Quản trị, Nhân viên Thu Mua, Trưởng phòng Thu Mua
+        $users = User::whereIn('role_id', [1, 2, 3])->get();
         $statuses = [
             'pending_manager_approval',
             'manager_approved',
@@ -19,17 +19,31 @@ class SupplierSelectionReportSeeder extends Seeder
             'director_approved',
             'rejected',
         ];
-        for ($i = 1; $i <= 100; $i++) {
+        $year = date('Y');
+        // Tìm index lớn nhất đã dùng cho năm hiện tại trước vòng lặp
+        $maxIndex = SupplierSelectionReport::whereYear('created_at', $year)
+            ->where('code', 'like', "$year/%/%")
+            ->get()
+            ->map(function($r) use ($year) {
+                $parts = explode('/', $r->code);
+                return isset($parts[2]) ? intval($parts[2]) : 0;
+            })->max();
+        $nextIndex = $maxIndex ? $maxIndex + 1 : 1;
+        foreach (range(1, 100) as $i) {
+            $creator = $users->random();
+            $departmentCode = optional($creator->department)->code ?? 'N/A';
+            $code = sprintf('%d/%s/%d', $year, $departmentCode, $nextIndex);
             SupplierSelectionReport::create([
-                'code' => date('y') . '/' . date('m') . '/' . str_pad($i, 3, '0', STR_PAD_LEFT) . '-PIT',
+                'code' => $code,
                 'description' => 'Phiếu mua hàng số ' . $i,
                 'status' => $statuses[array_rand($statuses)],
-                'creator_id' => $users->random(),
-                'manager_id' => $users->random(),
+                'creator_id' => $creator->id,
+                'manager_id' => $users->random()->id,
                 'file_path' => '',
                 'created_at' => now()->subDays(rand(0, 365)),
                 'updated_at' => now(),
             ]);
+            $nextIndex++;
         }
     }
 }
