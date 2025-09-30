@@ -87,6 +87,15 @@
               && (report.status === 'pending_director_approval' || report.status === 'director_approved' || report.status === 'rejected')">
             <Button label="Duyệt phiếu" icon="pi pi-check" @click="openDirectorModal" class="w-full" />
           </div>
+
+          <div v-if="report.status === 'rejected'" class="mt-4 justify-end flex">
+            <Button
+                label="Tạo phiếu mới từ phiếu bị từ chối"
+                icon="pi pi-plus"
+                class="p-button-success"
+                @click="createNewFromRejected"
+            />
+          </div>
         </TabPanel>
 
         <TabPanel value="1">
@@ -546,6 +555,12 @@ const submitAuditorAudit = () => {
       toast.add({severity: 'error', summary: 'Lỗi', detail: 'Lỗi xảy ra trong quá trình duyệt.', life: 3000});
       processing.value = false;
     }
+  });
+};
+
+const createNewFromRejected = () => {
+  router.get('/supplier_selection_reports/create', {
+    parent_report_id: report.value.id
   });
 };
 </script>

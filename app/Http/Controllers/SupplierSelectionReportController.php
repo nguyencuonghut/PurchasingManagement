@@ -112,11 +112,27 @@ class SupplierSelectionReportController extends Controller
     {
         $this->authorize('create', SupplierSelectionReport::class);
         $adminThuMuaUsers = $this->getAdminThuMuaUsers($request->user());
+
+        // Nếu có parent_report_id (tạo từ phiếu bị rejected)
+        $parentReportId = $request->input('parent_report_id');
+        $parentReport = null;
+        $initData = [];
+        if ($parentReportId) {
+            $parentReport = SupplierSelectionReport::find($parentReportId);
+            if ($parentReport && $parentReport->status === ReportStatus::REJECTED) {
+                $initData['description'] = $parentReport->description;
+                $initData['adm_id'] = $parentReport->adm_id;
+                $initData['parent_report_id'] = $parentReport->id;
+            }
+        }
+
         return Inertia::render('SupplierSelectionReportCreate', [
             'can' => [
                 'create_report' => $request->user()->can('create', SupplierSelectionReport::class),
             ],
-            'admin_thu_mua_users' => $adminThuMuaUsers,
+            'admin_thu_mua_users' => ($adminThuMuaUsers ?? collect())->toArray(),
+            'init_data' => $initData,
+            'parent_report' => $parentReport ? (new SupplierSelectionReportResource($parentReport))->toArray($request) : null,
         ]);
     }
 
@@ -134,6 +150,17 @@ class SupplierSelectionReportController extends Controller
             // Lưu adm_id nếu có (ép về null nếu rỗng, ép về int nếu có)
             $adminId = $request->input('admin_thu_mua_id');
             $data['adm_id'] = ($adminId === '' || $adminId === null) ? null : (int)$adminId;
+
+            // Nếu tạo từ phiếu cha bị rejected thì lấy description, adm_id, parent_report_id từ phiếu cha
+            $parentReportId = $request->input('parent_report_id');
+            if ($parentReportId) {
+                $parentReport = SupplierSelectionReport::find($parentReportId);
+                if ($parentReport && $parentReport->status === ReportStatus::REJECTED) {
+                    $data['description'] = $parentReport->description;
+                    $data['adm_id'] = $parentReport->adm_id;
+                    $data['parent_report_id'] = $parentReport->id;
+                }
+            }
 
             // --- Sinh mã code tự động, Index tăng từ 1 tới N cho cả năm, không phụ thuộc Department ---
             $year = now()->year;

@@ -308,7 +308,6 @@ const hideDialog = () => {
 };
 
 const saveUser = async () => {
-    console.log("Form data before save:", form);
     submitted.value = true;
     const isFormValid = await v$.value.$validate(); // Chạy validation frontend
 

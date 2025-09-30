@@ -41,6 +41,9 @@ return new class extends Migration
             // Admin Thu Mua (adm_id) - nullable foreign key to users
             $table->foreignId('adm_id')->nullable()->constrained('users')->nullOnDelete();
 
+            // Liên kết tới phiếu cha bị rejected (nullable)
+            $table->foreignId('parent_report_id')->nullable()->constrained('supplier_selection_reports')->nullOnDelete();
+
             $table->timestamps();
         });
     }

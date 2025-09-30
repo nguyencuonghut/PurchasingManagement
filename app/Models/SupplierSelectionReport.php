@@ -115,4 +115,15 @@ class SupplierSelectionReport extends Model
         return $this->adminThuMua ? $this->adminThuMua->name : null;
     }
 
+    // --- Liên kết phiếu cha bị rejected ---
+    public function parentReport()
+    {
+        return $this->belongsTo(SupplierSelectionReport::class, 'parent_report_id');
+    }
+
+    // --- Liên kết các phiếu con tạo từ phiếu bị rejected ---
+    public function childReports()
+    {
+        return $this->hasMany(SupplierSelectionReport::class, 'parent_report_id');
+    }
 }

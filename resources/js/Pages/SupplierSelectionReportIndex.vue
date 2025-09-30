@@ -115,7 +115,16 @@
 
             <Column :exportable="false" style="min-width: 13rem">
                 <template #body="slotProps">
-                    <!-- Gửi duyệt tới Trưởng phòng -->
+                    <!-- Tạo lại từ phiếu bị rejected -->
+                    <Button
+                        v-if="slotProps.data.status === 'rejected'"
+                        icon="pi pi-copy"
+                        outlined
+                        rounded
+                        severity="success"
+                        class="mr-2"
+                        @click="createFromRejected(slotProps.data)"
+                    />
                     <!-- Gửi duyệt tới Trưởng phòng -->
                     <Button
                         v-if="($page.props.auth.user.id === slotProps.data.creator_id) && (slotProps.data.status === 'draft' || slotProps.data.status === 'pending_manager_approval')"
@@ -463,6 +472,11 @@ const canDelete = (row) => {
     if (isCreator && row.status === 'draft') return true;
     if (isCreator && u.role === Roles.PM_MANAGER && row.status === 'manager_approved') return true;
     return false;
+};
+
+// Tạo lại từ phiếu bị rejected
+const createFromRejected = (report) => {
+    router.get('/supplier_selection_reports/create', { parent_report_id: report.id });
 };
 </script>
 

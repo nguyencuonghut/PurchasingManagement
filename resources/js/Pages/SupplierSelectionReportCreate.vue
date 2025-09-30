@@ -5,6 +5,13 @@
     <h2 class="text-xl font-semibold mb-4">Tạo báo cáo lựa chọn nhà cung cấp</h2>
 
     <form @submit.prevent="save" class="flex flex-col gap-6">
+      <div v-if="parentReport" class="mb-4 p-3 border-l-4 border-yellow-400 bg-yellow-50 rounded">
+        <b>Phiếu cha bị từ chối:</b>
+        <div>Mã: {{ parentReport.code }}</div>
+        <div>Mô tả: {{ parentReport.description }}</div>
+        <div>Admin Thu Mua: {{ parentReport.admin_thu_mua_name }}</div>
+      </div>
+
       <!-- Code is auto-generated, no input field -->
 
 
@@ -197,6 +204,21 @@ watch(
   { immediate: true }
 );
 
+// Xử lý cho phiếu tạo từ phiếu bị rejected
+const initData = computed(() => page.props.init_data || {});
+const parentReport = computed(() => page.props.parent_report || null);
+watch(
+  () => initData.value,
+  (val) => {
+    if (val) {
+      if (val.description) form.description = val.description;
+      if (val.adm_id) form.admin_thu_mua_id = val.adm_id;
+    }
+  },
+  { immediate: true }
+);
+
+// ----- Form actions
 const editorKey = ref(0);
 
 const { description } = toRefs(form);

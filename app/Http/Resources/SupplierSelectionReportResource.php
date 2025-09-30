@@ -55,8 +55,8 @@ class SupplierSelectionReportResource extends JsonResource
             'formatted_auditor_audited_at' => $this->auditor_audited_at ? Carbon::parse($this->auditor_audited_at)->format('d/m/Y H:i') : '',
             'formatted_director_approved_at' => $this->director_approved_at ? Carbon::parse($this->director_approved_at)->format('d/m/Y H:i') : '',
 
-            'quotation_files' => QuotationFileResource::collection($this->whenLoaded('quotationFiles')),
-            'proposal_files' => ProposalFileResource::collection($this->whenLoaded('proposalFiles')),
+            'quotation_files' => QuotationFileResource::collection($this->quotationFiles ?? collect()),
+            'proposal_files' => ProposalFileResource::collection($this->proposalFiles ?? collect()),
         ];
     }
 }
