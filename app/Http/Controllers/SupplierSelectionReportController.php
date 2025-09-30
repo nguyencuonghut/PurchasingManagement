@@ -355,23 +355,7 @@ class SupplierSelectionReportController extends Controller
         $adminId = $request->input('admin_thu_mua_id');
         $data['adm_id'] = ($adminId === '' || $adminId === null) ? null : (int)$adminId;
 
-        // Tự động sinh lại code nếu năm hoặc department thay đổi (hoặc luôn sinh lại để đảm bảo đồng bộ)
-        $year = $supplierSelectionReport->created_at->format('Y');
-        $departmentCode = optional($supplierSelectionReport->creator->department)->code ?? 'N/A';
-        // Tìm index lớn nhất đã dùng cho năm hiện tại
-        $maxIndex = SupplierSelectionReport::whereYear('created_at', $year)
-            ->where('code', 'like', "$year/%/%")
-            ->get()
-            ->map(function($r) use ($year) {
-                $parts = explode('/', $r->code);
-                return isset($parts[2]) ? intval($parts[2]) : 0;
-            })->max();
-        $index = $maxIndex ? $maxIndex + 1 : 1;
-        $code = sprintf('%d/%s/%d', $year, $departmentCode, $index);
-        if (SupplierSelectionReport::where('code', $code)->where('id', '!=', $supplierSelectionReport->id)->exists()) {
-            throw new \Exception('Không thể sinh mã báo cáo duy nhất, vui lòng thử lại.');
-        }
-        $data['code'] = $code;
+        // Giữ nguyên code cũ, không sinh lại khi update
 
         $oldFilePath = $supplierSelectionReport->file_path;
 
