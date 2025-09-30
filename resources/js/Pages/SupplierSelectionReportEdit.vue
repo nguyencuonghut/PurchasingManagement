@@ -58,7 +58,7 @@
       <div>
         <label class="block font-bold mb-2">{{ t('quotation.title') }}</label>
 
-        <QuotationFilesUploadList
+        <FilesUploadList
           v-model="uploadedQuotationFiles"
           :existing-files="existingQuotationFiles"
           :max-size="MAX_DOC_SIZE"
@@ -74,7 +74,7 @@
       <!-- Proposal/BOQ Files -->
       <div>
         <label class="block font-bold mb-2">File đề nghị/BOQ</label>
-        <QuotationFilesUploadList
+        <FilesUploadList
           v-model="uploadedProposalFiles"
           :existing-files="existingProposalFiles"
           :max-size="MAX_DOC_SIZE"
@@ -110,7 +110,7 @@ import Select from 'primevue/select';
 import ProgressBar from 'primevue/progressbar';
 import { useToast } from 'primevue/usetoast';
 import DragDropImageUpload from '@/components/DragDropImageUpload.vue';
-import QuotationFilesUploadList from '@/components/QuotationFilesUploadList.vue';
+import FilesUploadList from '@/components/FilesUploadList.vue';
 import { t } from '@/i18n/messages';
 
 
