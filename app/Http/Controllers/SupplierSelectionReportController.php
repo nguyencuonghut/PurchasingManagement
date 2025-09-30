@@ -125,6 +125,7 @@ class SupplierSelectionReportController extends Controller
      */
     public function store(StoreSupplierSelectionReportRequest $request)
     {
+        \Log::info('Creating Supplier Selection Report', $request->all());
         $this->authorize('create', SupplierSelectionReport::class);
 
 
@@ -149,6 +150,7 @@ class SupplierSelectionReportController extends Controller
                 })->max();
             $index = $maxIndex ? $maxIndex + 1 : 1;
             $code = sprintf('%d/%s/%d', $year, $departmentCode, $index);
+            \Log::info('Generated report code', ['code' => $code]);
             if (SupplierSelectionReport::where('code', $code)->exists()) {
                 throw new \Exception('Không thể sinh mã báo cáo duy nhất, vui lòng thử lại.');
             }
@@ -157,6 +159,7 @@ class SupplierSelectionReportController extends Controller
             // Chuẩn bị biến theo dõi file đã upload để có thể dọn nếu lỗi
             $uploadedMainPath = null;
             $storedQuotationFiles = [];
+            $storedProposalFiles = [];
 
             // Xử lý file_path cho báo cáo (upload trước, lưu DB sau)
             if ($request->hasFile('file_path')) {
@@ -197,6 +200,27 @@ class SupplierSelectionReportController extends Controller
                     $quotationFile->file_size = $qf['file_size'];
                     $quotationFile->supplier_selection_report_id = $report->id;
                     $quotationFile->save();
+                }
+                // Xử lý file đề nghị/BOQ
+                if ($request->hasFile('proposal_files')) {
+                    foreach ($request->file('proposal_files') as $file) {
+                        $path = $file->store('proposal_files');
+                        $storedProposalFiles[] = [
+                            'file_name' => $file->getClientOriginalName(),
+                            'file_path' => $path,
+                            'file_type' => $file->getClientMimeType(),
+                            'file_size' => $file->getSize(),
+                        ];
+                    }
+                }
+                foreach ($storedProposalFiles as $pf) {
+                    $proposalFile = new \App\Models\ProposalFile();
+                    $proposalFile->file_name = $pf['file_name'];
+                    $proposalFile->file_path = $pf['file_path'];
+                    $proposalFile->file_type = $pf['file_type'];
+                    $proposalFile->file_size = $pf['file_size'];
+                    $proposalFile->supplier_selection_report_id = $report->id;
+                    $proposalFile->save();
                 }
 
                 // Nếu người tạo là Trưởng phòng Thu Mua -> auto approve & notify
@@ -249,6 +273,13 @@ class SupplierSelectionReportController extends Controller
                         }
                     }
                 }
+                if (!empty($storedProposalFiles)) {
+                    foreach ($storedProposalFiles as $pf) {
+                        if (!empty($pf['file_path']) && Storage::disk('public')->exists($pf['file_path'])) {
+                            Storage::disk('public')->delete($pf['file_path']);
+                        }
+                    }
+                }
             } catch (\Throwable $cleanupEx) {
                 // noop: log cleanup error if needed
                 Log::warning('Cleanup uploaded files failed: '.$cleanupEx->getMessage());
@@ -269,7 +300,7 @@ class SupplierSelectionReportController extends Controller
     public function edit(SupplierSelectionReport $supplierSelectionReport)
     {
         $this->authorize('update', $supplierSelectionReport);
-        $report = $supplierSelectionReport->load(['quotationFiles','creator','manager','auditor','director']);
+        $report = $supplierSelectionReport->load(['quotationFiles','proposalFiles','creator','manager','auditor','director']);
         $adminThuMuaUsers = $this->getAdminThuMuaUsers(request()->user());
         return Inertia::render('SupplierSelectionReportEdit', [
             'report' => (new SupplierSelectionReportResource($report))->toArray(request()),
@@ -282,7 +313,7 @@ class SupplierSelectionReportController extends Controller
      */
     public function show(SupplierSelectionReport $supplierSelectionReport)
     {
-        $report = $supplierSelectionReport->load(['quotationFiles','creator','manager','auditor','director']);
+        $report = $supplierSelectionReport->load(['quotationFiles', 'proposalFiles', 'creator','manager','auditor','director']);
 
         // Gather activity logs for this report
         $logs = \App\Models\ActivityLog::with('user')
@@ -387,17 +418,16 @@ class SupplierSelectionReportController extends Controller
             // no-op
         }
 
+
         // ---- 2) Xử lý xoá file báo giá cũ (nếu người dùng đánh dấu)
-        $deletedIds = collect($request->input('deleted_quotation_file_ids', []))
+        $deletedQuotationIds = collect($request->input('deleted_quotation_file_ids', []))
             ->filter(fn($id) => is_numeric($id))
             ->map('intval')
             ->values();
-
-        if ($deletedIds->isNotEmpty()) {
+        if ($deletedQuotationIds->isNotEmpty()) {
             $filesToDelete = $supplierSelectionReport->quotationFiles()
-                ->whereIn('id', $deletedIds)
+                ->whereIn('id', $deletedQuotationIds)
                 ->get();
-
             foreach ($filesToDelete as $qf) {
                 if ($qf->file_path && Storage::disk('public')->exists($qf->file_path)) {
                     Storage::disk('public')->delete($qf->file_path);
@@ -406,10 +436,39 @@ class SupplierSelectionReportController extends Controller
             }
         }
 
+        // ---- 2b) Xử lý xoá file đề nghị/BOQ cũ (nếu người dùng đánh dấu)
+        $deletedProposalIds = collect($request->input('deleted_proposal_file_ids', []))
+            ->filter(fn($id) => is_numeric($id))
+            ->map('intval')
+            ->values();
+        if ($deletedProposalIds->isNotEmpty()) {
+            $proposalFilesToDelete = $supplierSelectionReport->proposalFiles()
+                ->whereIn('id', $deletedProposalIds)
+                ->get();
+            foreach ($proposalFilesToDelete as $pf) {
+                if ($pf->file_path && Storage::disk('public')->exists($pf->file_path)) {
+                    Storage::disk('public')->delete($pf->file_path);
+                }
+                $pf->delete();
+            }
+        }
+
         // ---- 3) Thêm file báo giá mới (nếu có)
         if ($request->hasFile('quotation_files')) {
             foreach ($request->file('quotation_files') as $file) {
                 $supplierSelectionReport->quotationFiles()->create([
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $this->uploadFile($file),
+                    'file_type' => $file->getClientMimeType(),
+                    'file_size' => $file->getSize(),
+                ]);
+            }
+        }
+
+        // ---- 3b) Thêm file đề nghị/BOQ mới (nếu có)
+        if ($request->hasFile('proposal_files')) {
+            foreach ($request->file('proposal_files') as $file) {
+                $supplierSelectionReport->proposalFiles()->create([
                     'file_name' => $file->getClientOriginalName(),
                     'file_path' => $this->uploadFile($file),
                     'file_type' => $file->getClientMimeType(),
@@ -434,7 +493,7 @@ class SupplierSelectionReportController extends Controller
 
         // Ví dụ: yêu cầu phải còn ít nhất một file báo giá sau khi xử lý
         $remainQuotation = $supplierSelectionReport->quotationFiles()
-            ->whereNotIn('id', $deletedIds)
+            ->whereNotIn('id', $deletedQuotationIds)
             ->count();
         $addingQuotation = $request->hasFile('quotation_files') ? count($request->file('quotation_files')) : 0;
 

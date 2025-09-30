@@ -7,8 +7,9 @@
     <Tabs value="0">
       <TabList>
         <Tab value="0">Chi tiết</Tab>
-        <Tab value="1">Báo giá</Tab>
-        <Tab value="2">Nhật ký</Tab>
+        <Tab value="1">Đề nghị/BOQ</Tab>
+        <Tab value="2">Báo giá</Tab>
+        <Tab value="3">Nhật ký</Tab>
       </TabList>
       <TabPanels>
         <TabPanel value="0">
@@ -90,6 +91,44 @@
 
         <TabPanel value="1">
           <div class="p-4">
+            <DataTable ref="dtProposal" v-model:filters="filtersProposal" :value="report.proposal_files && report.proposal_files.data ? report.proposal_files.data : []" paginator :rows="10" dataKey="id" filterDisplay="menu"
+                :globalFilterFields="['file_name']">
+              <template #header>
+                <div class="flex justify-between">
+                  <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearProposalFilter()" />
+                  <IconField>
+                    <InputIcon>
+                      <i class="pi pi-search" />
+                    </InputIcon>
+                    <InputText v-model="filtersProposal['global'].value" placeholder="Tìm kiếm file đề nghị/BOQ" />
+                  </IconField>
+                </div>
+              </template>
+              <template #empty> Không có file đề nghị/BOQ nào. </template>
+              <Column header="STT" style="width: 60px">
+                <template #body="slotProps">
+                  {{ slotProps.index + 1 }}
+                </template>
+              </Column>
+              <Column field="file_name" header="File báo giá" sortable style="min-width: 14rem">
+                <template #body="{ data }">
+                  <a :href="data.file_url" target="_blank" class="text-primary hover:underline" style="cursor:pointer">{{ data.file_name }}</a>
+                </template>
+                <template #filter="{ filterModel }">
+                  <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo tên file" />
+                </template>
+              </Column>
+              <Column field="file_size_formatted" header="Dung lượng" style="min-width: 8rem" sortable>
+                <template #body="{ data }">
+                  {{ data.file_size_formatted }}
+                </template>
+              </Column>
+            </DataTable>
+          </div>
+        </TabPanel>
+
+        <TabPanel value="2">
+          <div class="p-4">
             <DataTable ref="dtQuotation" v-model:filters="filtersQuotation" :value="report.quotation_files && report.quotation_files.data ? report.quotation_files.data : []" paginator :rows="10" dataKey="id" filterDisplay="menu"
                 :globalFilterFields="['file_name']">
               <template #header>
@@ -126,7 +165,7 @@
           </div>
         </TabPanel>
 
-        <TabPanel value="2">
+        <TabPanel value="3">
           <div class="p-4">
             <DataTable :value="activityLogs" paginator :rows="10" dataKey="id">
               <template #empty> Chưa có nhật ký nào. </template>
@@ -226,6 +265,19 @@ const filtersQuotation = ref({
 });
 const clearQuotationFilter = () => {
   filtersQuotation.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    file_name: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  };
+};
+
+
+const dtProposal = ref();
+const filtersProposal = ref({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  file_name: { value: null, matchMode: FilterMatchMode.CONTAINS },
+});
+const clearProposalFilter = () => {
+  filtersProposal.value = {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     file_name: { value: null, matchMode: FilterMatchMode.CONTAINS },
   };

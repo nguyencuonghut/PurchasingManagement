@@ -72,18 +72,17 @@
         <small v-if="submitted && form.errors.file_path" class="text-red-500">{{ form.errors.file_path }}</small>
       </div>
 
+
       <!-- Quotation Files -->
       <div>
         <label class="block font-bold mb-2 required-field">File báo giá</label>
-
-        <!-- Kéo thả / chọn file mới -->
         <div
           class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
           @drop.prevent="handleQuotationFilesDrop"
           @dragover.prevent
           @click="$refs.quotationFilesInput.click()"
         >
-          <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
+          <i class="pi pi-cloud-upload text-4xl text-green-400 mb-2"></i>
           <p class="text-gray-600 mb-1">Kéo thả file báo giá vào đây hoặc click để chọn</p>
           <p class="text-sm text-gray-500">Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG</p>
           <input
@@ -95,8 +94,6 @@
             class="hidden"
           />
         </div>
-
-        <!-- Danh sách file báo giá mới upload -->
         <div v-if="uploadedQuotationFiles.length > 0" class="mt-4">
           <h4 class="font-semibold mb-2">File mới thêm:</h4>
           <div class="space-y-2">
@@ -112,8 +109,46 @@
             </div>
           </div>
         </div>
-
         <small v-if="submitted && form.errors.quotation_files" class="text-red-500">{{ form.errors.quotation_files }}</small>
+      </div>
+
+      <!-- Proposal/BOQ Files -->
+      <div>
+        <label class="block font-bold mb-2 required-field">File đề nghị/BOQ</label>
+        <div
+          class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-green-400 transition-colors"
+          @drop.prevent="handleProposalFilesDrop"
+          @dragover.prevent
+          @click="$refs.proposalFilesInput.click()"
+        >
+          <i class="pi pi-cloud-upload text-4xl text-green-400 mb-2"></i>
+          <p class="text-gray-600 mb-1">Kéo thả file đề nghị/BOQ vào đây hoặc click để chọn</p>
+          <p class="text-sm text-gray-500">Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG</p>
+          <input
+            type="file"
+            ref="proposalFilesInput"
+            @change="handleProposalFilesSelect"
+            multiple
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+            class="hidden"
+          />
+        </div>
+        <div v-if="uploadedProposalFiles.length > 0" class="mt-4">
+          <h4 class="font-semibold mb-2">File mới thêm:</h4>
+          <div class="space-y-2">
+            <div v-for="(file, index) in uploadedProposalFiles" :key="index" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div class="flex items-center space-x-3">
+                <i :class="getFileIcon(file.type)" class="text-xl"></i>
+                <div>
+                  <p class="font-medium text-sm">{{ file.name }}</p>
+                  <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
+                </div>
+              </div>
+              <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm" @click="removeNewProposalFile(index)" />
+            </div>
+          </div>
+        </div>
+        <small v-if="submitted && form.errors.proposal_files" class="text-red-500">{{ form.errors.proposal_files }}</small>
       </div>
 
       <div class="flex justify-end gap-2">
@@ -126,7 +161,7 @@
 
 <script setup>
 import { Head, useForm, router, usePage } from '@inertiajs/vue3';
-import { ref, computed, toRefs } from 'vue';
+import { ref, computed, toRefs, watch } from 'vue';
 import { useVuelidate } from '@vuelidate/core';
 import { required, maxLength, helpers } from '@vuelidate/validators';
 import InputText from 'primevue/inputtext';
@@ -144,7 +179,23 @@ const form = useForm({
   admin_thu_mua_id: '',
   file_path: null,           // có thể là URL, base64, File hoặc null
   quotation_files: [],       // File[] mới
+  proposal_files: [],        // File[] mới
 });
+
+watch(
+  () => usePage().props.auth.flash,
+  (val) => {
+    if (val && val.message) {
+      toast.add({
+        severity: val.type === 'error' ? 'error' : 'success',
+        summary: val.type === 'error' ? 'Lỗi' : 'Thành công',
+        detail: val.message,
+        life: 3000
+      });
+    }
+  },
+  { immediate: true }
+);
 
 const editorKey = ref(0);
 
@@ -207,6 +258,52 @@ function removeImage() {
   showPlaceholder.value = true;
   isContentEditable.value = true;
   editorKey.value++;
+}
+
+
+// ----- Proposal/BOQ files
+const uploadedProposalFiles = ref([]);
+function handleProposalFilesDrop(e) { addProposalFiles(Array.from(e.dataTransfer.files || [])); }
+function handleProposalFilesSelect(e) { addProposalFiles(Array.from(e.target.files || [])); }
+function addProposalFiles(files) {
+  const allowedTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'image/jpeg', 'image/jpg', 'image/png'
+  ];
+  const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'];
+  const valid = [];
+  const invalid = [];
+  files.forEach(f => {
+    let ok = false;
+    const ext = f.name && f.name.lastIndexOf('.') !== -1 ? f.name.slice(f.name.lastIndexOf('.')).toLowerCase() : '';
+    if (allowedTypes.includes(f.type)) {
+      ok = true;
+    } else if (
+      (f.type === 'application/octet-stream' || f.type === '' || f.type.startsWith('application/'))
+      && allowedExtensions.includes(ext)
+    ) {
+      ok = true;
+    }
+    if (ok) {
+      valid.push(f);
+    } else {
+      invalid.push(f);
+    }
+  });
+  if (invalid.length > 0) {
+    console.warn('[ProposalFiles] Các file bị loại:', invalid.map(f => f.name));
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Một số file không được hỗ trợ và đã bị bỏ qua.', life: 2500 });
+  }
+  uploadedProposalFiles.value.push(...valid);
+  form.proposal_files = [...uploadedProposalFiles.value];
+}
+function removeNewProposalFile(index) {
+  uploadedProposalFiles.value.splice(index, 1);
+  form.proposal_files = [...uploadedProposalFiles.value];
 }
 
 // ----- Quotation files
@@ -297,8 +394,9 @@ async function save() {
   form.description = String(v$.value.description.$model ?? form.description ?? '');
 
   const hasNewInlineImage = typeof form.file_path === 'string' && form.file_path.startsWith('data:image');
-  const hasUploadedFiles = (form.quotation_files?.length || 0) > 0;
-  const needsMultipart = hasNewInlineImage || hasUploadedFiles;
+  const hasUploadedQuotationFiles = (form.quotation_files?.length || 0) > 0;
+  const hasUploadedProposalFiles = (form.proposal_files?.length || 0) > 0;
+  const needsMultipart = hasNewInlineImage || hasUploadedQuotationFiles || hasUploadedProposalFiles;
 
   if (needsMultipart) {
     form
@@ -306,6 +404,7 @@ async function save() {
         const out = {
           description: String(data.description ?? ''),
           quotation_files: Array.isArray(data.quotation_files) ? data.quotation_files : [],
+          proposal_files: Array.isArray(data.proposal_files) ? data.proposal_files : [],
           admin_thu_mua_id: data.admin_thu_mua_id || '',
         };
         if (typeof data.file_path === 'string' && data.file_path.startsWith('data:image')) {
@@ -319,6 +418,7 @@ async function save() {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
+            console.log('onSuccess');
           form.reset();
         },
         onError: (errors) => {

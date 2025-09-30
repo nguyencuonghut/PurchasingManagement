@@ -40,7 +40,7 @@ class SupplierSelectionReportSeeder extends Seeder
                 'creator_id' => $creator->id,
                 'manager_id' => $users->random()->id,
                 'file_path' => '',
-                'created_at' => now()->subDays(rand(0, 365)),
+                'created_at' => now()->subDays(rand(0, 100)),
                 'updated_at' => now(),
             ]);
             $nextIndex++;

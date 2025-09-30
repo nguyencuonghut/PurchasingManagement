@@ -89,6 +89,11 @@ class SupplierSelectionReport extends Model
         return $this->hasMany(QuotationFile::class);
     }
 
+        public function proposalFiles()
+        {
+            return $this->hasMany(ProposalFile::class);
+        }
+
     public function getQuotationFilesCountAttribute()
     {
         // Ưu tiên dùng giá trị đã được withCount() nạp sẵn nếu có
