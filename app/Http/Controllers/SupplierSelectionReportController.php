@@ -125,7 +125,6 @@ class SupplierSelectionReportController extends Controller
      */
     public function store(StoreSupplierSelectionReportRequest $request)
     {
-        \Log::info('Creating Supplier Selection Report', $request->all());
         $this->authorize('create', SupplierSelectionReport::class);
 
 
@@ -150,7 +149,6 @@ class SupplierSelectionReportController extends Controller
                 })->max();
             $index = $maxIndex ? $maxIndex + 1 : 1;
             $code = sprintf('%d/%s/%d', $year, $departmentCode, $index);
-            \Log::info('Generated report code', ['code' => $code]);
             if (SupplierSelectionReport::where('code', $code)->exists()) {
                 throw new \Exception('Không thể sinh mã báo cáo duy nhất, vui lòng thử lại.');
             }

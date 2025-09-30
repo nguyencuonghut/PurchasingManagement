@@ -211,6 +211,12 @@ const rules = computed(() => ({
     required: helpers.withMessage('Mô tả không được để trống.', required),
     maxLength: helpers.withMessage('Mô tả không được vượt quá 1000 ký tự.', maxLength(1000)),
   },
+  file_path: {
+    required: helpers.withMessage('Ảnh báo cáo bắt buộc.', required),
+  },
+  quotation_files: {
+    required: helpers.withMessage('File báo giá bắt buộc.', value => Array.isArray(value) && value.length > 0),
+  },
   admin_thu_mua_id: {
     required: helpers.withMessage('Vui lòng chọn Admin Thu Mua.', required),
   },

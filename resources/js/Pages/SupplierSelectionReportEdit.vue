@@ -160,6 +160,13 @@ const rules = computed(() => ({
   admin_thu_mua_id: {
     required: helpers.withMessage('Vui lòng chọn Admin Thu Mua.', required),
   },
+  file_path: {
+    required: helpers.withMessage('Ảnh báo cáo bắt buộc.', required),
+  },
+  quotation_files: {
+    required: helpers.withMessage('File báo giá bắt buộc.', value => Array.isArray(value) && value.length > 0),
+  },
+  // proposal_files: không required
 }));
 const v$ = useVuelidate(rules, form);
 const submitted = ref(false);
@@ -263,18 +270,26 @@ async function save() {
   form.clearErrors();
 
   const ok = await v$.value.$validate();
-  if (!ok) return
+  if (!ok) {
+    // Nếu thiếu file_path hoặc quotation_files, hiển thị lỗi toast rõ ràng
+    if (v$.value.file_path.$invalid) {
+      toast.add({ severity: 'error', summary: t('common.error'), detail: 'Ảnh báo cáo bắt buộc.', life: 3500 });
+    }
+    if (v$.value.quotation_files.$invalid) {
+      toast.add({ severity: 'error', summary: t('common.error'), detail: 'File báo giá bắt buộc.', life: 3500 });
+    }
+    return;
+  }
 
   form.code = String(v$.value.code.$model ?? form.code ?? '');
   form.description = String(v$.value.description.$model ?? form.description ?? '');
 
-  // ngay sau khi đã validate v$ và đồng bộ form.code/description...
   const isNewImageFile   = form.file_path instanceof File;
   const wantRemoveImage  = !!form.file_path_removed;
 
-  // ❗ Nếu user xóa ảnh mà KHÔNG đính kèm ảnh mới -> chặn tại FE
+  // Nếu user xóa ảnh mà KHÔNG đính kèm ảnh mới -> chặn tại FE
   if (wantRemoveImage && !isNewImageFile) {
-    toast.add({ severity: 'error', summary: t('common.error'), detail: t('validation.image_required'), life: 3500 });
+    toast.add({ severity: 'error', summary: t('common.error'), detail: 'Ảnh báo cáo bắt buộc.', life: 3500 });
     return;
   }
 
@@ -286,11 +301,10 @@ async function save() {
   const needsMultipart = hasUploadedFile || wantRemoveImage || hasDeletedExisting;
 
   if (needsMultipart) {
-    // 🔁 Dùng POST + _method=PUT để PHP/Laravel parse multipart ổn định
     form
       .transform((data) => {
         const out = {
-          _method: 'PUT',                         // 👈 quan trọng
+          _method: 'PUT',
           code: String(data.code ?? ''),
           description: String(data.description ?? ''),
           admin_thu_mua_id: data.admin_thu_mua_id,
@@ -304,18 +318,16 @@ async function save() {
             : [],
           proposal_files: Array.isArray(data.proposal_files) ? data.proposal_files : [],
         };
-
-        // file_path 4 nhánh
         if (data.file_path_removed) {
           out.file_path = null;
         } else if (data.file_path instanceof File) {
           out.file_path = data.file_path;
         } else if (typeof data.file_path === 'string') {
-          out.file_path = data.file_path; // URL ảnh cũ
+          out.file_path = data.file_path;
         }
         return out;
       })
-      .post(`/supplier_selection_reports/${props.report.id}`, {   // 👈 dùng post()
+      .post(`/supplier_selection_reports/${props.report.id}`, {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
@@ -328,7 +340,6 @@ async function save() {
         },
       });
   } else {
-    // giữ nguyên nhánh không multipart như trước (PUT thẳng)
     form
       .transform((data) => ({
         code: String(data.code ?? ''),
