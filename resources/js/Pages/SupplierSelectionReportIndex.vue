@@ -22,7 +22,7 @@
             :rows="10"
             dataKey="id"
             filterDisplay="menu"
-            :globalFilterFields="['code', 'description', 'image_url', 'formatted_created_at']"
+            :globalFilterFields="['code', 'description', 'image_url', 'formatted_created_at', 'creator_name', 'admin_thu_mua_name']"
             :sortField="'created_at'"
             :sortOrder="-1"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
@@ -77,11 +77,17 @@
                 <template #body="{ data }">
                     {{ data.creator_name || 'N/A' }}
                 </template>
+                <template #filter="{ filterModel }">
+                    <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo người tạo" />
+                </template>
             </Column>
 
             <Column field="admin_thu_mua_name" header="Admin Thu Mua" sortable style="min-width: 12rem">
                 <template #body="{ data }">
                     {{ data.admin_thu_mua_name || '-' }}
+                </template>
+                <template #filter="{ filterModel }">
+                    <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo Admin Thu Mua" />
                 </template>
             </Column>
 
@@ -423,6 +429,8 @@ const initFilters = () => {
         description: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
         formatted_created_at: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
         status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+        creator_name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
+        admin_thu_mua_name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
     };
 };
 initFilters();
