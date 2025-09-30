@@ -279,7 +279,6 @@ class SupplierSelectionReportController extends Controller
                     }
                 }
             } catch (\Throwable $cleanupEx) {
-                // noop: log cleanup error if needed
                 Log::warning('Cleanup uploaded files failed: '.$cleanupEx->getMessage());
             }
 

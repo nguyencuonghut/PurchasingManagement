@@ -424,8 +424,11 @@ async function save() {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
-            console.log('onSuccess');
-          form.reset();
+          // Chỉ reset form nếu không có lỗi từ BE (flash type error)
+          const flash = usePage().props.auth.flash;
+          if (!flash || flash.type !== 'error') {
+            form.reset();
+          }
         },
         onError: (errors) => {
           form.errors = errors;
@@ -443,7 +446,10 @@ async function save() {
       .post('/supplier_selection_reports', {
         preserveScroll: true,
         onSuccess: () => {
-          form.reset();
+          const flash = usePage().props.flash;
+          if (!flash || flash.type !== 'error') {
+            form.reset();
+          }
         },
         onError: (errors) => {
           form.errors = errors;
