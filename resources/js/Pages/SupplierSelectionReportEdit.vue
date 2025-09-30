@@ -62,12 +62,28 @@
           v-model="uploadedQuotationFiles"
           :existing-files="existingQuotationFiles"
           :max-size="MAX_DOC_SIZE"
+          existing-title="File báo giá hiện có:"
           @delete-existing="markQuotationFileDeleted"
           @invalid-files="onInvalidQuotationFiles"
           @oversize-files="onOversizeQuotationFiles"
         />
 
         <small v-if="submitted && form.errors.quotation_files" class="text-red-500">{{ form.errors.quotation_files }}</small>
+      </div>
+
+      <!-- Proposal/BOQ Files -->
+      <div>
+        <label class="block font-bold mb-2">File đề nghị/BOQ</label>
+        <QuotationFilesUploadList
+          v-model="uploadedProposalFiles"
+          :existing-files="existingProposalFiles"
+          :max-size="MAX_DOC_SIZE"
+          existing-title="File đề nghị/BOQ hiện có:"
+          @delete-existing="markProposalFileDeleted"
+          @invalid-files="onInvalidProposalFiles"
+          @oversize-files="onOversizeProposalFiles"
+        />
+        <small v-if="submitted && form.errors.proposal_files" class="text-red-500">{{ form.errors.proposal_files }}</small>
       </div>
 
       <div class="flex justify-end gap-2">
@@ -117,6 +133,8 @@ const form = useForm({
   quotation_files: [], // File[] mới
   deleted_quotation_file_ids: [], // id[] file báo giá cũ đánh dấu xóa
   file_path_removed: false, // user click Xóa ảnh
+  proposal_files: [], // File[] mới
+  deleted_proposal_file_ids: [], // id[] file đề nghị/BOQ cũ đánh dấu xóa
 });
 
 // Lấy flash message (tuỳ app của bạn là flash hay auth.flash)
@@ -190,6 +208,26 @@ function pickServerError(errors, fallback) {
 
 
 // ----- Quotation files
+// ----- Proposal/BOQ files
+const existingProposalFiles = ref(
+  normalizeFiles(props.report.proposal_files) || normalizeFiles(props.report.proposalFiles)
+);
+const uploadedProposalFiles = ref([]);
+watch(uploadedProposalFiles, (val) => {
+  form.proposal_files = Array.isArray(val) ? [...val] : [];
+});
+const deletedProposalFileIds = ref([]);
+function markProposalFileDeleted(id) {
+  if (!deletedProposalFileIds.value.includes(id)) deletedProposalFileIds.value.push(id);
+  form.deleted_proposal_file_ids = [...deletedProposalFileIds.value];
+  existingProposalFiles.value = existingProposalFiles.value.filter(f => f.id !== id);
+}
+function onInvalidProposalFiles() {
+  toast.add({ severity: 'warn', summary: t('common.warn'), detail: 'Một số file đề nghị/BOQ không hợp lệ.', life: 2500 });
+}
+function onOversizeProposalFiles() {
+  toast.add({ severity: 'warn', summary: t('common.warn'), detail: 'File đề nghị/BOQ vượt quá 20MB.', life: 3000 });
+}
 function normalizeFiles(input) {
   if (Array.isArray(input)) return input;
   if (input && Array.isArray(input.data)) return input.data;
@@ -241,9 +279,9 @@ async function save() {
   }
 
   const hasUploadedFile =
-    form.file_path instanceof File || (form.quotation_files?.length || 0) > 0;
+    form.file_path instanceof File || (form.quotation_files?.length || 0) > 0 || (form.proposal_files?.length || 0) > 0;
 
-  const hasDeletedExisting = (form.deleted_quotation_file_ids?.length || 0) > 0;
+  const hasDeletedExisting = (form.deleted_quotation_file_ids?.length || 0) > 0 || (form.deleted_proposal_file_ids?.length || 0) > 0;
 
   const needsMultipart = hasUploadedFile || wantRemoveImage || hasDeletedExisting;
 
@@ -261,6 +299,10 @@ async function save() {
             ? data.deleted_quotation_file_ids
             : [],
           quotation_files: Array.isArray(data.quotation_files) ? data.quotation_files : [],
+          deleted_proposal_file_ids: Array.isArray(data.deleted_proposal_file_ids)
+            ? data.deleted_proposal_file_ids
+            : [],
+          proposal_files: Array.isArray(data.proposal_files) ? data.proposal_files : [],
         };
 
         // file_path 4 nhánh
@@ -293,10 +335,13 @@ async function save() {
         admin_thu_mua_id: data.admin_thu_mua_id,
         description: String(data.description ?? ''),
         file_path: typeof data.file_path === 'string' ? data.file_path : '',
-        // 👇 THÊM DÒNG NÀY
         deleted_quotation_file_ids: Array.isArray(data.deleted_quotation_file_ids)
-        ? data.deleted_quotation_file_ids
-        : [],
+          ? data.deleted_quotation_file_ids
+          : [],
+        deleted_proposal_file_ids: Array.isArray(data.deleted_proposal_file_ids)
+          ? data.deleted_proposal_file_ids
+          : [],
+        proposal_files: Array.isArray(data.proposal_files) ? data.proposal_files : [],
       }))
       .put(`/supplier_selection_reports/${props.report.id}`, {
         preserveScroll: true,

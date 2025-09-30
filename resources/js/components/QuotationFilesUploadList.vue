@@ -22,7 +22,7 @@
 
     <!-- Existing files -->
     <div v-if="existingFiles.length > 0" class="mt-4">
-      <h4 class="font-semibold mb-2">{{ t('quotation.existing_title') }}</h4>
+      <h4 class="font-semibold mb-2">{{ existingTitle || t('quotation.existing_title') }}</h4>
       <div class="space-y-2">
         <div v-for="file in existingFiles" :key="file.id" class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
           <div class="flex items-center space-x-3">
@@ -73,6 +73,7 @@ const props = defineProps({
   existingFiles: { type: Array, default: () => [] }, // [{id, file_url, file_name, file_type, file_size_formatted}]
   maxSize: { type: Number, default: MAX_QUOTATION_BYTES },
   accept: { type: String, default: buildAcceptFromExts(ALLOWED_QUOTATION_EXTS) },
+  existingTitle: { type: String, default: '' },
 });
 const emit = defineEmits(['update:modelValue', 'delete-existing', 'invalid-files', 'oversize-files']);
 
