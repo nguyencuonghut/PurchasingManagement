@@ -164,8 +164,16 @@ const rules = computed(() => ({
     required: helpers.withMessage('Ảnh báo cáo bắt buộc.', required),
   },
   quotation_files: {
-    required: helpers.withMessage('File báo giá bắt buộc.', value => Array.isArray(value) && value.length > 0),
-  },
+    required: helpers.withMessage(
+      'File báo giá bắt buộc.',
+      value => {
+        // Nếu còn file báo giá cũ (chưa bị xóa hết), không required
+        const hasOldFiles = existingQuotationFiles.value && existingQuotationFiles.value.length > 0;
+        const hasNewFiles = Array.isArray(value) && value.length > 0;
+        return hasOldFiles || hasNewFiles;
+      }
+    ),
+},
   // proposal_files: không required
 }));
 const v$ = useVuelidate(rules, form);
