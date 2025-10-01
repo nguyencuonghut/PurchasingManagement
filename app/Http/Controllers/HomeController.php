@@ -66,8 +66,30 @@ class HomeController extends Controller
 
         // Phiếu gần đây
         $recentReports = (clone $datatableQuery)->orderByDesc('created_at')->limit(5)->get(['id','code','description','status','created_at']);
-        // Phiếu cần xử lý (ví dụ: đang chờ duyệt, hoặc chờ user xử lý)
-        $pendingReports = (clone $datatableQuery)->whereIn('status', ['pending_manager_approval','manager_approved','auditor_approved'])->orderByDesc('created_at')->limit(5)->get(['id','code','description','status','created_at']);
+
+        // Phiếu cần xử lý - filter theo đúng ý nghĩa từng Role
+        $pendingReportsQuery = \App\Models\SupplierSelectionReport::query();
+        if ($roleName === 'Admin') {
+            $pendingReportsQuery = $pendingReportsQuery->whereIn('status', ['pending_manager_approval','manager_approved','auditor_approved']);
+        } elseif ($roleName === 'Nhân viên Thu Mua') {
+            $pendingReportsQuery = $pendingReportsQuery->where('creator_id', $user->id)
+                ->whereIn('status', ['pending_manager_approval','manager_approved','auditor_approved']);
+        } elseif ($roleName === 'Trưởng phòng Thu Mua') {
+            $pendingReportsQuery = $pendingReportsQuery->where('manager_id', $user->id)
+                ->where('status', 'pending_manager_approval');
+        } elseif ($roleName === 'Nhân viên Kiểm Soát') {
+            $pendingReportsQuery = $pendingReportsQuery->where('status', 'manager_approved');
+        } elseif ($roleName === 'Giám đốc') {
+            $pendingReportsQuery = $pendingReportsQuery->where('director_id', $user->id)
+                ->where('status', 'auditor_approved');
+        } elseif ($roleName === 'Kế toán') {
+            $pendingReportsQuery = $pendingReportsQuery->where('status', 'director_approved');
+        } elseif ($roleName === 'Admin Thu Mua') {
+            $pendingReportsQuery = $pendingReportsQuery->where('status', 'director_approved')
+                ->where('adm_id', $user->id);
+        }
+        // Các role còn lại xem được toàn bộ phiếu cần xử lý
+        $pendingReports = $pendingReportsQuery->orderByDesc('created_at')->limit(5)->get(['id','code','description','status','created_at']);
 
         // Thông báo (dummy)
         $notifications = [];
