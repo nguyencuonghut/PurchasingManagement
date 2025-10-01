@@ -50,7 +50,7 @@ class HomeController extends Controller
                   ->orWhere('manager_id', $user->id);
             });
         } elseif ($roleName === 'Nhân viên Kiểm Soát') {
-            $datatableQuery = $datatableQuery->where('status', 'manager_approved');
+            $datatableQuery = $datatableQuery->whereIn('status', ['manager_approved', 'auditor_approved', 'rejected', 'pending_director_approval', 'director_approved']);
         } elseif ($roleName === 'Giám đốc') {
             $datatableQuery = $datatableQuery->where(function($q) use ($user) {
                 $q->where('director_id', $user->id)

@@ -60,7 +60,7 @@ class SupplierSelectionReportController extends Controller
                   });
             });
         } elseif ($roleName === 'Nhân viên Kiểm Soát') {
-            $query->whereIn('status', [ReportStatus::MANAGER_APPROVED, ReportStatus::AUDITOR_APPROVED, ReportStatus::PENDING_DIRECTOR]);
+            $query->whereIn('status', [ReportStatus::MANAGER_APPROVED, ReportStatus::AUDITOR_APPROVED, ReportStatus::PENDING_DIRECTOR, ReportStatus::DIRECTOR_APPROVED, ReportStatus::REJECTED]);
         } elseif ($roleName === 'Giám đốc') {
             $query->where('director_id', $user->id);
         } elseif ($roleName === 'Kế toán') {
