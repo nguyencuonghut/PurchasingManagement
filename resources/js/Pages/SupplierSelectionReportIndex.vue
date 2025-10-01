@@ -44,11 +44,27 @@
             <template #empty> Không tìm thấy báo cáo. </template>
 
             <Column field="code" header="Mã" sortable style="min-width: 14rem">
-                <template #body="{ data }">
-                    <a :href="`/supplier_selection_reports/${data.id}`" class="text-primary hover:underline" style="cursor:pointer">
-                        {{ data.code }}
-                    </a>
-                </template>
+                    <template #body="{ data }">
+                        <div>
+                            <a :href="`/supplier_selection_reports/${data.id}`" class="text-primary hover:underline" style="cursor:pointer">
+                                {{ data.code }}
+                            </a>
+                            <!-- Nếu có parent -->
+                            <span v-if="data.parent_report" class="ml-2" title="Parent">
+                                <i class="pi pi-link text-primary" style="vertical-align: middle; font-size: 1.1em;"></i>
+                                <a :href="`/supplier_selection_reports/${data.parent_report.id}`" class="text-info hover:underline ml-1" style="cursor:pointer">
+                                    {{ data.parent_report.code }}
+                                </a>
+                            </span>
+                            <!-- Nếu có child -->
+                            <span v-if="data.child_report" class="ml-2" title="Child">
+                                <i class="pi pi-share-alt text-primary" style="vertical-align: middle; font-size: 1.1em;"></i>
+                                <a :href="`/supplier_selection_reports/${data.child_report.id}`" class="text-success hover:underline ml-1" style="cursor:pointer">
+                                    {{ data.child_report.code }}
+                                </a>
+                            </span>
+                        </div>
+                    </template>
                 <template #filter="{ filterModel }">
                     <InputText v-model="filterModel.value" type="text" placeholder="Tìm theo mã" />
                 </template>

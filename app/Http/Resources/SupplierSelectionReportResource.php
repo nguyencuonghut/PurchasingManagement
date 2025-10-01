@@ -59,6 +59,7 @@ class SupplierSelectionReportResource extends JsonResource
             'proposal_files' => ProposalFileResource::collection($this->proposalFiles ?? collect()),
 
             'child_report' => $this->childReport ? $this->childReport->toArray() : null,
+            'parent_report' => $this->parentReport ? $this->parentReport->toArray() : null,
         ];
     }
 }
