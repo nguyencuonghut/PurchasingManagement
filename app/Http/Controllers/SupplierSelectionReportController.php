@@ -164,7 +164,7 @@ class SupplierSelectionReportController extends Controller
                             'parent_report_id' => 'Phiếu cha đã có phiếu con, không thể tạo thêm.'
                         ]);
                     }
-                    $data['description'] = $parentReport->description;
+                    $data['description'] = '[LẦN 2] - ' . $parentReport->description;
                     $data['adm_id'] = $parentReport->adm_id;
                     $data['parent_report_id'] = $parentReport->id;
                 }
