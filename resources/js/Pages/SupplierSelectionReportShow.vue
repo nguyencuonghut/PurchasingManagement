@@ -88,7 +88,11 @@
             <Button label="Duyệt phiếu" icon="pi pi-check" @click="openDirectorModal" class="w-full" />
           </div>
 
-          <div v-if="report.status === 'rejected'  && (user?.role === 'Nhân viên Thu Mua' || user?.role === 'Trưởng phòng Thu Mua')" class="mt-4 justify-end flex">
+          <div v-if="report.status === 'rejected'
+                    && !report.child_report
+                    && (user?.role === 'Nhân viên Thu Mua' || user?.role === 'Trưởng phòng Thu Mua')"
+            class="mt-4 justify-end flex"
+          >
             <Button
                 label="Tạo phiếu mới từ phiếu bị từ chối"
                 icon="pi pi-plus"
