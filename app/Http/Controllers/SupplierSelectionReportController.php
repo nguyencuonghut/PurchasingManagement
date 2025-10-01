@@ -44,7 +44,7 @@ class SupplierSelectionReportController extends Controller
         // Lấy quyền của người dùng hiện tại
         $user = $request->user();
 
-        $query = SupplierSelectionReport::with(['creator'])
+        $query = SupplierSelectionReport::with(['creator', 'childReport'])
             ->withCount('quotationFiles')
             ->orderBy('id', 'desc');
 
@@ -120,6 +120,9 @@ class SupplierSelectionReportController extends Controller
         if ($parentReportId) {
             $parentReport = SupplierSelectionReport::find($parentReportId);
             if ($parentReport && $parentReport->status === ReportStatus::REJECTED) {
+                if ($parentReport->childReport) {
+                    abort(403, 'Phiếu này đã có phiếu con, không thể tạo thêm.');
+                }
                 $initData['description'] = $parentReport->description;
                 $initData['adm_id'] = $parentReport->adm_id;
                 $initData['parent_report_id'] = $parentReport->id;
@@ -156,12 +159,16 @@ class SupplierSelectionReportController extends Controller
             if ($parentReportId) {
                 $parentReport = SupplierSelectionReport::find($parentReportId);
                 if ($parentReport && $parentReport->status === ReportStatus::REJECTED) {
+                    if ($parentReport->childReport) {
+                        throw ValidationException::withMessages([
+                            'parent_report_id' => 'Phiếu cha đã có phiếu con, không thể tạo thêm.'
+                        ]);
+                    }
                     $data['description'] = $parentReport->description;
                     $data['adm_id'] = $parentReport->adm_id;
                     $data['parent_report_id'] = $parentReport->id;
                 }
             }
-
             // --- Sinh mã code tự động, Index tăng từ 1 tới N cho cả năm, không phụ thuộc Department ---
             $year = now()->year;
             $user = $request->user();
@@ -337,7 +344,7 @@ class SupplierSelectionReportController extends Controller
      */
     public function show(SupplierSelectionReport $supplierSelectionReport)
     {
-        $report = $supplierSelectionReport->load(['quotationFiles', 'proposalFiles', 'creator','manager','auditor','director']);
+        $report = $supplierSelectionReport->load(['quotationFiles', 'proposalFiles', 'creator','manager','auditor','director', 'childReport']);
 
         // Gather activity logs for this report
         $logs = \App\Models\ActivityLog::with('user')

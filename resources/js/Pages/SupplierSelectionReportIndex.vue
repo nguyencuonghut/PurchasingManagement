@@ -117,7 +117,7 @@
                 <template #body="slotProps">
                     <!-- Tạo lại từ phiếu bị rejected -->
                     <Button
-                        v-if="slotProps.data.status === 'rejected'"
+                        v-if="slotProps.data.status === 'rejected' && !slotProps.data.child_report"
                         icon="pi pi-copy"
                         outlined
                         rounded

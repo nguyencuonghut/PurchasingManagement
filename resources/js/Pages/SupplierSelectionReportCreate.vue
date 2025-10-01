@@ -10,6 +10,9 @@
         <div>Mã: {{ parentReport.code }}</div>
         <div>Mô tả: {{ parentReport.description }}</div>
         <div>Admin Thu Mua: {{ parentReport.admin_thu_mua_name }}</div>
+        <div> parent_report_id: {{ form.parent_report_id }}</div>
+          <!-- Hidden input để truyền parent_report_id xuống backend -->
+          <input type="hidden" name="parent_report_id" v-model="form.parent_report_id" />
       </div>
 
       <!-- Code is auto-generated, no input field -->
@@ -187,6 +190,7 @@ const form = useForm({
   file_path: null,           // có thể là URL, base64, File hoặc null
   quotation_files: [],       // File[] mới
   proposal_files: [],        // File[] mới
+  parent_report_id: '',      // ID phiếu cha bị từ chối (nếu có)
 });
 
 watch(
@@ -213,6 +217,7 @@ watch(
     if (val) {
       if (val.description) form.description = val.description;
       if (val.adm_id) form.admin_thu_mua_id = val.adm_id;
+      if (val.parent_report_id) form.parent_report_id = val.parent_report_id;
     }
   },
   { immediate: true }
@@ -434,6 +439,7 @@ async function save() {
           quotation_files: Array.isArray(data.quotation_files) ? data.quotation_files : [],
           proposal_files: Array.isArray(data.proposal_files) ? data.proposal_files : [],
           admin_thu_mua_id: data.admin_thu_mua_id || '',
+          parent_report_id: data.parent_report_id || '',
         };
         if (typeof data.file_path === 'string' && data.file_path.startsWith('data:image')) {
           out.file_path = dataURLtoBlob(data.file_path);
@@ -464,6 +470,7 @@ async function save() {
         description: String(data.description ?? ''),
         file_path: typeof data.file_path === 'string' ? data.file_path : '',
         admin_thu_mua_id: data.admin_thu_mua_id || '',
+        parent_report_id: data.parent_report_id || '',
       }))
       .post('/supplier_selection_reports', {
         preserveScroll: true,

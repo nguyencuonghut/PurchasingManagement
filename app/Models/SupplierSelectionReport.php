@@ -26,6 +26,7 @@ class SupplierSelectionReport extends Model
         'director_approved_notes',
         'director_id',
         'director_approved_at',
+        'parent_report_id',
     ];
 
     // Accessor để tự động thêm URL công khai cho file_path khi truy vấn
@@ -122,8 +123,8 @@ class SupplierSelectionReport extends Model
     }
 
     // --- Liên kết các phiếu con tạo từ phiếu bị rejected ---
-    public function childReports()
+    public function childReport()
     {
-        return $this->hasMany(SupplierSelectionReport::class, 'parent_report_id');
+        return $this->hasOne(SupplierSelectionReport::class, 'parent_report_id');
     }
 }
