@@ -1,9 +1,9 @@
 <script setup>
 import FloatingConfigurator from '@/PrimeVue/components/FloatingConfigurator.vue';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 // 1. Thay đổi import useForm từ laravel-precognition-vue-inertia sang @inertiajs/vue3
-import { useForm, Link } from '@inertiajs/vue3';
+import { useForm, Link, usePage } from '@inertiajs/vue3';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Checkbox from 'primevue/checkbox';
@@ -16,6 +16,23 @@ const form = useForm({
     email: '',
     password: '',
     remember: true,
+});
+
+const page = usePage();
+
+// Lấy thông báo từ flash message khi redirect từ ResetPassword
+const flashMessage = computed(() => {
+    if (page.props.flash && page.props.flash.message) {
+        return page.props.flash.message;
+    }
+    return '';
+});
+
+const messageType = computed(() => {
+    if (page.props.flash && page.props.flash.type) {
+        return page.props.flash.type;
+    }
+    return 'info';
 });
 
 const submit = () => {
@@ -68,6 +85,10 @@ export default {
                             </g>
                         </svg>
                         <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">HONGHAFEED JSC</div>
+                    </div>
+
+                    <div v-if="flashMessage" class="mb-6 p-3 rounded" :class="messageType === 'success' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'">
+                        {{ flashMessage }}
                     </div>
 
                     <div>

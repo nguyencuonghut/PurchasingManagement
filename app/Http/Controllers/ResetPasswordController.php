@@ -42,8 +42,8 @@ class ResetPasswordController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return back()->with([
-                'message' => 'Đặt lại mật khẩu thành công.',
+            return redirect('/login')->with([
+                'message' => 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập với mật khẩu mới.',
                 'type' => 'success'
             ]);
         } else {

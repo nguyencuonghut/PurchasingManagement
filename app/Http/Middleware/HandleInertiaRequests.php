@@ -37,6 +37,26 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
+            // Tạo một flash property độc lập ở cùng cấp với auth
+            'flash' => function () use ($request) {
+                $flash = $request->session()->get('flash');
+                $message = $request->session()->get('message');
+                // Nếu có flash là array thì luôn trả về type và message
+                if (is_array($flash)) {
+                    return [
+                        'type' => $flash['type'] ?? null,
+                        'message' => $flash['message'] ?? $message,
+                    ];
+                }
+                // Nếu chỉ có message thì mặc định type là null
+                if ($message) {
+                    return [
+                        'type' => null,
+                        'message' => $message,
+                    ];
+                }
+                return null;
+            },
             'auth' => Auth::user() ? [
                 'user' => [
                     'id' => Auth::user()->id,

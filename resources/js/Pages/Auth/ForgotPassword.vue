@@ -24,7 +24,9 @@
               <div v-if="form.errors.email" class="text-red-500 mb-4">{{ form.errors.email }}</div>
 
               <Button label="Gửi link đặt lại mật khẩu" class="w-full md:w-[30rem]" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing"></Button>
-              <div v-if="flashMessage" class="text-green-600 mt-4">{{ flashMessage }}</div>
+              <div v-if="flashMessage" class="mt-4 p-3 rounded" :class="messageType === 'success' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'">
+                {{ flashMessage }}
+              </div>
             </form>
           </div>
         </div>
@@ -45,13 +47,30 @@ const form = useForm({
 });
 
 const status = ref('');
+const page = usePage();
 
-// Lấy thông báo từ flash message
+// Lấy thông báo từ flash message (cả từ cấp cao và từ auth nếu người dùng đã đăng nhập)
 const flashMessage = computed(() => {
-  if (usePage().props.auth?.flash?.message) {
-    return usePage().props.auth?.flash?.message;
+  // Kiểm tra flash message ở cấp cao (đã cập nhật middleware)
+  if (page.props.flash && page.props.flash.message) {
+    return page.props.flash.message;
+  }
+  // Kiểm tra flash message trong auth (cách cũ)
+  if (page.props.auth?.flash?.message) {
+    return page.props.auth.flash.message;
   }
   return '';
+});
+
+// Xác định loại thông báo (success, error, warning, info)
+const messageType = computed(() => {
+  if (page.props.flash && page.props.flash.type) {
+    return page.props.flash.type;
+  }
+  if (page.props.auth?.flash?.type) {
+    return page.props.auth.flash.type;
+  }
+  return 'info';
 });
 
 const submitEmail = async () => {
