@@ -32,8 +32,11 @@
               <InputText id="email" type="email" placeholder="Nhập email của bạn" class="w-full mb-8" v-model="form.email" />
               <br v-if="form.errors.email">
               <small v-if="form.errors.email" class="text-red-500">{{ form.errors.email }}</small>
+              <div v-if="form.errors.email && (form.errors.email.toString().includes('không hợp lệ') || form.errors.email.toString().includes('hết hạn'))" class="mt-2">
+                <Link href="/forgot-password" class="text-primary hover:underline">Yêu cầu liên kết đặt lại mật khẩu mới</Link>
+              </div>
 
-              <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Mật khẩu mới</label>
+              <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2 mt-4">Mật khẩu mới</label>
               <Password id="password" v-model="form.password" placeholder="Mật khẩu mới" :toggleMask="true" class="w-full mb-4" fluid :feedback="false"></Password>
               <br v-if="form.errors.password">
               <small v-if="form.errors.password" class="text-red-500">{{ form.errors.password }}</small>
@@ -56,7 +59,7 @@
 <script setup>
 import FloatingConfigurator from '@/PrimeVue/components/FloatingConfigurator.vue';
 import { computed } from 'vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { useForm, usePage, Link } from '@inertiajs/vue3';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
