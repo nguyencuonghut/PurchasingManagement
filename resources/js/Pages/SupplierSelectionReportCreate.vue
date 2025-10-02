@@ -412,7 +412,7 @@ function dataURLtoBlob(dataurl) {
   return new Blob([u8], { type: mime });
 }
 
-function goBack() { router.replace('/supplier_selection_reports'); }
+function goBack() { router.visit('/supplier_selection_reports', { method: 'get' }); }
 
 // ----- Save
 async function save() {

@@ -3,6 +3,9 @@
     <title>Chi tiết BCLCNCC</title>
   </Head>
   <div class="card">
+    <div class="flex justify-end items-center mb-4">
+      <Button type="button" label="Quay lại" icon="pi pi-arrow-left" outlined @click="goBack" />
+    </div>
     <!-- Tabs with two tabs -->
     <Tabs value="0">
       <TabList>
@@ -568,6 +571,10 @@ const createNewFromRejected = () => {
   router.get('/supplier_selection_reports/create', {
     parent_report_id: report.value.id
   });
+};
+
+const goBack = () => {
+  router.visit('/supplier_selection_reports', { method: 'get' });
 };
 </script>
 
