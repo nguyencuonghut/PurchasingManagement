@@ -221,11 +221,12 @@ class SupplierSelectionReportController extends Controller
 
             // Khởi tạo mảng rỗng cho $storedProposalFiles để tránh lỗi undefined
             $storedProposalFiles = [];
-            
+
             // Upload file đề nghị/BOQ trước khi bắt đầu transaction (nếu có)
             if ($request->hasFile('proposal_files')) {
                 foreach ($request->file('proposal_files') as $file) {
-                    $path = $file->store('proposal_files');
+                    // Lưu vào public disk để có thể truy cập trực tiếp
+                    $path = $file->store('proposal_files', 'public');
                     $storedProposalFiles[] = [
                         'file_name' => $file->getClientOriginalName(),
                         'file_path' => $path,
@@ -249,7 +250,7 @@ class SupplierSelectionReportController extends Controller
                     $quotationFile->supplier_selection_report_id = $report->id;
                     $quotationFile->save();
                 }
-                
+
                 // Lưu các file đề nghị/BOQ đã upload (nếu có)
                 foreach ($storedProposalFiles as $pf) {
                     $proposalFile = new \App\Models\ProposalFile();
@@ -565,7 +566,7 @@ class SupplierSelectionReportController extends Controller
                 }
                 $quotationFile->delete();
             }
-            
+
             // Xóa file đề nghị/BOQ
             foreach ($supplierSelectionReport->proposalFiles as $proposalFile) {
                 if ($proposalFile->file_path && Storage::disk('public')->exists($proposalFile->file_path)) {
