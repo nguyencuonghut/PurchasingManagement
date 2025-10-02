@@ -219,9 +219,25 @@ class SupplierSelectionReportController extends Controller
                 }
             }
 
+            // Khởi tạo mảng rỗng cho $storedProposalFiles để tránh lỗi undefined
+            $storedProposalFiles = [];
+            
+            // Upload file đề nghị/BOQ trước khi bắt đầu transaction (nếu có)
+            if ($request->hasFile('proposal_files')) {
+                foreach ($request->file('proposal_files') as $file) {
+                    $path = $file->store('proposal_files');
+                    $storedProposalFiles[] = [
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $path,
+                        'file_type' => $file->getClientMimeType(),
+                        'file_size' => $file->getSize(),
+                    ];
+                }
+            }
+
             // Tạo bản ghi trong transaction
             $report = null;
-            DB::transaction(function () use (&$report, $data, $storedQuotationFiles, $request) {
+            DB::transaction(function () use (&$report, $data, $storedQuotationFiles, $storedProposalFiles, $request) {
                 $report = SupplierSelectionReport::create($data);
 
                 foreach ($storedQuotationFiles as $qf) {
@@ -233,18 +249,8 @@ class SupplierSelectionReportController extends Controller
                     $quotationFile->supplier_selection_report_id = $report->id;
                     $quotationFile->save();
                 }
-                // Xử lý file đề nghị/BOQ
-                if ($request->hasFile('proposal_files')) {
-                    foreach ($request->file('proposal_files') as $file) {
-                        $path = $file->store('proposal_files');
-                        $storedProposalFiles[] = [
-                            'file_name' => $file->getClientOriginalName(),
-                            'file_path' => $path,
-                            'file_type' => $file->getClientMimeType(),
-                            'file_size' => $file->getSize(),
-                        ];
-                    }
-                }
+                
+                // Lưu các file đề nghị/BOQ đã upload (nếu có)
                 foreach ($storedProposalFiles as $pf) {
                     $proposalFile = new \App\Models\ProposalFile();
                     $proposalFile->file_name = $pf['file_name'];
@@ -467,6 +473,7 @@ class SupplierSelectionReportController extends Controller
                 $pf->delete();
             }
         }
+        // File đề nghị/BOQ không bắt buộc, có thể có hoặc không
 
         // ---- 3) Thêm file báo giá mới (nếu có)
         if ($request->hasFile('quotation_files')) {
@@ -480,17 +487,18 @@ class SupplierSelectionReportController extends Controller
             }
         }
 
-        // ---- 3b) Thêm file đề nghị/BOQ mới (nếu có)
+        // ---- 3b) Thêm file đề nghị/BOQ mới (nếu có, không bắt buộc)
         if ($request->hasFile('proposal_files')) {
             foreach ($request->file('proposal_files') as $file) {
                 $supplierSelectionReport->proposalFiles()->create([
                     'file_name' => $file->getClientOriginalName(),
-                    'file_path' => $this->uploadFile($file),
+                    'file_path' => $this->uploadFile($file), // Sử dụng helper function để upload
                     'file_type' => $file->getClientMimeType(),
                     'file_size' => $file->getSize(),
                 ]);
             }
         }
+        // Lưu ý: File đề nghị/BOQ không bắt buộc, không cần kiểm tra số lượng
 
         // ---- 4) Các ràng buộc bắt buộc (nếu nghiệp vụ yêu cầu)
         // - file_path required?
@@ -556,6 +564,14 @@ class SupplierSelectionReportController extends Controller
                     Storage::disk('public')->delete($quotationFile->file_path);
                 }
                 $quotationFile->delete();
+            }
+            
+            // Xóa file đề nghị/BOQ
+            foreach ($supplierSelectionReport->proposalFiles as $proposalFile) {
+                if ($proposalFile->file_path && Storage::disk('public')->exists($proposalFile->file_path)) {
+                    Storage::disk('public')->delete($proposalFile->file_path);
+                }
+                $proposalFile->delete();
             }
 
             // Xóa file báo cáo

@@ -125,7 +125,7 @@
                   {{ slotProps.index + 1 }}
                 </template>
               </Column>
-              <Column field="file_name" header="File báo giá" sortable style="min-width: 14rem">
+              <Column field="file_name" header="File đề nghị/BOQ" sortable style="min-width: 14rem">
                 <template #body="{ data }">
                   <a :href="data.file_url" target="_blank" class="text-primary hover:underline" style="cursor:pointer">{{ data.file_name }}</a>
                 </template>

@@ -44,6 +44,14 @@ class StoreSupplierSelectionReportRequest extends FormRequest
                 'mimes:' . implode(',', config('uploads.quotation.mimes', ['pdf','doc','docx','xls','xlsx','jpg','jpeg','png'])),
                 'max:' . (int) config('uploads.quotation.max_kb', 20480),
             ],
+
+            // File đề nghị/BOQ - KHÔNG bắt buộc
+            'proposal_files' => ['sometimes', 'array'],
+            'proposal_files.*' => [
+                'file',
+                'mimes:' . implode(',', config('uploads.quotation.mimes', ['pdf','doc','docx','xls','xlsx','jpg','jpeg','png'])),
+                'max:' . (int) config('uploads.quotation.max_kb', 20480),
+            ],
         ];
     }
 
@@ -70,6 +78,11 @@ class StoreSupplierSelectionReportRequest extends FormRequest
             'quotation_files.*.file' => 'Mỗi file báo giá phải là một file hợp lệ.',
             'quotation_files.*.mimes' => 'File báo giá phải có định dạng: pdf, doc, docx, xls, xlsx, jpg, jpeg, png.',
             'quotation_files.*.max' => 'File báo giá không được vượt quá 20MB.',
+
+            'proposal_files.array' => 'Danh sách file đề nghị/BOQ phải là một mảng.',
+            'proposal_files.*.file' => 'Mỗi file đề nghị/BOQ phải là một file hợp lệ.',
+            'proposal_files.*.mimes' => 'File đề nghị/BOQ phải có định dạng: pdf, doc, docx, xls, xlsx, jpg, jpeg, png.',
+            'proposal_files.*.max' => 'File đề nghị/BOQ không được vượt quá 20MB.',
         ];
     }
 }

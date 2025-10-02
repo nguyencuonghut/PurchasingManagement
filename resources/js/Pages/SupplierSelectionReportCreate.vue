@@ -124,7 +124,7 @@
 
       <!-- Proposal/BOQ Files -->
       <div>
-        <label class="block font-bold mb-2 required-field">File đề nghị/BOQ</label>
+        <label class="block font-bold mb-2">File đề nghị/BOQ</label>
         <div
           class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-green-400 transition-colors"
           @drop.prevent="handleProposalFilesDrop"
