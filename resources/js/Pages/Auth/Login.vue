@@ -3,7 +3,7 @@ import FloatingConfigurator from '@/PrimeVue/components/FloatingConfigurator.vue
 import { ref } from 'vue';
 
 // 1. Thay đổi import useForm từ laravel-precognition-vue-inertia sang @inertiajs/vue3
-import { useForm } from '@inertiajs/vue3';
+import { useForm, Link } from '@inertiajs/vue3';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Checkbox from 'primevue/checkbox';
@@ -86,7 +86,7 @@ export default {
                                     <Checkbox v-model="form.remember" id="remember" binary class="mr-2"></Checkbox>
                                     <label for="remember">Ghi nhớ</label>
                                 </div>
-                                <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Quên mật khẩu?</span>
+                                <Link href="/forgot-password" class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Quên mật khẩu?</Link>
                             </div>
                             <Button label="Đăng nhập" class="w-full" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing"></Button>
                         </form>

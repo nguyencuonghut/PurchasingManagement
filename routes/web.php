@@ -8,6 +8,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChangePasswordController;
+use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\ResetPasswordController;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +17,20 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest:web')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('show_login');
     Route::post('/login', [LoginController::class, 'handleLogin'])->name('login');
+    // Hiển thị trang nhập email quên mật khẩu
+    Route::get('/forgot-password', function () {
+        return Inertia\Inertia::render('Auth/ForgotPassword');
+    })->name('password.request');
+    // Quên mật khẩu
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    // Reset mật khẩu
+    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+    // Route FE nhận token reset
+    Route::get('/reset-password/{token}', function (string $token) {
+        return Inertia\Inertia::render('Auth/ResetPassword', [
+            'token' => $token
+        ]);
+    })->name('password.reset');
 });
 Route::group(['middleware'=>'auth:web'], function() {
     Route::post('/logout', [LoginController::class, 'handleLogout'])->name('logout');
