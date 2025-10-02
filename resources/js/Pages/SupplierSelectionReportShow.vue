@@ -56,9 +56,11 @@
             </div>
             <div v-if="report.image_url" class="mt-2">
               <b>File đính kèm:</b>
-              <img :src="report.image_url" alt="Ảnh đính kèm" style="max-width: 100%; max-height: 100%; display: block; margin-top: 8px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer;" @click="openImageModal(report.image_url)" />
+              <div class="image-container" style="background-color: #ffffff; padding: 8px; border-radius: 8px; margin-top: 8px;">
+                <img :src="report.image_url" alt="Ảnh đính kèm" style="max-width: 100%; max-height: 100%; display: block; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer;" @click="openImageModal(report.image_url)" />
+              </div>
               <Dialog v-model:visible="imageModalVisible" maximizable :style="{ width: '80vw', height: '80vh' }" header="Xem ảnh đính kèm" :modal="true" class="image-modal">
-                <div class="image-modal-content">
+                <div class="image-modal-content" style="background-color: #ffffff;">
                   <img v-if="currentImageSrc" :src="currentImageSrc" alt="Full size image" ref="imageRef" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain; margin: auto;" />
                   <p v-else>Không có ảnh để hiển thị.</p>
                 </div>
@@ -568,3 +570,21 @@ const createNewFromRejected = () => {
   });
 };
 </script>
+
+<style scoped>
+.image-container {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb;
+}
+
+.image-modal-content {
+  background-color: #ffffff !important;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Ensure dark mode compatibility */
+:deep(.p-dialog-content) {
+  background-color: #ffffff !important;
+}
+</style>
