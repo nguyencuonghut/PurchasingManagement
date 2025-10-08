@@ -43,7 +43,7 @@ class HomeController extends Controller
             // Xem tất cả phiếu
             // Không cần filter
         } elseif ($roleName === 'Nhân viên Thu Mua') {
-            $datatableQuery = $datatableQuery->where('creator_id', $user->id);
+            // Xem tất cả phiếu
         } elseif ($roleName === 'Trưởng phòng Thu Mua') {
             $datatableQuery = $datatableQuery->where(function($q) use ($user) {
                 $q->where('creator_id', $user->id)

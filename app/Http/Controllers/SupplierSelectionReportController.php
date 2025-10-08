@@ -50,7 +50,7 @@ class SupplierSelectionReportController extends Controller
 
         $roleName = optional($user->role)->name;
         if ($roleName === 'Nhân viên Thu Mua') {
-            $query->where('creator_id', $user->id);
+            // Xem tất cả phiếu
         } elseif ($roleName === 'Trưởng phòng Thu Mua') {
             $query->where(function($q) use ($user) {
                 $q->where('creator_id', $user->id)
