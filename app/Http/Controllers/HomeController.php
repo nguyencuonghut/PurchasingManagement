@@ -53,8 +53,7 @@ class HomeController extends Controller
             $datatableQuery = $datatableQuery->whereIn('status', ['manager_approved', 'auditor_approved', 'rejected', 'pending_director_approval', 'director_approved']);
         } elseif ($roleName === 'Giám đốc') {
             $datatableQuery = $datatableQuery->where(function($q) use ($user) {
-                $q->where('director_id', $user->id)
-                  ->where('status', 'auditor_approved');
+                $q->where('status', 'auditor_approved');
             });
         } elseif ($roleName === 'Kế toán') {
             $datatableQuery = $datatableQuery->where('status', 'director_approved');
@@ -80,8 +79,7 @@ class HomeController extends Controller
         } elseif ($roleName === 'Nhân viên Kiểm Soát') {
             $pendingReportsQuery = $pendingReportsQuery->where('status', 'manager_approved');
         } elseif ($roleName === 'Giám đốc') {
-            $pendingReportsQuery = $pendingReportsQuery->where('director_id', $user->id)
-                ->where('status', 'auditor_approved');
+            $pendingReportsQuery = $pendingReportsQuery->where('status', 'auditor_approved');
         } elseif ($roleName === 'Kế toán') {
             $pendingReportsQuery = $pendingReportsQuery->where('status', 'director_approved');
         } elseif ($roleName === 'Admin Thu Mua') {
