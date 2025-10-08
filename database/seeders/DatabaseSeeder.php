@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
         ]);
         User::factory()->create([
             'name' => 'Phạm Thị Trang',
-            'email' => 'nvtm@honghafeed.com.vn',
+            'email' => 'phamthitrang@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 2, // Nhân viên Thu Mua
@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
         ]);
         User::factory()->create([
             'name' => 'Bùi Thị Nụ',
-            'email' => 'nvks@honghafeed.com.vn',
+            'email' => 'buithinu@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 4, // Nhân viên Kiểm Soát
@@ -45,7 +45,7 @@ class DatabaseSeeder extends Seeder
         ]);
         User::factory()->create([
             'name' => 'Lê Thị Hồng',
-            'email' => 'tptm@honghafeed.com.vn',
+            'email' => 'lethihong@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 3, // Trưởng phòng Thu Mua
@@ -53,7 +53,7 @@ class DatabaseSeeder extends Seeder
         ]);
         User::factory()->create([
             'name' => 'Vũ Hoàng Giang',
-            'email' => 'tptm2@honghafeed.com.vn',
+            'email' => 'vuhoanggiang@longhaigroup.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 3, // Trưởng phòng Thu Mua
@@ -61,7 +61,7 @@ class DatabaseSeeder extends Seeder
         ]);
         User::factory()->create([
             'name' => 'Tạ Văn Toại',
-            'email' => 'gd@honghafeed.com.vn',
+            'email' => 'tavantoai@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 5, // Giám đốc
@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
         ]);
         User::factory()->create([
             'name' => 'Nguyễn khôi Nguyên',
-            'email' => 'gd2@honghafeed.com.vn',
+            'email' => 'nguyenkhoinguyen@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 5, // Giám đốc
@@ -85,12 +85,12 @@ class DatabaseSeeder extends Seeder
         ]);
         User::factory()->create([
             'name' => 'Trần Thị Thu Huyền',
-            'email' => 'nvadm@honghafeed.com.vn',
+            'email' => 'tranthithuhuyen@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
             'status' => 'On',
             'role_id' => 7, // Admin Thu Mua
             'department_id' => 1, // Phòng Thu Mua
         ]);
-        $this->call(\Database\Seeders\SupplierSelectionReportSeeder::class);
+        //$this->call(\Database\Seeders\SupplierSelectionReportSeeder::class);
     }
 }
