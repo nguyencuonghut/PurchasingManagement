@@ -474,7 +474,7 @@ const canEdit = (row) => {
     if (!can?.update_report) return false;
     if (u.role === Roles.ADMIN) return true;
     const isCreator = u.id === row.creator_id;
-    if (isCreator && row.status === 'draft') return true;
+    if (isCreator && (row.status === 'draft' || row.status === 'pending_manager_approval')) return true;
     if (isCreator && u.role === Roles.PM_MANAGER && row.status === 'manager_approved') return true;
     return false;
 };
