@@ -515,13 +515,13 @@ const getStatusLabel = (status) => {
     case 'pending_manager_approval':
       return 'Chờ trưởng phòng duyệt';
     case 'manager_approved':
-      return 'Đã trưởng phòng duyệt';
+      return 'Trưởng phòng đã duyệt';
     case 'auditor_approved':
-      return 'Đã kiểm soát duyệt';
+      return 'Kiểm soát đã duyệt';
     case 'pending_director_approval':
       return 'Chờ giám đốc duyệt';
     case 'director_approved':
-      return 'Đã giám đốc duyệt';
+      return 'Giám đốc đã duyệt';
     case 'rejected':
       return 'Từ chối';
     default:
