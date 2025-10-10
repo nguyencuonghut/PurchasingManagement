@@ -45,10 +45,7 @@ class HomeController extends Controller
         } elseif ($roleName === 'Nhân viên Thu Mua') {
             // Xem tất cả phiếu
         } elseif ($roleName === 'Trưởng phòng Thu Mua') {
-            $datatableQuery = $datatableQuery->where(function($q) use ($user) {
-                $q->where('creator_id', $user->id)
-                  ->orWhere('manager_id', $user->id);
-            });
+            // Xem tất cả phiếu
         } elseif ($roleName === 'Nhân viên Kiểm Soát') {
             $datatableQuery = $datatableQuery->whereIn('status', ['manager_approved', 'auditor_approved', 'rejected', 'pending_director_approval', 'director_approved']);
         } elseif ($roleName === 'Giám đốc') {

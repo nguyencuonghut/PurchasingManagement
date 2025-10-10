@@ -52,13 +52,7 @@ class SupplierSelectionReportController extends Controller
         if ($roleName === 'Nhân viên Thu Mua') {
             // Xem tất cả phiếu
         } elseif ($roleName === 'Trưởng phòng Thu Mua') {
-            $query->where(function($q) use ($user) {
-                $q->where('creator_id', $user->id)
-                  ->orWhere(function($q2) use ($user) {
-                      $q2->whereNotNull('manager_id')
-                         ->where('manager_id', $user->id);
-                  });
-            });
+            // Xem tất cả phiếu
         } elseif ($roleName === 'Nhân viên Kiểm Soát') {
             $query->whereIn('status', [ReportStatus::MANAGER_APPROVED, ReportStatus::AUDITOR_APPROVED, ReportStatus::PENDING_DIRECTOR, ReportStatus::DIRECTOR_APPROVED, ReportStatus::REJECTED]);
         } elseif ($roleName === 'Giám đốc') {
