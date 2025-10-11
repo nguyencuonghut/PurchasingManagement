@@ -79,6 +79,7 @@
                 </template>
             </Column>
 
+            <!--
             <Column field="file_path" header="File đính kèm" style="min-width: 14rem">
                 <template #body="{ data }">
                     <a v-if="data.image_url" href="#" @click.prevent="openImageModal(data.image_url)" class="file-link">
@@ -87,6 +88,7 @@
                     <span v-else>Không có file</span>
                 </template>
             </Column>
+            -->
 
 
             <Column field="creator_name" header="Người tạo" sortable style="min-width: 12rem">
