@@ -27,7 +27,7 @@
             :sortOrder="-1"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
             :rowsPerPageOptions="[10, 15, 25]"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+            currentPageReportTemplate="Hiển thị từ {first} đến {last} của {totalRecords} báo cáo"
         >
             <template #header>
                 <div class="flex justify-between">
