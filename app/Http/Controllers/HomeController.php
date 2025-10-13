@@ -49,7 +49,7 @@ class HomeController extends Controller
             $datatableQuery = $datatableQuery->whereIn('status', ['manager_approved', 'auditor_approved', 'rejected', 'pending_director_approval', 'director_approved']);
         } elseif ($roleName === 'Giám đốc') {
             $datatableQuery = $datatableQuery->where(function($q) use ($user) {
-                $q->where('status', 'auditor_approved');
+                $q->whereIn('status', ['pending_director_approval','director_approved']);
             });
         } elseif ($roleName === 'Kế toán') {
             $datatableQuery = $datatableQuery->where('status', 'director_approved');

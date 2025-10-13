@@ -123,6 +123,7 @@ const statusViMap = {
   pending_manager_approval: 'Đang chờ duyệt',
   manager_approved: 'Quản lý đã duyệt',
   auditor_approved: 'Kiểm soát đã duyệt',
+  pending_director_approval: 'Đang chờ duyệt Giám đốc',
   director_approved: 'Giám đốc đã duyệt',
   rejected: 'Từ chối',
 };
