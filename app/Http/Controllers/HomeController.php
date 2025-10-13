@@ -18,13 +18,12 @@ class HomeController extends Controller
         $allQuery = \App\Models\SupplierSelectionReport::query();
 
         $total = (clone $allQuery)->count();
-        $pending = (clone $allQuery)->whereIn('status', ['pending_manager_approval','manager_approved','auditor_approved'])->count();
-        $approved = (clone $allQuery)->whereIn('status', ['manager_approved','auditor_approved','director_approved'])->count();
-        $rejected = (clone $allQuery)->where('status', 'rejected')->count();
 
+        // Tính toán một lần và sử dụng lại
         $statusCounts = [
+            'draft' => (clone $allQuery)->where('status', 'draft')->count(),
             'pending' => (clone $allQuery)->whereIn('status', ['pending_manager_approval','manager_approved','auditor_approved'])->count(),
-            'approved' => (clone $allQuery)->whereIn('status', ['manager_approved','auditor_approved','director_approved'])->count(),
+            'approved' => (clone $allQuery)->where('status', 'director_approved')->count(),
             'rejected' => (clone $allQuery)->where('status', 'rejected')->count(),
         ];
 
@@ -92,19 +91,21 @@ class HomeController extends Controller
         return Inertia::render('Dashboard', [
             'stats' => [
                 ['label' => 'Tổng số phiếu', 'value' => $total, 'icon' => 'pi pi-file'],
-                ['label' => 'Đang chờ duyệt', 'value' => $pending, 'icon' => 'pi pi-clock'],
-                ['label' => 'Đã duyệt', 'value' => $approved, 'icon' => 'pi pi-check'],
-                ['label' => 'Đã từ chối', 'value' => $rejected, 'icon' => 'pi pi-times'],
+                ['label' => 'Nháp', 'value' => $statusCounts['draft'], 'icon' => 'pi pi-file-edit'],
+                ['label' => 'Đang chờ duyệt', 'value' => $statusCounts['pending'], 'icon' => 'pi pi-clock'],
+                ['label' => 'Đã duyệt', 'value' => $statusCounts['approved'], 'icon' => 'pi pi-check'],
+                ['label' => 'Đã từ chối', 'value' => $statusCounts['rejected'], 'icon' => 'pi pi-times'],
             ],
             'statusChartData' => [
-                'labels' => ['Đang chờ', 'Đã duyệt', 'Đã từ chối'],
+                'labels' => ['Nháp', 'Đang chờ duyệt', 'Đã duyệt', 'Đã từ chối'],
                 'datasets' => [[
                     'data' => [
+                        $statusCounts['draft'],
                         $statusCounts['pending'],
                         $statusCounts['approved'],
                         $statusCounts['rejected'],
                     ],
-                    'backgroundColor' => ['#fbbf24', '#22c55e', '#ef4444'],
+                    'backgroundColor' => ['#6b7280', '#fbbf24', '#22c55e', '#ef4444'],
                 ]],
             ],
             'monthlyChartData' => [

@@ -3,7 +3,7 @@
     <title>Dashboard</title>
   </Head>
   <div class="dashboard">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
   <Card v-for="stat in stats" :key="stat.label" class="text-center">
         <template #title>
           <i :class="stat.icon" class="text-2xl mb-2 text-blue-500"></i>
