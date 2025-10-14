@@ -158,7 +158,7 @@
                                     <div
                                         v-for="log in config.logs.slice(0, 3)"
                                         :key="log.id"
-                                        class="flex items-center gap-2 p-2 bg-surface-50 rounded text-sm"
+                                        class="flex items-center gap-2 p-2 surface-ground border border-surface-border rounded text-sm"
                                     >
                                         <div
                                             :class="{
