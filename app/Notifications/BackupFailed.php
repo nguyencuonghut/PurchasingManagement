@@ -54,8 +54,8 @@ class BackupFailed extends Notification implements ShouldQueue
             ->line('**Chi tiết lỗi:**')
             ->line($this->errorMessage ?: $this->log->error_message ?: 'Không có thông tin chi tiết về lỗi.')
             ->line('Vui lòng kiểm tra lại cấu hình backup hoặc liên hệ với quản trị viên hệ thống.')
-            ->action('Xem chi tiết', url('/backup-configurations/' . $this->config->id))
-            ->salutation('Trân trọng,<br>' . config('app.name'));
+            ->action('Xem cấu hình Backup', route('backup.configurations'))
+            ->salutation('Trân trọng, ' . config('app.name'));
     }
 
     /**

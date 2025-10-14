@@ -53,7 +53,7 @@ class BackupCompleted extends Notification implements ShouldQueue
             ->lineIf($this->log->google_drive_file_id, '• Đã upload lên Google Drive: ✅')
             ->lineIf(!$this->log->google_drive_file_id && $this->config->google_drive_enabled, '• Upload Google Drive: ❌')
             ->line('Backup đã được thực hiện thành công và dữ liệu của bạn được bảo vệ an toàn.')
-            ->salutation('Trân trọng,<br>' . config('app.name'));
+            ->salutation('Trân trọng, ' . config('app.name'));
     }
 
     /**
