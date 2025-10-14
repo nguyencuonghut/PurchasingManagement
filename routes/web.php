@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChangePasswordController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\BackupController;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +56,10 @@ Route::group(['middleware'=>'auth:web'], function() {
     // Department routes
     Route::resource('departments', \App\Http\Controllers\DepartmentController::class)->except(['show', 'create', 'edit']);
     Route::post('departments/bulkDelete', [\App\Http\Controllers\DepartmentController::class, 'bulkDelete']);
+
+    // Backup routes
+    Route::get('backup', [\App\Http\Controllers\BackupController::class, 'index'])->name('backup.index');
+    Route::get('backup/download', [\App\Http\Controllers\BackupController::class, 'backup'])->name('backup.download');
 
     //SupplierSelectionReport routes
     Route::resource('/supplier_selection_reports', SupplierSelectionReportController::class);

@@ -25,6 +25,7 @@ const model = computed(() => {
                 { label: 'Vai trò', icon: 'pi pi-fw pi-user-edit', to: '/roles' },
                 { label: 'Phòng ban', icon: 'pi pi-fw pi-sitemap', to: '/departments' },
                 { label: 'Người dùng', icon: 'pi pi-fw pi-users', to: '/users' },
+                { label: 'Backup', icon: 'pi pi-fw pi-cloud-download', to: '/backup' },
             ]
         });
     }
