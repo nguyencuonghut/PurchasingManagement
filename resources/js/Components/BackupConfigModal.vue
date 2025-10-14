@@ -302,15 +302,6 @@
 
                         <!-- Right side - Standard buttons -->
                         <div class="flex gap-3">
-                            <!-- DEBUG: Test localStorage button -->
-                            <button
-                                @click="testLocalStorage"
-                                type="button"
-                                class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
-                            >
-                                🔧 Test localStorage
-                            </button>
-
                             <button
                                 @click="$emit('close')"
                                 type="button"
@@ -456,8 +447,6 @@ const connectGoogleDrive = async () => {
             const popup = window.open(data.auth_url, 'google-oauth', 'width=500,height=600')
 
             // Server-side session polling approach
-            console.log('Setting up OAuth session polling...')
-            console.log('Current origin:', window.location.origin)
 
             const pollInterval = setInterval(async () => {
                 try {
@@ -477,10 +466,9 @@ const connectGoogleDrive = async () => {
 
                     if (response.ok) {
                         const data = await response.json()
-                        console.log('OAuth status poll:', data)
 
                         if (data.success && data.config) {
-                            console.log('OAuth successful! Detected connection.')
+                            console.log('OAuth successful! Google Drive connected.')
                             clearInterval(pollInterval)
                             popup.close()
 
@@ -628,13 +616,10 @@ const checkGoogleDriveConnection = async () => {
 
         if (response.ok) {
             const data = await response.json()
-            console.log('Google Drive status response:', data)
             if (data.success && data.config) {
-                console.log('Setting googleDriveConfig from status check:', data.config)
                 googleDriveConfig.value = data.config
                 form.value.google_drive_enabled = true
             } else {
-                console.log('No Google Drive config found or not successful')
                 googleDriveConfig.value = null
                 form.value.google_drive_enabled = false
             }
@@ -680,25 +665,10 @@ const save = async () => {
 }
 
 const showGoogleDriveFolderPicker = () => {
-    console.log('Opening Google Drive folder picker...')
     showFolderPicker.value = true
-    console.log('showFolderPicker.value set to:', showFolderPicker.value)
 }
 
 // Helper function for token exchange
-// Manual test localStorage function
-const testLocalStorage = () => {
-    console.log('Testing localStorage manually...')
-    const testData = {
-        type: 'GOOGLE_OAUTH_SUCCESS',
-        code: 'test123',
-        state: 'test456',
-        timestamp: Date.now()
-    }
-    localStorage.setItem('google_oauth_result', JSON.stringify(testData))
-    console.log('Test data set in localStorage:', testData)
-}
-
 const handleTokenExchange = async (code, state) => {
     try {
         const csrfToken = getCsrfToken()
@@ -723,24 +693,18 @@ const handleTokenExchange = async (code, state) => {
         const result = await response.json()
 
         if (result.success) {
-            console.log('Token exchange success! Response:', result)
-
             // Update local state immediately if config is returned
             if (result.config) {
-                console.log('Setting googleDriveConfig from exchange response:', result.config)
                 googleDriveConfig.value = result.config
                 form.value.google_drive_enabled = true
             }
 
             // Also check connection status from server
             setTimeout(async () => {
-                console.log('Checking Google Drive connection after token exchange...')
                 await checkGoogleDriveConnection()
-                console.log('Current googleDriveConfig after check:', googleDriveConfig.value)
 
                 // Auto-open folder picker if connection is confirmed
                 if (googleDriveConfig.value) {
-                    console.log('Auto-opening folder picker...')
                     showGoogleDriveFolderPicker()
                 }
             }, 1500) // Increase delay to ensure session is saved

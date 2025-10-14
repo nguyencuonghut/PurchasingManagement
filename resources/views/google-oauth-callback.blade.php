@@ -7,8 +7,7 @@
 <body>
     <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
         <h3>✅ Xác thực thành công!</h3>
-        <p>Sẽ đóng popup trong: <span id="countdown" style="font-weight: bold; font-size: 18px; color: blue;">10</span> giây</p>
-        <p style="font-size: 12px; color: #666;">Mở Developer Console (F12) để xem debug logs</p>
+        <p>Sẽ đóng popup trong: <span id="countdown" style="font-weight: bold; font-size: 18px; color: blue;">3</span> giây</p>
     </div>
 
     <script>
@@ -25,14 +24,13 @@
         if (error) {
             console.log('OAuth failed with error:', error);
         } else if (code) {
-            console.log('OAuth successful! Code received:', code);
-            console.log('Session will handle token exchange automatically');
+            console.log('OAuth successful! Code received.');
         } else {
             console.log('No code or error found in callback URL');
         }
 
         // DEBUG: Countdown timer and delay
-        let countdown = 10;
+        let countdown = 3;
         const countdownEl = document.getElementById('countdown');
 
         const timer = setInterval(() => {
@@ -41,12 +39,9 @@
 
             if (countdown <= 0) {
                 clearInterval(timer);
-                console.log('Closing popup now...');
                 window.close();
             }
         }, 1000);
-
-        console.log('Will close popup in 10 seconds... Check console for logs!');
     </script>
 </body>
 </html>
