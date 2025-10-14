@@ -471,7 +471,9 @@ const connectGoogleDrive = async () => {
                         if (data.success && data.config) {
                             console.log('OAuth successful! Google Drive connected.')
                             clearInterval(pollInterval)
-                            popup.close()
+
+                            // Skip popup.close() entirely to avoid COOP policy errors
+                            // Popup will close naturally when user returns to main window
 
                             // Update state
                             googleDriveConfig.value = data.config
@@ -498,6 +500,10 @@ const connectGoogleDrive = async () => {
                     console.log('OAuth timeout - cleaning up')
                     connectingGoogleDrive.value = false
                 }
+
+
+                // Skip popup.close() on timeout to avoid COOP policy errors
+                // User can close popup manually if needed
             }, 60000)
         }
     } catch (error) {
