@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BackupConfiguration;
+use App\Models\BackupLog;
+use App\Services\AutoBackupService;
+use App\Services\GoogleDriveService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use ZipArchive;
@@ -22,10 +27,249 @@ class BackupController extends Controller
             abort(403, 'Bạn không có quyền truy cập chức năng này.');
         }
 
-        return Inertia::render('BackupIndex');
+        $configurations = BackupConfiguration::with(['creator', 'logs' => function($query) {
+            $query->latest()->limit(5);
+        }])->get();
+
+        return Inertia::render('BackupIndex', [
+            'configurations' => $configurations,
+            'recentLogs' => BackupLog::with(['configuration'])
+                ->latest()
+                ->limit(10)
+                ->get()
+        ]);
     }
 
     /**
+     * Display auto backup configurations
+     */
+    public function configurations()
+    {
+        // Chỉ admin mới có quyền
+        $user = request()->user();
+        if (optional($user->role)->name !== 'Quản trị') {
+            abort(403, 'Bạn không có quyền truy cập chức năng này.');
+        }
+
+        $configurations = BackupConfiguration::with(['creator', 'logs' => function($query) {
+            $query->latest()->limit(3);
+        }])
+        ->get()
+        ->map(function ($config) {
+            // Add computed attributes for frontend
+            $config->formatted_last_run_at = $config->formatted_last_run_at;
+            $config->formatted_next_run_at = $config->formatted_next_run_at;
+            $config->schedule_description = $config->schedule_description;
+            return $config;
+        });
+
+        return Inertia::render('BackupConfigurations', [
+            'configurations' => $configurations
+        ]);
+    }
+
+    /**
+     * Store new backup configuration
+     */
+    public function storeConfiguration(Request $request)
+    {
+        $user = $request->user();
+        if (optional($user->role)->name !== 'Quản trị') {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'schedule' => 'required|array',
+            'backup_options' => 'required|array',
+            'notification_emails' => 'required|array|min:1',
+            'notification_emails.*' => 'email',
+            'retention_days' => 'required|integer|min:1|max:365',
+            'google_drive_enabled' => 'boolean',
+            'google_drive_config' => 'nullable|array'
+        ]);
+
+        // Get Google Drive config with tokens from session if enabled
+        $googleDriveConfig = null;
+        if ($request->google_drive_enabled) {
+            $sessionConfig = Session::get('google_drive_config');
+            if ($sessionConfig && isset($sessionConfig['tokens'])) {
+                $googleDriveConfig = $sessionConfig;
+            } elseif ($request->google_drive_config) {
+                // Fallback to request config but log warning
+                Log::warning('Google Drive enabled but no tokens in session, using request config');
+                $googleDriveConfig = $request->google_drive_config;
+            }
+        }
+
+        $config = BackupConfiguration::create([
+            'name' => $request->name,
+            'schedule' => $request->schedule,
+            'backup_options' => $request->backup_options,
+            'google_drive_enabled' => $request->google_drive_enabled ?? false,
+            'google_drive_config' => $googleDriveConfig,
+            'notification_emails' => $request->notification_emails,
+            'retention_days' => $request->retention_days,
+            'created_by' => $user->id
+        ]);
+
+        // Tính toán next_run_at
+        $config->updateNextRunTime();
+
+        return redirect()->back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Cấu hình backup đã được tạo thành công!'
+        ]);
+    }
+
+    /**
+     * Test Google Drive connection
+     */
+    public function testGoogleDrive(Request $request, GoogleDriveService $googleDriveService)
+    {
+        $user = $request->user();
+        if (optional($user->role)->name !== 'Quản trị') {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
+
+        try {
+            // Get tokens from session instead of request config
+            $tokens = Session::get('google_drive_tokens');
+
+            if (!$tokens) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ Chưa có tokens Google Drive. Vui lòng kết nối lại.'
+                ]);
+            }
+
+            // Set tokens for the service
+            $googleDriveService->setTokens($tokens);
+
+            // Test connection by trying to get user info or list a folder
+            if ($googleDriveService->testConnection()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => '✅ Kết nối Google Drive thành công! Có thể upload backup.'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ Không thể kết nối với Google Drive. Tokens có thể đã hết hạn.'
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Lỗi kết nối: ' . $e->getMessage()
+            ]);
+        }
+    }    /**
+     * Update backup configuration
+     */
+    public function updateConfiguration(Request $request, BackupConfiguration $configuration)
+    {
+        $user = $request->user();
+        if (optional($user->role)->name !== 'Quản trị') {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'schedule' => 'required|array',
+            'backup_options' => 'required|array',
+            'notification_emails' => 'required|array|min:1',
+            'notification_emails.*' => 'email',
+            'retention_days' => 'required|integer|min:1|max:365',
+            'google_drive_enabled' => 'boolean',
+            'google_drive_config' => 'nullable|array'
+        ]);
+
+        // Get Google Drive config with tokens from session if enabled
+        $googleDriveConfig = null;
+        if ($request->google_drive_enabled) {
+            $sessionConfig = Session::get('google_drive_config');
+            if ($sessionConfig && isset($sessionConfig['tokens'])) {
+                $googleDriveConfig = $sessionConfig;
+            } elseif ($request->google_drive_config) {
+                // Keep existing config if no new session config
+                $googleDriveConfig = $request->google_drive_config;
+            } elseif ($configuration->google_drive_config) {
+                // Keep existing database config
+                $googleDriveConfig = $configuration->google_drive_config;
+            }
+        }
+
+        $configuration->update([
+            'name' => $request->name,
+            'schedule' => $request->schedule,
+            'backup_options' => $request->backup_options,
+            'google_drive_enabled' => $request->google_drive_enabled ?? false,
+            'google_drive_config' => $googleDriveConfig,
+            'notification_emails' => $request->notification_emails,
+            'retention_days' => $request->retention_days,
+        ]);
+
+        // Tính toán lại next_run_at
+        $configuration->updateNextRunTime();
+
+        return redirect()->back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Cấu hình backup đã được cập nhật thành công!'
+        ]);
+    }
+
+    /**
+     * Toggle backup configuration active status
+     */
+    public function toggleConfiguration(Request $request, BackupConfiguration $configuration)
+    {
+        $user = $request->user();
+        if (optional($user->role)->name !== 'Quản trị') {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
+
+        $configuration->update([
+            'is_active' => $request->is_active
+        ]);
+
+        return redirect()->back()->with('flash', [
+            'type' => 'success',
+            'message' => $request->is_active ? 'Đã kích hoạt cấu hình backup' : 'Đã tạm dừng cấu hình backup'
+        ]);
+    }
+
+    /**
+     * Manual run backup configuration
+     */
+    public function runConfiguration(Request $request, BackupConfiguration $configuration, AutoBackupService $autoBackupService)
+    {
+        $user = $request->user();
+        if (optional($user->role)->name !== 'Quản trị') {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
+
+        try {
+            $log = $autoBackupService->executeBackup($configuration);
+
+            if ($log->status === 'success') {
+                return redirect()->back()->with('flash', [
+                    'type' => 'success',
+                    'message' => 'Backup đã được thực hiện thành công!'
+                ]);
+            } else {
+                return redirect()->back()->with('flash', [
+                    'type' => 'error',
+                    'message' => 'Backup thất bại: ' . $log->error_message
+                ]);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ]);
+        }
+    }    /**
      * Perform system backup
      */
     public function backup(Request $request)

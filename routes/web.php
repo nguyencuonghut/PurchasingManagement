@@ -60,8 +60,22 @@ Route::group(['middleware'=>'auth:web'], function() {
     // Backup routes
     Route::get('backup', [\App\Http\Controllers\BackupController::class, 'index'])->name('backup.index');
     Route::get('backup/download', [\App\Http\Controllers\BackupController::class, 'backup'])->name('backup.download');
+    Route::get('backup/configurations', [\App\Http\Controllers\BackupController::class, 'configurations'])->name('backup.configurations');
+    Route::post('backup/configurations', [\App\Http\Controllers\BackupController::class, 'storeConfiguration'])->name('backup.configurations.store');
+    Route::put('backup/configurations/{configuration}', [\App\Http\Controllers\BackupController::class, 'updateConfiguration'])->name('backup.configurations.update');
+    Route::patch('backup/configurations/{configuration}', [\App\Http\Controllers\BackupController::class, 'toggleConfiguration'])->name('backup.configurations.toggle');
+    Route::post('backup/configurations/test-google-drive', [\App\Http\Controllers\BackupController::class, 'testGoogleDrive'])->name('backup.configurations.test-google-drive');
+    Route::post('backup/configurations/{configuration}/run', [\App\Http\Controllers\BackupController::class, 'runConfiguration'])->name('backup.configurations.run');
 
-    //SupplierSelectionReport routes
+    // Google Drive OAuth routes - SqlBak style
+    Route::post('/auth/google-drive/connect', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'redirectToGoogle'])->name('google-drive.connect');
+    Route::get('/auth/google-drive/callback', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'handleCallback'])->name('google-drive.callback');
+    Route::post('/auth/google-drive/exchange-token', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'exchangeToken'])->name('google-drive.exchange-token');
+    Route::get('/api/google-drive/status', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'getConnectionStatus'])->name('google-drive.status');
+    Route::get('/api/google-drive/folders', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'getFolders'])->name('google-drive.folders');
+    Route::post('/api/google-drive/create-folder', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'createBackupFolder'])->name('google-drive.create-folder');
+    Route::post('/api/google-drive/select-folder', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'saveFolderSelection'])->name('google-drive.select-folder');
+    Route::post('/api/google-drive/disconnect', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'disconnect'])->name('google-drive.disconnect');    //SupplierSelectionReport routes
     Route::resource('/supplier_selection_reports', SupplierSelectionReportController::class);
     // API lấy danh sách Admin Thu Mua
     Route::get('/api/admin-thu-mua-users', [SupplierSelectionReportController::class, 'getAdminThuMuaUsers'])->name('api.admin_thu_mua_users');
