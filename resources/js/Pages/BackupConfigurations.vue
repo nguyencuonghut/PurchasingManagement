@@ -6,7 +6,6 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-bold">Auto Backup</h1>
-                    <p class="mt-1 sm:mt-2 text-sm text-muted-color">Cấu hình backup tự động giống SqlBak</p>
                 </div>
                 <Button
                     @click="showCreateModal = true"
