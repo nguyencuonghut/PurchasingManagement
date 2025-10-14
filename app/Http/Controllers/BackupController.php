@@ -36,8 +36,6 @@ class BackupController extends Controller
             abort(403, 'Bạn không có quyền thực hiện backup.');
         }
 
-        \Log::info($request->all());
-
         $backupPath = null;
         $zipPath = null;
 
