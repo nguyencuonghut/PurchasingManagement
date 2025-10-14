@@ -73,7 +73,7 @@
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-muted-color">Google Drive</p>
                                 <p class="text-sm font-semibold" :class="googleDriveConnected ? 'text-green-600' : 'text-red-600'">
-                                    {{ googleDriveConnected ? 'Đã kết nối' : 'Chưa kết nối' }}
+                                    {{ googleDriveConnected ? `${googleDriveConfigsCount} cấu hình` : 'Chưa có cấu hình' }}
                                 </p>
                             </div>
                         </div>
@@ -113,9 +113,15 @@
                                             :severity="config.is_active ? 'success' : 'danger'"
                                         />
                                         <Tag
-                                            v-if="config.google_drive_enabled"
-                                            value="Google Drive"
+                                            v-if="config.google_drive_enabled && config.google_drive_config?.folder_name"
+                                            :value="`📁 ${config.google_drive_config.folder_name}`"
                                             severity="info"
+                                            icon="pi pi-google"
+                                        />
+                                        <Tag
+                                            v-else-if="config.google_drive_enabled"
+                                            value="Google Drive (chưa chọn folder)"
+                                            severity="warn"
                                             icon="pi pi-google"
                                         />
                                     </div>
@@ -124,6 +130,10 @@
                                         <span>Lần cuối: {{ formatDate(config.last_run_at) }}</span>
                                         <span>Tiếp theo: {{ formatDate(config.next_run_at) }}</span>
                                         <span>Email: {{ config.notification_emails.length }} người nhận</span>
+                                        <span v-if="config.google_drive_enabled && config.google_drive_config?.folder_name" class="text-blue-600">
+                                            <i class="pi pi-google mr-1"></i>
+                                            Folder: {{ config.google_drive_config.folder_name }}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -194,7 +204,9 @@
             @selected="handleFolderSelected"
         />
     </div>
-</template><script setup>
+</template>
+
+<script setup>
 import { ref, computed, onMounted } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import { useForm } from '@inertiajs/vue3'
@@ -218,7 +230,6 @@ const showEditModal = ref(false)
 const showFolderPicker = ref(false)
 const editingConfig = ref(null)
 const runningBackup = ref(null)
-const googleDriveConnected = ref(false)
 
 // Computed properties
 const activeConfigs = computed(() =>
@@ -235,6 +246,20 @@ const lastBackupTime = computed(() => {
 
     const latestLog = allLogs.sort((a, b) => new Date(b.started_at) - new Date(a.started_at))[0]
     return formatDate(latestLog.started_at)
+})
+
+const googleDriveConnected = computed(() => {
+    return props.configurations.some(config =>
+        config.google_drive_enabled &&
+        config.google_drive_config?.folder_name
+    )
+})
+
+const googleDriveConfigsCount = computed(() => {
+    return props.configurations.filter(config =>
+        config.google_drive_enabled &&
+        config.google_drive_config?.folder_name
+    ).length
 })
 
 // Methods
@@ -313,12 +338,6 @@ const handleFolderSelected = (folder) => {
 
 // Mounted
 onMounted(() => {
-    // Check Google Drive connection status
-    checkGoogleDriveConnection()
+    // Google Drive connection status is now computed from configurations
 })
-
-const checkGoogleDriveConnection = () => {
-    // This would be an API call to check connection
-    googleDriveConnected.value = false
-}
 </script>
