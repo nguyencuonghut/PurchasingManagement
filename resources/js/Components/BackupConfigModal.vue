@@ -280,28 +280,8 @@
                     </div>
 
                     <!-- Footer -->
-                    <div class="flex justify-between items-center mt-8 pt-4 border-t border-gray-200">
-                        <!-- Left side - Backup ngay button (chỉ hiện khi đã có config) -->
-                        <div>
-                            <button
-                                v-if="config"
-                                @click="runBackupNow"
-                                type="button"
-                                :disabled="runningBackup"
-                                class="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium"
-                            >
-                                <svg v-if="runningBackup" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                                {{ runningBackup ? 'Đang backup...' : 'Backup ngay' }}
-                            </button>
-                        </div>
-
-                        <!-- Right side - Standard buttons -->
+                    <div class="flex justify-end items-center mt-8 pt-4 border-t border-gray-200">
+                        <!-- Standard buttons only -->
                         <div class="flex gap-3">
                             <button
                                 @click="$emit('close')"
@@ -351,7 +331,6 @@ const processing = ref(false)
 const errors = ref({})
 const testingConnection = ref(false)
 const testResult = ref(null)
-const runningBackup = ref(false)
 const connectingGoogleDrive = ref(false)
 const showFolderPicker = ref(false)
 
@@ -595,40 +574,6 @@ const testGoogleDriveConnection = async () => {
         testResult.value = { success: false, message: 'Lỗi kết nối: ' + error.message }
     } finally {
         testingConnection.value = false
-    }
-}
-
-const runBackupNow = async () => {
-    if (!props.config) return
-
-    runningBackup.value = true
-
-    try {
-        const csrfToken = getCsrfToken()
-        if (!csrfToken) {
-            throw new Error('CSRF token not found. Please refresh the page.')
-        }
-
-        const response = await fetch(`/backup/configurations/${props.config.id}/run`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            }
-        })
-
-        if (response.ok) {
-            alert('✅ Backup đã được thực hiện thành công!')
-            emit('saved') // Refresh parent component
-        } else {
-            const data = await response.json()
-            alert('❌ Backup thất bại: ' + (data.message || 'Lỗi không xác định'))
-        }
-
-    } catch (error) {
-        alert('❌ Có lỗi xảy ra: ' + error.message)
-    } finally {
-        runningBackup.value = false
     }
 }
 

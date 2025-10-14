@@ -218,17 +218,25 @@
             />
         </div>
     </div>
+
+    <!-- Toast Messages -->
+    <Toast />
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import { useForm } from '@inertiajs/vue3'
+import { useToast } from 'primevue/usetoast'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Tag from 'primevue/tag'
+import Toast from 'primevue/toast'
 import BackupConfigModal from '@/Components/BackupConfigModal.vue'
 import GoogleDriveFolderPicker from '@/Components/GoogleDriveFolderPicker.vue'
+
+// Toast setup
+const toast = useToast()
 
 // Props
 const props = defineProps({
@@ -319,12 +327,29 @@ const runBackup = async (config) => {
         const form = useForm({})
         await form.post(`/backup/configurations/${config.id}/run`)
 
-        // Show success message
-        alert('Backup đã được thực hiện thành công!')
+        // Show success toast
+        toast.add({
+            severity: 'success',
+            summary: 'Backup thành công',
+            detail: `Backup cho "${config.name}" đã được thực hiện thành công!`,
+            life: 5000
+        })
+
+        // Reload page to refresh backup logs
+        setTimeout(() => {
+            window.location.reload()
+        }, 1000)
 
     } catch (error) {
         console.error('Backup failed:', error)
-        alert('Có lỗi xảy ra khi thực hiện backup!')
+
+        // Show error toast
+        toast.add({
+            severity: 'error',
+            summary: 'Backup thất bại',
+            detail: error.response?.data?.message || `Có lỗi xảy ra khi thực hiện backup cho "${config.name}"!`,
+            life: 5000
+        })
     } finally {
         runningBackup.value = null
     }
@@ -347,19 +372,36 @@ const toggleConfig = async (config) => {
 const deleteConfig = async (config) => {
     // Confirm deletion
     const confirmed = confirm(`Bạn có chắc chắn muốn xóa cấu hình backup "${config.name}"?\n\nThao tác này sẽ xóa vĩnh viễn cấu hình và tất cả lịch sử backup liên quan.`)
-    
+
     if (!confirmed) return
 
     try {
         const form = useForm({})
         await form.delete(`/backup/configurations/${config.id}`)
 
+        // Show success toast
+        toast.add({
+            severity: 'success',
+            summary: 'Xóa thành công',
+            detail: `Đã xóa cấu hình backup "${config.name}"`,
+            life: 3000
+        })
+
         // Reload page to update the list
-        window.location.reload()
+        setTimeout(() => {
+            window.location.reload()
+        }, 1000)
 
     } catch (error) {
         console.error('Delete config failed:', error)
-        alert('Có lỗi xảy ra khi xóa cấu hình!')
+
+        // Show error toast
+        toast.add({
+            severity: 'error',
+            summary: 'Xóa thất bại',
+            detail: error.response?.data?.message || `Có lỗi xảy ra khi xóa cấu hình "${config.name}"!`,
+            life: 5000
+        })
     }
 }
 
