@@ -164,6 +164,13 @@
                                             severity="contrast"
                                             size="small"
                                         />
+                                        <Button
+                                            @click="deleteConfig(config)"
+                                            label="Xóa"
+                                            icon="pi pi-trash"
+                                            severity="danger"
+                                            size="small"
+                                        />
                                     </div>
                                 </div>
 
@@ -334,6 +341,25 @@ const toggleConfig = async (config) => {
 
     } catch (error) {
         console.error('Toggle config failed:', error)
+    }
+}
+
+const deleteConfig = async (config) => {
+    // Confirm deletion
+    const confirmed = confirm(`Bạn có chắc chắn muốn xóa cấu hình backup "${config.name}"?\n\nThao tác này sẽ xóa vĩnh viễn cấu hình và tất cả lịch sử backup liên quan.`)
+    
+    if (!confirmed) return
+
+    try {
+        const form = useForm({})
+        await form.delete(`/backup/configurations/${config.id}`)
+
+        // Reload page to update the list
+        window.location.reload()
+
+    } catch (error) {
+        console.error('Delete config failed:', error)
+        alert('Có lỗi xảy ra khi xóa cấu hình!')
     }
 }
 

@@ -220,6 +220,30 @@ class BackupController extends Controller
     }
 
     /**
+     * Delete backup configuration
+     */
+    public function deleteConfiguration(Request $request, BackupConfiguration $configuration)
+    {
+        $user = $request->user();
+        if (optional($user->role)->name !== 'Quản trị') {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
+
+        $configName = $configuration->name;
+
+        // Delete related logs first
+        $configuration->logs()->delete();
+
+        // Delete the configuration
+        $configuration->delete();
+
+        return redirect()->back()->with('flash', [
+            'type' => 'success',
+            'message' => "Đã xóa cấu hình backup '{$configName}' thành công"
+        ]);
+    }
+
+    /**
      * Toggle backup configuration active status
      */
     public function toggleConfiguration(Request $request, BackupConfiguration $configuration)

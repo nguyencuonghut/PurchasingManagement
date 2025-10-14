@@ -381,6 +381,29 @@ const form = ref({
     retention_days: 30
 })
 
+// Helper function to clear Google Drive session (moved before watcher)
+const clearGoogleDriveSession = async () => {
+    try {
+        const csrfToken = getCsrfToken()
+        if (!csrfToken) {
+            return
+        }
+
+        await fetch('/api/google-drive/disconnect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+
+        googleDriveConfig.value = null
+        form.value.google_drive_enabled = false
+    } catch (error) {
+        console.error('Failed to clear Google Drive session:', error)
+    }
+}
+
 // Watch for config changes
 watch(() => props.config, (newConfig) => {
     if (newConfig) {
@@ -394,7 +417,7 @@ watch(() => props.config, (newConfig) => {
         }
         googleDriveConfig.value = newConfig.google_drive_config
     } else {
-        // Reset form for new config
+        // Reset form for new config - also clear Google Drive session
         form.value = {
             name: '',
             schedule: {
@@ -413,6 +436,9 @@ watch(() => props.config, (newConfig) => {
             retention_days: 30
         }
         googleDriveConfig.value = null
+
+        // Clear Google Drive session when creating new config
+        clearGoogleDriveSession()
     }
 }, { immediate: true })
 
@@ -739,6 +765,10 @@ const handleFolderSelected = (folder) => {
 
 // Mounted
 onMounted(() => {
-    checkGoogleDriveConnection()
+    // Only check Google Drive connection for existing configs
+    // For new configs, start fresh
+    if (props.config) {
+        checkGoogleDriveConnection()
+    }
 })
 </script>
