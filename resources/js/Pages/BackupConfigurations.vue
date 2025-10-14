@@ -1,208 +1,216 @@
 <template>
-    <div>
+    <div class="p-4 sm:p-6">
         <Head title="Auto Backup Configuration" />
 
-        <!-- Header -->
-        <div class="p-6">
-            <div class="flex items-center justify-between mb-6">
+        <div class="card">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 class="text-3xl font-bold">Auto Backup</h1>
-                    <p class="mt-2 text-sm text-muted-color">Cấu hình backup tự động giống SqlBak</p>
+                    <h1 class="text-2xl sm:text-3xl font-bold">Auto Backup</h1>
+                    <p class="mt-1 sm:mt-2 text-sm text-muted-color">Cấu hình backup tự động giống SqlBak</p>
                 </div>
                 <Button
                     @click="showCreateModal = true"
                     icon="pi pi-plus"
-                    label="Tạo Backup Mới"
-                    class="p-button-primary"
+                    :label="'Tạo Backup Mới'"
+                    class="p-button-primary w-full sm:w-auto"
+                    size="small"
                 />
             </div>
-        </div>
 
-        <!-- Content -->
-        <div class="p-6">
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <!-- Content -->
+            <div>
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+                    <Card class="hover:shadow-md transition-shadow">
+                        <template #content>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <div class="p-2 bg-green-100 rounded-lg mb-2 sm:mb-0 self-start">
+                                    <i class="pi pi-check-circle text-green-600 text-xl sm:text-2xl"></i>
+                                </div>
+                                <div class="sm:ml-4">
+                                    <p class="text-xs sm:text-sm font-medium text-muted-color">Hoạt động</p>
+                                    <p class="text-xl sm:text-2xl font-semibold">{{ activeConfigs }}</p>
+                                </div>
+                            </div>
+                        </template>
+                    </Card>
+
+                    <Card class="hover:shadow-md transition-shadow">
+                        <template #content>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <div class="p-2 bg-blue-100 rounded-lg mb-2 sm:mb-0 self-start">
+                                    <i class="pi pi-cloud-download text-blue-600 text-xl sm:text-2xl"></i>
+                                </div>
+                                <div class="sm:ml-4">
+                                    <p class="text-xs sm:text-sm font-medium text-muted-color">Tổng Backup</p>
+                                    <p class="text-xl sm:text-2xl font-semibold">{{ totalBackups }}</p>
+                                </div>
+                            </div>
+                        </template>
+                    </Card>
+
+                    <Card class="hover:shadow-md transition-shadow">
+                        <template #content>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <div class="p-2 bg-yellow-100 rounded-lg mb-2 sm:mb-0 self-start">
+                                    <i class="pi pi-clock text-yellow-600 text-xl sm:text-2xl"></i>
+                                </div>
+                                <div class="sm:ml-4">
+                                    <p class="text-xs sm:text-sm font-medium text-muted-color">Backup Cuối</p>
+                                    <p class="text-xs sm:text-sm font-semibold truncate">{{ lastBackupTime }}</p>
+                                </div>
+                            </div>
+                        </template>
+                    </Card>
+
+                    <Card class="hover:shadow-md transition-shadow">
+                        <template #content>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <div class="p-2 bg-purple-100 rounded-lg mb-2 sm:mb-0 self-start">
+                                    <i class="pi pi-google text-purple-600 text-xl sm:text-2xl"></i>
+                                </div>
+                                <div class="sm:ml-4">
+                                    <p class="text-xs sm:text-sm font-medium text-muted-color">Google Drive</p>
+                                    <p class="text-xs sm:text-sm font-semibold" :class="googleDriveConnected ? 'text-green-600' : 'text-red-600'">
+                                        {{ googleDriveConnected ? `${googleDriveConfigsCount} cấu hình` : 'Chưa có cấu hình' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </template>
+                    </Card>
+                </div>
+
+                <!-- Backup Configurations -->
                 <Card>
-                    <template #content>
-                        <div class="flex items-center">
-                            <div class="p-2 bg-green-100 rounded-lg">
-                                <i class="pi pi-check-circle text-green-600 text-2xl"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-muted-color">Hoạt động</p>
-                                <p class="text-2xl font-semibold">{{ activeConfigs }}</p>
-                            </div>
+                    <template #title>
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-medium">Cấu hình Backup</h2>
                         </div>
                     </template>
-                </Card>
-
-                <Card>
                     <template #content>
-                        <div class="flex items-center">
-                            <div class="p-2 bg-blue-100 rounded-lg">
-                                <i class="pi pi-cloud-download text-blue-600 text-2xl"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-muted-color">Tổng Backup</p>
-                                <p class="text-2xl font-semibold">{{ totalBackups }}</p>
+                        <div v-if="configurations.length === 0" class="text-center py-12">
+                            <i class="pi pi-users text-6xl text-muted-color mb-4"></i>
+                            <h3 class="mt-2 text-sm font-medium">Chưa có cấu hình backup</h3>
+                            <p class="mt-1 text-sm text-muted-color">Bắt đầu bằng cách tạo cấu hình backup đầu tiên.</p>
+                            <div class="mt-6">
+                                <Button
+                                    @click="showCreateModal = true"
+                                    label="Tạo Backup Đầu Tiên"
+                                    class="p-button-primary"
+                                />
                             </div>
                         </div>
-                    </template>
-                </Card>
 
-                <Card>
-                    <template #content>
-                        <div class="flex items-center">
-                            <div class="p-2 bg-yellow-100 rounded-lg">
-                                <i class="pi pi-clock text-yellow-600 text-2xl"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-muted-color">Backup Cuối</p>
-                                <p class="text-sm font-semibold">{{ lastBackupTime }}</p>
-                            </div>
-                        </div>
-                    </template>
-                </Card>
+                        <div v-else class="space-y-4 sm:space-y-6">
+                            <div v-for="config in configurations" :key="config.id" class="border-b border-surface-border pb-4 sm:pb-6 last:border-b-0">
+                                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                                            <h3 class="text-base sm:text-lg font-medium truncate">{{ config.name }}</h3>
+                                            <div class="flex flex-wrap gap-2">
+                                                <Tag
+                                                    :value="config.is_active ? 'Hoạt động' : 'Tạm dừng'"
+                                                    :severity="config.is_active ? 'success' : 'danger'"
+                                                    class="text-xs"
+                                                />
+                                                <Tag
+                                                    v-if="config.google_drive_enabled && config.google_drive_config?.folder_name"
+                                                    :value="`📁 ${config.google_drive_config.folder_name}`"
+                                                    severity="info"
+                                                    icon="pi pi-google"
+                                                    class="text-xs max-w-[250px] truncate"
+                                                />
+                                                <Tag
+                                                    v-else-if="config.google_drive_enabled"
+                                                    value="Google Drive (chưa chọn folder)"
+                                                    severity="warn"
+                                                    icon="pi pi-google"
+                                                    class="text-xs"
+                                                />
+                                            </div>
+                                        </div>
+                                        <p class="text-xs sm:text-sm text-muted-color mb-2 truncate">{{ config.schedule_description }}</p>
+                                        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-color">
+                                            <span class="truncate">Lần cuối: {{ formatDate(config.last_run_at) }}</span>
+                                            <span class="truncate">Tiếp theo: {{ formatDate(config.next_run_at) }}</span>
+                                            <span class="truncate">Email: {{ config.notification_emails.length }} người nhận</span>
+                                            <span v-if="config.google_drive_enabled && config.google_drive_config?.folder_name" class="text-blue-600 truncate">
+                                                <i class="pi pi-google mr-1"></i>
+                                                Folder: {{ config.google_drive_config.folder_name }}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                <Card>
-                    <template #content>
-                        <div class="flex items-center">
-                            <div class="p-2 bg-purple-100 rounded-lg">
-                                <i class="pi pi-google text-purple-600 text-2xl"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-muted-color">Google Drive</p>
-                                <p class="text-sm font-semibold" :class="googleDriveConnected ? 'text-green-600' : 'text-red-600'">
-                                    {{ googleDriveConnected ? `${googleDriveConfigsCount} cấu hình` : 'Chưa có cấu hình' }}
-                                </p>
+                                    <div class="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                                        <Button
+                                            @click="runBackup(config)"
+                                            :disabled="runningBackup === config.id"
+                                            :loading="runningBackup === config.id"
+                                            label="Chạy ngay"
+                                            icon="pi pi-play"
+                                            class="p-button-success"
+                                            size="small"
+                                        />
+                                        <Button
+                                            @click="editConfig(config)"
+                                            label="Sửa"
+                                            icon="pi pi-pencil"
+                                            class="p-button-primary"
+                                            size="small"
+                                        />
+                                        <Button
+                                            @click="toggleConfig(config)"
+                                            :label="config.is_active ? 'Tạm dừng' : 'Kích hoạt'"
+                                            :icon="config.is_active ? 'pi pi-pause' : 'pi pi-play'"
+                                            class="p-button-secondary"
+                                            size="small"
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- Recent Logs -->
+                                <div v-if="config.logs && config.logs.length > 0" class="mt-4">
+                                    <h4 class="text-xs sm:text-sm font-medium mb-2">Lịch sử gần đây</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                        <div
+                                            v-for="log in config.logs.slice(0, 3)"
+                                            :key="log.id"
+                                            class="flex items-center gap-2 p-2 surface-ground border border-surface-border rounded text-xs sm:text-sm min-w-0"
+                                        >
+                                            <div
+                                                :class="{
+                                                    'w-2 h-2 rounded-full flex-shrink-0': true,
+                                                    'bg-green-500': log.status === 'success',
+                                                    'bg-red-500': log.status === 'failed',
+                                                    'bg-blue-500': log.status === 'running'
+                                                }"
+                                            ></div>
+                                            <span class="text-muted-color truncate flex-1">{{ formatDate(log.started_at) }}</span>
+                                            <span v-if="log.formatted_file_size" class="text-muted-color text-xs flex-shrink-0">{{ log.formatted_file_size }}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </template>
                 </Card>
             </div>
 
-            <!-- Backup Configurations -->
-            <Card>
-                <template #title>
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-medium">Cấu hình Backup</h2>
-                    </div>
-                </template>
-                <template #content>
-                    <div v-if="configurations.length === 0" class="text-center py-12">
-                        <i class="pi pi-users text-6xl text-muted-color mb-4"></i>
-                        <h3 class="mt-2 text-sm font-medium">Chưa có cấu hình backup</h3>
-                        <p class="mt-1 text-sm text-muted-color">Bắt đầu bằng cách tạo cấu hình backup đầu tiên.</p>
-                        <div class="mt-6">
-                            <Button
-                                @click="showCreateModal = true"
-                                label="Tạo Backup Đầu Tiên"
-                                class="p-button-primary"
-                            />
-                        </div>
-                    </div>
+            <!-- Create/Edit Backup Modal -->
+            <BackupConfigModal
+                :show="showCreateModal || showEditModal"
+                :config="editingConfig"
+                @close="closeModal"
+                @saved="handleConfigSaved"
+            />
 
-                    <div v-else class="space-y-6">
-                        <div v-for="config in configurations" :key="config.id" class="border-b border-surface-border pb-6 last:border-b-0">
-                            <div class="flex items-center justify-between">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <h3 class="text-lg font-medium">{{ config.name }}</h3>
-                                        <Tag
-                                            :value="config.is_active ? 'Hoạt động' : 'Tạm dừng'"
-                                            :severity="config.is_active ? 'success' : 'danger'"
-                                        />
-                                        <Tag
-                                            v-if="config.google_drive_enabled && config.google_drive_config?.folder_name"
-                                            :value="`📁 ${config.google_drive_config.folder_name}`"
-                                            severity="info"
-                                            icon="pi pi-google"
-                                        />
-                                        <Tag
-                                            v-else-if="config.google_drive_enabled"
-                                            value="Google Drive (chưa chọn folder)"
-                                            severity="warn"
-                                            icon="pi pi-google"
-                                        />
-                                    </div>
-                                    <p class="text-sm text-muted-color mb-2">{{ config.schedule_description }}</p>
-                                    <div class="flex items-center gap-4 text-sm text-muted-color">
-                                        <span>Lần cuối: {{ formatDate(config.last_run_at) }}</span>
-                                        <span>Tiếp theo: {{ formatDate(config.next_run_at) }}</span>
-                                        <span>Email: {{ config.notification_emails.length }} người nhận</span>
-                                        <span v-if="config.google_drive_enabled && config.google_drive_config?.folder_name" class="text-blue-600">
-                                            <i class="pi pi-google mr-1"></i>
-                                            Folder: {{ config.google_drive_config.folder_name }}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-2">
-                                    <Button
-                                        @click="runBackup(config)"
-                                        :disabled="runningBackup === config.id"
-                                        :loading="runningBackup === config.id"
-                                        label="Chạy ngay"
-                                        icon="pi pi-play"
-                                        class="p-button-success p-button-sm"
-                                    />
-                                    <Button
-                                        @click="editConfig(config)"
-                                        label="Sửa"
-                                        icon="pi pi-pencil"
-                                        class="p-button-primary p-button-sm"
-                                    />
-                                    <Button
-                                        @click="toggleConfig(config)"
-                                        :label="config.is_active ? 'Tạm dừng' : 'Kích hoạt'"
-                                        :icon="config.is_active ? 'pi pi-pause' : 'pi pi-play'"
-                                        class="p-button-secondary p-button-sm"
-                                    />
-                                </div>
-                            </div>
-
-                            <!-- Recent Logs -->
-                            <div v-if="config.logs && config.logs.length > 0" class="mt-4">
-                                <h4 class="text-sm font-medium mb-2">Lịch sử gần đây</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                    <div
-                                        v-for="log in config.logs.slice(0, 3)"
-                                        :key="log.id"
-                                        class="flex items-center gap-2 p-2 surface-ground border border-surface-border rounded text-sm"
-                                    >
-                                        <div
-                                            :class="{
-                                                'w-2 h-2 rounded-full': true,
-                                                'bg-green-500': log.status === 'success',
-                                                'bg-red-500': log.status === 'failed',
-                                                'bg-blue-500': log.status === 'running'
-                                            }"
-                                        ></div>
-                                        <span class="text-muted-color">{{ formatDate(log.started_at) }}</span>
-                                        <span v-if="log.formatted_file_size" class="text-muted-color">{{ log.formatted_file_size }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-            </Card>
+            <!-- Google Drive Folder Picker Modal -->
+            <GoogleDriveFolderPicker
+                :show="showFolderPicker"
+                @close="showFolderPicker = false"
+                @selected="handleFolderSelected"
+            />
         </div>
-
-        <!-- Create/Edit Backup Modal -->
-        <BackupConfigModal
-            :show="showCreateModal || showEditModal"
-            :config="editingConfig"
-            @close="closeModal"
-            @saved="handleConfigSaved"
-        />
-
-        <!-- Google Drive Folder Picker Modal -->
-        <GoogleDriveFolderPicker
-            :show="showFolderPicker"
-            @close="showFolderPicker = false"
-            @selected="handleFolderSelected"
-        />
     </div>
 </template>
 
