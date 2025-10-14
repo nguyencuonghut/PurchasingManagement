@@ -155,14 +155,14 @@
                                             @click="editConfig(config)"
                                             label="Sửa"
                                             icon="pi pi-pencil"
-                                            class="p-button-primary"
+                                            severity="warn"
                                             size="small"
                                         />
                                         <Button
                                             @click="toggleConfig(config)"
                                             :label="config.is_active ? 'Tạm dừng' : 'Kích hoạt'"
                                             :icon="config.is_active ? 'pi pi-pause' : 'pi pi-play'"
-                                            class="p-button-secondary"
+                                            severity="contrast"
                                             size="small"
                                         />
                                     </div>
