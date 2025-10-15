@@ -42,9 +42,16 @@ class HomeController extends Controller
             // Xem tất cả phiếu
             // Không cần filter
         } elseif ($roleName === 'Nhân viên Thu Mua') {
-            // Xem tất cả phiếu
+            // Xem tất cả phiếu của phòng ban mình, nhưng với phiếu trạng thái draft thì chỉ xem của mình
+            $datatableQuery = $datatableQuery->where('department_id', $user->department_id);
+            $datatableQuery = $datatableQuery->where(function($q) use ($user) {
+                $q->where('status', '!=', 'draft')
+                  ->orWhere('creator_id', $user->id);
+            });
         } elseif ($roleName === 'Trưởng phòng Thu Mua') {
-            // Xem tất cả phiếu
+            // Xem tất cả phiếu của phòng ban mình, trừ những phiếu ở trạng thái draft
+            $datatableQuery = $datatableQuery->where('department_id', $user->department_id);
+            $datatableQuery = $datatableQuery->where('status', '!=', 'draft');
         } elseif ($roleName === 'Nhân viên Kiểm Soát') {
             $datatableQuery = $datatableQuery->whereIn('status', ['manager_approved', 'auditor_approved', 'rejected', 'pending_director_approval', 'director_approved']);
         } elseif ($roleName === 'Giám đốc') {

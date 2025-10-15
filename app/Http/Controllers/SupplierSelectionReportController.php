@@ -50,9 +50,22 @@ class SupplierSelectionReportController extends Controller
 
         $roleName = optional($user->role)->name;
         if ($roleName === 'Nhân viên Thu Mua') {
-            // Xem tất cả phiếu
+            // Xem tất cả phiếu thuộc phòng ban mình, nhưng với phiếu trạng thái draft thì chỉ xem của mình
+            $departmentId = $user->department_id;
+            $query->whereHas('creator', function($q) use ($departmentId) {
+                $q->where('department_id', $departmentId);
+            });
+            $query->where(function($q) use ($user) {
+                $q->where('status', '!=', ReportStatus::DRAFT)
+                  ->orWhere('creator_id', $user->id);
+            });
         } elseif ($roleName === 'Trưởng phòng Thu Mua') {
-            // Xem tất cả phiếu
+            // Xem tất cả phiếu thuộc phòng ban mình, trừ những phiếu ở trạng thái draft
+            $departmentId = $user->department_id;
+            $query->whereHas('creator', function($q) use ($departmentId) {
+                $q->where('department_id', $departmentId);
+            });
+            $query->where('status', '!=', ReportStatus::DRAFT);
         } elseif ($roleName === 'Nhân viên Kiểm Soát') {
             $query->whereIn('status', [ReportStatus::MANAGER_APPROVED, ReportStatus::AUDITOR_APPROVED, ReportStatus::PENDING_DIRECTOR, ReportStatus::DIRECTOR_APPROVED, ReportStatus::REJECTED]);
         } elseif ($roleName === 'Giám đốc') {
