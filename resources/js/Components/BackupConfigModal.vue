@@ -357,7 +357,7 @@ const form = ref({
     },
     google_drive_enabled: false,
     notification_emails: [''],
-    retention_days: 30
+    retention_days: 7
 })
 
 // Helper function to clear Google Drive session (moved before watcher)
@@ -392,7 +392,7 @@ watch(() => props.config, (newConfig) => {
             backup_options: newConfig.backup_options || form.value.backup_options,
             google_drive_enabled: newConfig.google_drive_enabled || false,
             notification_emails: newConfig.notification_emails || [''],
-            retention_days: newConfig.retention_days || 30
+            retention_days: newConfig.retention_days || 7
         }
         googleDriveConfig.value = newConfig.google_drive_config
     } else {
@@ -412,7 +412,7 @@ watch(() => props.config, (newConfig) => {
             },
             google_drive_enabled: false,
             notification_emails: [''],
-            retention_days: 30
+            retention_days: 7
         }
         googleDriveConfig.value = null
 
