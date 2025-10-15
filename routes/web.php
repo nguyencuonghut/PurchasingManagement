@@ -76,7 +76,9 @@ Route::group(['middleware'=>'auth:web'], function() {
     Route::get('/api/google-drive/folders', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'getFolders'])->name('google-drive.folders');
     Route::post('/api/google-drive/create-folder', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'createBackupFolder'])->name('google-drive.create-folder');
     Route::post('/api/google-drive/select-folder', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'saveFolderSelection'])->name('google-drive.select-folder');
-    Route::post('/api/google-drive/disconnect', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'disconnect'])->name('google-drive.disconnect');    //SupplierSelectionReport routes
+    Route::post('/api/google-drive/disconnect', [\App\Http\Controllers\GoogleDriveOAuthController::class, 'disconnect'])->name('google-drive.disconnect');
+
+    //SupplierSelectionReport routes
     Route::resource('/supplier_selection_reports', SupplierSelectionReportController::class);
     // API lấy danh sách Admin Thu Mua
     Route::get('/api/admin-thu-mua-users', [SupplierSelectionReportController::class, 'getAdminThuMuaUsers'])->name('api.admin_thu_mua_users');
