@@ -83,7 +83,7 @@
                 <Card>
                     <template #title>
                         <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-medium">Cấu hình Backup</h2>
+                            <h2 class="text- font-bold">Cấu hình Backup</h2>
                         </div>
                     </template>
                     <template #content>

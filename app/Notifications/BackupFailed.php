@@ -13,7 +13,8 @@ class BackupFailed extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected BackupConfiguration $config;
+    protected string $configName;
+    protected int $configId;
     protected BackupLog $log;
     protected string $errorMessage;
 
@@ -22,7 +23,8 @@ class BackupFailed extends Notification implements ShouldQueue
      */
     public function __construct(BackupConfiguration $config, BackupLog $log, string $errorMessage = '')
     {
-        $this->config = $config;
+        $this->configName = $config->name;
+        $this->configId = $config->id;
         $this->log = $log;
         $this->errorMessage = $errorMessage;
     }
@@ -43,11 +45,11 @@ class BackupFailed extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('❌ Backup thất bại - ' . $this->config->name)
+            ->subject('❌ Backup thất bại - ' . $this->configName)
             ->greeting('Xin chào!')
             ->line('Backup tự động đã gặp lỗi và không thể hoàn thành.')
             ->line('**Thông tin backup:**')
-            ->line('• Tên cấu hình: ' . $this->config->name)
+            ->line('• Tên cấu hình: ' . $this->configName)
             ->line('• Thời gian bắt đầu: ' . $this->log->started_at->format('d/m/Y H:i:s'))
             ->lineIf($this->log->completed_at, '• Thời gian kết thúc: ' . $this->log->completed_at->format('d/m/Y H:i:s'))
             ->lineIf($this->log->duration, '• Thời gian thực hiện: ' . $this->log->formatted_duration)
@@ -66,8 +68,8 @@ class BackupFailed extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'config_id' => $this->config->id,
-            'config_name' => $this->config->name,
+            'config_id' => $this->configId,
+            'config_name' => $this->configName,
             'log_id' => $this->log->id,
             'status' => 'failed',
             'started_at' => $this->log->started_at,

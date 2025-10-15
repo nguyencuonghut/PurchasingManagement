@@ -80,7 +80,16 @@ class BackupConfiguration extends Model
 
         switch ($schedule['type']) {
             case 'daily':
-                $nextRun = $now->copy()->addDay()->setTimeFromTimeString($schedule['time']);
+                // Set thời gian hôm nay trước
+                $todayAtScheduleTime = $now->copy()->setTimeFromTimeString($schedule['time']);
+
+                // Nếu chưa chạy lần nào và thời gian hôm nay chưa qua, schedule cho hôm nay
+                // Ngược lại, schedule cho ngày mai
+                if (!$this->last_run_at && $now->lessThanOrEqualTo($todayAtScheduleTime)) {
+                    $nextRun = $todayAtScheduleTime;
+                } else {
+                    $nextRun = $now->copy()->addDay()->setTimeFromTimeString($schedule['time']);
+                }
                 break;
             case 'weekly':
                 $nextRun = $now->copy()->next($schedule['day_of_week'])->setTimeFromTimeString($schedule['time']);

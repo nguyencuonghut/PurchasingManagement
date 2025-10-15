@@ -13,7 +13,8 @@ class BackupCompleted extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected BackupConfiguration $config;
+    protected string $configName;
+    protected int $configId;
     protected BackupLog $log;
 
     /**
@@ -21,7 +22,8 @@ class BackupCompleted extends Notification implements ShouldQueue
      */
     public function __construct(BackupConfiguration $config, BackupLog $log)
     {
-        $this->config = $config;
+        $this->configName = $config->name;
+        $this->configId = $config->id;
         $this->log = $log;
     }
 
@@ -41,17 +43,16 @@ class BackupCompleted extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('✅ Backup thành công - ' . $this->config->name)
+            ->subject('✅ Backup thành công - ' . $this->configName)
             ->greeting('Xin chào!')
             ->line('Backup tự động đã hoàn thành thành công.')
             ->line('**Thông tin backup:**')
-            ->line('• Tên cấu hình: ' . $this->config->name)
+            ->line('• Tên cấu hình: ' . $this->configName)
             ->line('• Thời gian bắt đầu: ' . $this->log->started_at->format('d/m/Y H:i:s'))
             ->line('• Thời gian hoàn thành: ' . $this->log->completed_at->format('d/m/Y H:i:s'))
             ->line('• Thời gian thực hiện: ' . $this->log->formatted_duration)
             ->line('• Kích thước file: ' . $this->log->formatted_file_size)
             ->lineIf($this->log->google_drive_file_id, '• Đã upload lên Google Drive: ✅')
-            ->lineIf(!$this->log->google_drive_file_id && $this->config->google_drive_enabled, '• Upload Google Drive: ❌')
             ->line('Backup đã được thực hiện thành công và dữ liệu của bạn được bảo vệ an toàn.')
             ->salutation('Trân trọng, ' . config('app.name'));
     }
@@ -64,8 +65,8 @@ class BackupCompleted extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'config_id' => $this->config->id,
-            'config_name' => $this->config->name,
+            'config_id' => $this->configId,
+            'config_name' => $this->configName,
             'log_id' => $this->log->id,
             'status' => 'success',
             'started_at' => $this->log->started_at,
