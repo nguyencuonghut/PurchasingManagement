@@ -1,20 +1,19 @@
 <template>
-    <div class="p-4 sm:p-6">
-        <Head title="Auto Backup Configuration" />
+    <Head title="Auto Backup Configuration" />
 
-        <div class="card">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold">Auto Backup</h1>
-                </div>
-                <Button
-                    @click="showCreateModal = true"
-                    icon="pi pi-plus"
-                    :label="'Tạo Backup Mới'"
-                    class="p-button-primary w-full sm:w-auto"
-                    size="small"
-                />
+    <div class="card">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold">Auto Backup</h1>
             </div>
+            <Button
+                @click="showCreateModal = true"
+                icon="pi pi-plus"
+                :label="'Tạo Backup Mới'"
+                class="p-button-primary w-full sm:w-auto"
+                size="small"
+            />
+        </div>
 
             <!-- Content -->
             <div>
@@ -210,13 +209,12 @@
                 @saved="handleConfigSaved"
             />
 
-            <!-- Google Drive Folder Picker Modal -->
-            <GoogleDriveFolderPicker
-                :show="showFolderPicker"
-                @close="showFolderPicker = false"
-                @selected="handleFolderSelected"
-            />
-        </div>
+        <!-- Google Drive Folder Picker Modal -->
+        <GoogleDriveFolderPicker
+            :show="showFolderPicker"
+            @close="showFolderPicker = false"
+            @selected="handleFolderSelected"
+        />
     </div>
 
     <!-- Toast Messages -->
