@@ -104,7 +104,7 @@ class AutoBackupService
 
             // 7. Cập nhật log
             $completedAt = now();
-            $duration = $completedAt->diffInSeconds($log->started_at);
+            $duration = $log->started_at->diffInSeconds($completedAt, false); // false = get absolute value
 
             $log->update([
                 'status' => 'success',
@@ -153,7 +153,7 @@ class AutoBackupService
             $log->update([
                 'status' => 'failed',
                 'completed_at' => now(),
-                'duration' => now()->diffInSeconds($log->started_at),
+                'duration' => $log->started_at->diffInSeconds(now(), false),
                 'error_message' => $e->getMessage()
             ]);
 
