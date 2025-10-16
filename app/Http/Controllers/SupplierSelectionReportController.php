@@ -364,7 +364,7 @@ class SupplierSelectionReportController extends Controller
         try {
             $this->authorize('view', $supplierSelectionReport);
         } catch (AuthorizationException $e) {
-            return redirect()->back()->with('flash', [
+            return redirect()->route('supplier_selection_reports.index')->with('flash', [
                 'type' => 'error',
                 'message' => 'Bạn không có quyền xem phiếu này.',
             ]);

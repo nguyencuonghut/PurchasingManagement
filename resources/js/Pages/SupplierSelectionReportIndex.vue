@@ -236,7 +236,7 @@
 
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed, watch , onMounted } from 'vue';
+import { ref, computed, watch , onMounted, nextTick } from 'vue';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { usePage } from '@inertiajs/vue3';
@@ -259,17 +259,19 @@ const statusToVietnameseFn = statusToVietnamese;
 const toast = useToast();
 const dt = ref();
 const page = usePage();
-const flash = computed(() => page.props.auth.flash);
+const flash = computed(() => page.props.flash || page.props.auth?.flash);
 
 watch(
   () => flash.value,
   (val) => {
     if (val && val.message) {
-      toast.add({
-        severity: val.type === 'error' ? 'error' : 'success',
-        summary: val.type === 'error' ? 'Lỗi' : 'Thành công',
-        detail: val.message,
-        life: 3000
+      nextTick(() => {
+        toast.add({
+          severity: val.type === 'error' ? 'error' : 'success',
+          summary: val.type === 'error' ? 'Lỗi' : 'Thành công',
+          detail: val.message,
+          life: 3000
+        });
       });
     }
   },
