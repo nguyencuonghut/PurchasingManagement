@@ -232,7 +232,6 @@
             </template>
         </Dialog>
     </div>
-    <Toast />
 </template>
 
 <script setup>
@@ -248,7 +247,6 @@ import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
-import Toast from 'primevue/toast';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Tag from 'primevue/tag';
@@ -263,19 +261,8 @@ const dt = ref();
 const page = usePage();
 const flash = computed(() => page.props.auth.flash);
 
-onMounted(() => {
-  if (flash && flash.message) {
-    toast.add({
-      severity: flash.value.type === 'error' ? 'error' : 'success',
-      summary: flash.value.type === 'error' ? 'Lỗi' : 'Thành công',
-      detail: flash.value.message,
-      life: 3000
-    });
-  }
-});
-
 watch(
-  () => usePage().props.auth.flash,
+  () => flash.value,
   (val) => {
     if (val && val.message) {
       toast.add({

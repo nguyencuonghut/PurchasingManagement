@@ -21,7 +21,22 @@ class SupplierSelectionReportPolicy
      */
     public function view(User $user, SupplierSelectionReport $supplierSelectionReport): bool
     {
-        return false;
+        $roleName = optional($user->role)->name;
+        $departmentId = $user->department_id ?? null;
+        $isDraft = $supplierSelectionReport->status === 'draft';
+        $isSameDepartment = $supplierSelectionReport->creator && $supplierSelectionReport->creator->department_id == $departmentId;
+        $isCreator = $supplierSelectionReport->creator_id == $user->id;
+
+        if ($roleName === 'Nhân viên Thu Mua') {
+            // Xem phiếu cùng phòng ban, phiếu draft chỉ xem phiếu do mình tạo
+            return $isSameDepartment && (!$isDraft || $isCreator);
+        }
+        if ($roleName === 'Trưởng phòng Thu Mua') {
+            // Xem phiếu cùng phòng ban, không xem phiếu draft
+            return $isSameDepartment && !$isDraft;
+        }
+        // Các role khác: cho phép xem toàn bộ (hoặc mở rộng thêm nghiệp vụ nếu cần)
+        return true;
     }
 
     /**

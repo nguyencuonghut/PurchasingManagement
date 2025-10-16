@@ -31,6 +31,8 @@ use Inertia\Inertia;
 use Carbon\Carbon;
 use App\Http\Resources\SupplierSelectionReportResource;
 use App\Services\ActivityLogger;
+use Illuminate\Auth\Access\AuthorizationException;
+
 
 class SupplierSelectionReportController extends Controller
 {
@@ -358,6 +360,16 @@ class SupplierSelectionReportController extends Controller
      */
     public function show(SupplierSelectionReport $supplierSelectionReport)
     {
+        // Check condition to view report
+        try {
+            $this->authorize('view', $supplierSelectionReport);
+        } catch (AuthorizationException $e) {
+            return redirect()->back()->with('flash', [
+                'type' => 'error',
+                'message' => 'Bạn không có quyền xem phiếu này.',
+            ]);
+        }
+
         $report = $supplierSelectionReport->load(['quotationFiles', 'proposalFiles', 'creator','manager','auditor','director', 'childReport']);
 
         // Gather activity logs for this report
@@ -660,7 +672,7 @@ class SupplierSelectionReportController extends Controller
     public function managerApprove(ManagerApproveSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
-    if (optional($user->role)->name !== 'Trưởng phòng Thu Mua') {
+        if (optional($user->role)->name !== 'Trưởng phòng Thu Mua') {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
                 'message' => 'Bạn không có quyền duyệt phiếu này.'
@@ -712,7 +724,7 @@ class SupplierSelectionReportController extends Controller
     public function auditorAudit(AuditorAuditSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
-    if (optional($user->role)->name !== 'Nhân viên Kiểm Soát') {
+        if (optional($user->role)->name !== 'Nhân viên Kiểm Soát') {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
                 'message' => 'Bạn không có quyền review báo cáo này.'
@@ -803,7 +815,7 @@ class SupplierSelectionReportController extends Controller
     public function directorApprove(DirectorApproveSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
-    if (optional($user->role)->name !== 'Giám đốc') {
+        if (optional($user->role)->name !== 'Giám đốc') {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
                 'message' => 'Bạn không có quyền duyệt phiếu này.'
