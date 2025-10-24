@@ -80,7 +80,8 @@
           </div>
           <div v-if="canManagerApprove
               && (report.status === 'pending_manager_approval' || report.status === 'manager_approved' || report.status === 'rejected')
-              && report.auditor_audited_result === 'pending'">
+              && report.auditor_audited_result === 'pending'
+              && report.manager_id === user?.id">
             <Button label="Duyệt phiếu" icon="pi pi-check" @click="openManagerModal" class="w-full" />
           </div>
           <div v-else-if="canAudit
@@ -89,7 +90,8 @@
             <Button label="Kiểm tra phiếu" icon="pi pi-search" @click="openAuditorModal" class="w-full" />
           </div>
           <div v-if="canDirectorApprove
-              && (report.status === 'pending_director_approval' || report.status === 'director_approved' || report.status === 'rejected')">
+              && (report.status === 'pending_director_approval' || report.status === 'director_approved' || report.status === 'rejected')
+              && report.director_id === user?.id">
             <Button label="Duyệt phiếu" icon="pi pi-check" @click="openDirectorModal" class="w-full" />
           </div>
 
