@@ -224,6 +224,11 @@
           Báo cáo khẩn cấp (bỏ qua Kiểm Soát Nội Bộ)
         </label>
       </div>
+      <div v-if="is_urgent && manager_approved_result === 'approved'">
+        <label class="block mb-2 font-semibold text-orange-700">Chọn Giám đốc duyệt <span class="text-red-500">*</span></label>
+        <Select v-model="director_id" :options="directors" optionLabel="name" optionValue="id" placeholder="Chọn Giám đốc" class="w-full" />
+        <small class="text-orange-600">* Bắt buộc chọn Giám đốc cho phiếu khẩn cấp</small>
+      </div>
       <div>
         <label class="block mb-2 font-semibold">Ghi chú</label>
         <textarea v-model="manager_approved_notes" placeholder="Nhập ghi chú (tuỳ chọn)" rows="4" class="w-full p-2 border rounded resize-vertical" />
@@ -385,6 +390,7 @@ const page = usePage();
 const toast = useToast();
 const report = computed(() => page.props.report);
 const activityLogs = computed(() => page.props.activity_logs ?? []);
+const directors = computed(() => page.props.directors ?? []);
 const user = computed(() => page.props.auth.user);
 const canAudit = computed(() => user.value.role === 'Nhân viên Kiểm Soát');
 const canManagerApprove = computed(() => user.value.role === 'Trưởng phòng');
@@ -392,6 +398,7 @@ const canDirectorApprove = computed(() => user.value.role === 'Giám đốc');
 const manager_approved_result = ref('');
 const manager_approved_notes = ref('');
 const is_urgent = ref(false);
+const director_id = ref(null);
 const managerProcessing = ref(false);
 const managerModalVisible = ref(false);
 
@@ -401,6 +408,7 @@ const openManagerModal = () => {
   manager_approved_result.value = '';
   manager_approved_notes.value = '';
   is_urgent.value = false;
+  director_id.value = null;
 };
 
 const closeManagerModal = () => {
@@ -412,11 +420,16 @@ const submitManagerApprove = () => {
     toast.add({severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn trạng thái duyệt.', life: 3000});
     return;
   }
+  if (is_urgent.value && !director_id.value) {
+    toast.add({severity: 'error', summary: 'Lỗi', detail: 'Vui lòng chọn Giám đốc cho phiếu khẩn cấp.', life: 3000});
+    return;
+  }
   managerProcessing.value = true;
   router.post(`/supplier_selection_reports/${report.value.id}/manager-approve`, {
     manager_approved_result: manager_approved_result.value,
     manager_approved_notes: manager_approved_notes.value,
-    is_urgent: is_urgent.value
+    is_urgent: is_urgent.value,
+    director_id: director_id.value
   }, {
     preserveScroll: true,
     onSuccess: () => {

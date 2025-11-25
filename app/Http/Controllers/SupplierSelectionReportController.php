@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreSupplierSelectionReportRequest;
 use App\Http\Requests\UpdateSupplierSelectionReportRequest;
 use App\Models\QuotationFile;
+use App\Models\Role;
 use App\Models\SupplierSelectionReport;
 use App\Models\User;
 use App\Enums\ReportStatus;
@@ -416,9 +417,12 @@ class SupplierSelectionReportController extends Controller
                 ];
             });
 
+        $directors = User::where('role_id', Role::where('name', 'Giám đốc')->first()->id)->get(['id', 'name']);
+
         return Inertia::render('SupplierSelectionReportShow', [
             'report' => (new SupplierSelectionReportResource($report))->toArray(request()),
             'activity_logs' => $logs,
+            'directors' => $directors,
         ]);
     }
 
@@ -771,17 +775,35 @@ class SupplierSelectionReportController extends Controller
         $supplierSelectionReport->save();
 
         if ($supplierSelectionReport->status === ReportStatus::MANAGER_APPROVED) {
-            // Nếu báo cáo khẩn cấp, skip Auditor và gửi thẳng cho Director
+            // Nếu báo cáo khẩn cấp, skip Auditor và gửi thẳng cho Director đã chọn
             if ($supplierSelectionReport->is_urgent) {
+                // Lấy director_id từ request
+                $directorId = $validated['director_id'] ?? null;
+
                 $supplierSelectionReport->update([
                     'status' => ReportStatus::PENDING_DIRECTOR,
                     // Không set auditor_audited_result, để pending (không có kết quả vì đã bỏ qua)
                     'auditor_audited_notes' => 'Bỏ qua kiểm soát (Báo cáo khẩn cấp)',
+                    'director_id' => $directorId,
                 ]);
 
                 ActivityLogger::log($request, 'skipped_auditor', $supplierSelectionReport, [
                     'reason' => 'urgent_report',
                 ]);
+
+                // Gửi thông báo cho Director đã chọn
+                if ($directorId) {
+                    $director = User::find($directorId);
+                    if ($director) {
+                        Notification::route('mail', $director->email)
+                            ->notify(new SupplierSelectionReportNeedDirectorApproval($supplierSelectionReport));
+
+                        ActivityLogger::log($request, 'submitted_to_director', $supplierSelectionReport, [
+                            'director_id' => $director->id,
+                            'director_name' => $director->name,
+                        ]);
+                    }
+                }
 
                 // Thông báo cho creator
                 Notification::route('mail', $supplierSelectionReport->creator->email)
@@ -790,7 +812,7 @@ class SupplierSelectionReportController extends Controller
                 return redirect()->route('supplier_selection_reports.show', $supplierSelectionReport->id)
                     ->with('flash', [
                         'type' => 'success',
-                        'message' => 'Đã duyệt phiếu khẩn cấp thành công! Phiếu đã sẵn sàng để gửi Giám đốc duyệt.'
+                        'message' => 'Đã duyệt phiếu khẩn cấp thành công! Phiếu đã được gửi tới Giám đốc duyệt.'
                     ]);
             }
 
