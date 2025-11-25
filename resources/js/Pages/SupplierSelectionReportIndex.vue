@@ -143,7 +143,7 @@
                         class="mr-2"
                         @click="createFromRejected(slotProps.data)"
                     />
-                    <!-- Gửi duyệt tới Trưởng phòng -->
+                    <!-- Gửi phê duyệt -->
                     <Button
                         v-if="($page.props.auth.user.id === slotProps.data.creator_id) && (slotProps.data.status === 'draft' || slotProps.data.status === 'pending_manager_approval')"
                         icon="pi pi-send"
@@ -152,6 +152,7 @@
                         severity="warn"
                         @click="requestManagerToApprove(slotProps.data)"
                         class="mr-2"
+                        v-tooltip.top="'Gửi phê duyệt'"
                     />
 
                     <Button
@@ -198,10 +199,11 @@
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="sendApproveDialog" :style="{ width: '450px' }" header="Trưởng phòng duyệt" :modal="true">
+        <Dialog v-model:visible="sendApproveDialog" :style="{ width: '450px' }" header="Gửi phê duyệt" :modal="true">
             <div class="flex flex-col gap-4">
-                <label for="manager" class="block font-bold">Chọn Trưởng phòng duyệt</label>
-                <Select id="manager" v-model="selectedManagerId" :options="managers" optionLabel="name" optionValue="id" placeholder="Chọn Trưởng phòng" class="w-full" />
+                <label for="manager" class="block font-bold">Chọn người phê duyệt</label>
+                <Select id="manager" v-model="selectedManagerId" :options="managers" optionLabel="display_name" optionValue="id" placeholder="Chọn người phê duyệt" class="w-full" />
+                <small class="text-gray-500">* Nếu chọn Giám đốc, phiếu sẽ được tự động phê duyệt và chuyển thẳng tới Kiểm Soát</small>
             </div>
             <template #footer>
                 <Button label="Hủy" icon="pi pi-times" text @click="sendApproveDialog = false" />

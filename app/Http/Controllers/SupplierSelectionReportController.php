@@ -92,12 +92,39 @@ class SupplierSelectionReportController extends Controller
             'export_report' => $canExport,
         ];
 
-        $managers = User::whereHas('role', function($q) {
+        // Lấy Trưởng phòng cùng phòng ban với user hiện tại
+        $managersInDepartment = User::whereHas('role', function($q) {
                 $q->where('name', 'Trưởng phòng');
             })
-            ->select('id', 'name', 'email')
+            ->where('department_id', $user->department_id)
+            ->with('role:id,name')
+            ->select('id', 'name', 'email', 'role_id')
             ->orderBy('name')
             ->get();
+
+        // Nếu phòng ban không có Trưởng phòng, lấy Giám đốc
+        if ($managersInDepartment->isEmpty()) {
+            $managers = User::whereHas('role', function($q) {
+                    $q->where('name', 'Giám đốc');
+                })
+                ->with('role:id,name')
+                ->select('id', 'name', 'email', 'role_id')
+                ->orderBy('name')
+                ->get();
+        } else {
+            $managers = $managersInDepartment;
+        }
+
+        // Map để thêm display_name
+        $managers = $managers->map(function($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role_name' => optional($user->role)->name,
+                'display_name' => $user->name . ' (' . optional($user->role)->name . ')',
+            ];
+        });
 
         $directors = User::whereHas('role', function($q) {
                 $q->where('name', 'Giám đốc');
@@ -637,8 +664,8 @@ class SupplierSelectionReportController extends Controller
             ]);
         }
 
-        $manager = User::whereHas('role', function($q) {
-                $q->where('name', 'Trưởng phòng');
+        $manager = User::with(['role', 'department'])->whereHas('role', function($q) {
+                $q->whereIn('name', ['Trưởng phòng', 'Giám đốc']);
             })->where('id', $managerId)->first();
         if (!$manager) {
             return redirect()->back()->with('flash', [
@@ -647,6 +674,44 @@ class SupplierSelectionReportController extends Controller
             ]);
         }
 
+        // Kiểm tra nếu manager là Giám đốc hoặc thuộc Ban Giám Đốc
+        $isDirector = (optional($manager->role)->name === 'Giám đốc')
+                   || ($manager->department && $manager->department->code === 'GD');
+
+        if ($isDirector) {
+            // Tự động approve bước Manager và chuyển thẳng sang Kiểm Soát
+            $supplierSelectionReport->update([
+                'status' => ReportStatus::MANAGER_APPROVED,
+                'manager_id' => $manager->id,
+                'manager_approved_at' => now(),
+                'manager_approved_result' => 'approved',
+                'manager_approved_notes' => 'Tự động phê duyệt do người duyệt là Giám đốc',
+            ]);
+
+            ActivityLogger::log($request, 'auto_approved_by_director', $supplierSelectionReport, [
+                'manager_id' => $manager->id,
+                'manager_name' => $manager->name,
+                'note' => 'Tự động phê duyệt do người duyệt là Giám đốc',
+            ]);
+
+            // Gửi email cho Nhân viên Kiểm Soát
+            $auditors = User::whereHas('role', function($q) {
+                $q->where('name', 'Nhân viên Kiểm Soát');
+            })->get();
+
+            foreach ($auditors as $auditor) {
+                Notification::route('mail', $auditor->email)
+                    ->notify(new SupplierSelectionReportNeedAuditorAudit($supplierSelectionReport));
+            }
+
+            return redirect()->route('supplier_selection_reports.index')
+                ->with('flash', [
+                    'type' => 'success',
+                    'message' => 'Báo cáo đã được tự động phê duyệt bởi Giám đốc và gửi tới Kiểm Soát!'
+                ]);
+        }
+
+        // Luồng bình thường với Trưởng phòng
         $supplierSelectionReport->update([
             'status' => 'pending_manager_approval',
             'manager_id' => $manager->id,
