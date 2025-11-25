@@ -689,7 +689,7 @@ class SupplierSelectionReportController extends Controller
                 'manager_id' => $manager->id,
                 'manager_approved_at' => now(),
                 // Không set manager_approved_result, để pending (không có kết quả vì đã bỏ qua)
-                'manager_approved_notes' => 'Bỏ qua Trưởng phòng (Giám đốc)',
+                'manager_approved_notes' => 'Bỏ qua Trưởng phòng',
             ]);
 
             ActivityLogger::log($request, 'skipped_manager', $supplierSelectionReport, [

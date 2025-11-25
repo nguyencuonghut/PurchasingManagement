@@ -325,7 +325,7 @@ const formatAction = (action) => {
     case 'submitted_to_manager': return 'Gửi duyệt Trưởng phòng';
     case 'manager_approved': return 'Trưởng phòng duyệt';
     case 'manager_rejected': return 'Trưởng phòng từ chối';
-    case 'skipped_manager': return 'Bỏ qua Trưởng phòng (Giám đốc)';
+    case 'skipped_manager': return 'Bỏ qua Trưởng phòng';
     case 'auditor_approved': return 'Kiểm Soát duyệt';
     case 'auditor_rejected': return 'Kiểm Soát từ chối';
     case 'skipped_auditor': return 'Bỏ qua Kiểm Soát (Khẩn cấp)';
