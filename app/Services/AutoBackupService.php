@@ -89,6 +89,12 @@ class AutoBackupService
                     );
                     $backupDetails['google_drive_uploaded'] = $googleDriveFileId !== null;
                     $backupDetails['google_drive_file_id'] = $googleDriveFileId;
+
+                    // Xóa file zip ngay sau khi upload thành công để giải phóng disk
+                    if ($googleDriveFileId && file_exists($zipPath)) {
+                        unlink($zipPath);
+                        Log::info("Deleted local zip file after successful upload", ['log_id' => $log->id]);
+                    }
                 } else {
                     Log::warning("Failed to authenticate with Google Drive", ['log_id' => $log->id]);
                     $backupDetails['google_drive_uploaded'] = false;
@@ -98,6 +104,7 @@ class AutoBackupService
 
             // 6. Dọn dẹp files tạm
             $this->deleteDirectory($backupPath);
+            // Chỉ xóa zip nếu chưa xóa (trường hợp không upload hoặc upload thất bại)
             if (file_exists($zipPath)) {
                 unlink($zipPath);
             }
