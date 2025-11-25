@@ -14,8 +14,8 @@ class RoleSeeder extends Seeder
     {
         $roles = [
             'Quản trị',
-            'Nhân viên Thu Mua',
-            'Trưởng phòng Thu Mua',
+            'Nhân viên mua hàng',
+            'Trưởng phòng',
             'Nhân viên Kiểm Soát',
             'Giám đốc',
             'Kế toán',

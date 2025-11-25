@@ -27,11 +27,11 @@ class SupplierSelectionReportPolicy
         $isSameDepartment = $supplierSelectionReport->creator && $supplierSelectionReport->creator->department_id == $departmentId;
         $isCreator = $supplierSelectionReport->creator_id == $user->id;
 
-        if ($roleName === 'Nhân viên Thu Mua') {
+        if ($roleName === 'Nhân viên mua hàng') {
             // Xem phiếu cùng phòng ban, phiếu draft chỉ xem phiếu do mình tạo
             return $isSameDepartment && (!$isDraft || $isCreator);
         }
-        if ($roleName === 'Trưởng phòng Thu Mua') {
+        if ($roleName === 'Trưởng phòng') {
             // Xem phiếu cùng phòng ban, không xem phiếu draft
             return $isSameDepartment && !$isDraft;
         }
@@ -44,7 +44,7 @@ class SupplierSelectionReportPolicy
      */
     public function create(User $user): bool
     {
-        return true;//return in_array(optional($user->role)->name, ['Quản trị', 'Trưởng phòng Thu Mua', 'Nhân viên Thu Mua']);
+        return true;//return in_array(optional($user->role)->name, ['Quản trị', 'Trưởng phòng', 'Nhân viên mua hàng']);
     }
 
     /**

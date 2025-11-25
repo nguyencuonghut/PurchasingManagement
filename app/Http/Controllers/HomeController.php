@@ -41,7 +41,7 @@ class HomeController extends Controller
         if ($roleName === 'Admin') {
             // Xem tất cả phiếu
             // Không cần filter
-        } elseif ($roleName === 'Nhân viên Thu Mua') {
+        } elseif ($roleName === 'Nhân viên mua hàng') {
             // Xem tất cả phiếu của phòng ban mình, nhưng với phiếu trạng thái draft thì chỉ xem của mình
             $departmentId = $user->department_id;
             $datatableQuery = $datatableQuery->whereHas('creator', function($q) use ($departmentId) {
@@ -51,7 +51,7 @@ class HomeController extends Controller
                 $q->where('status', '!=', 'draft')
                   ->orWhere('creator_id', $user->id);
             });
-        } elseif ($roleName === 'Trưởng phòng Thu Mua') {
+        } elseif ($roleName === 'Trưởng phòng') {
             // Xem tất cả phiếu của phòng ban mình, trừ những phiếu ở trạng thái draft
             $departmentId = $user->department_id;
             $datatableQuery = $datatableQuery->whereHas('creator', function($q) use ($departmentId) {
@@ -79,10 +79,10 @@ class HomeController extends Controller
         $pendingReportsQuery = \App\Models\SupplierSelectionReport::query();
         if ($roleName === 'Admin') {
             $pendingReportsQuery = $pendingReportsQuery->whereIn('status', ['pending_manager_approval','manager_approved','auditor_approved']);
-        } elseif ($roleName === 'Nhân viên Thu Mua') {
+        } elseif ($roleName === 'Nhân viên mua hàng') {
             $pendingReportsQuery = $pendingReportsQuery->where('creator_id', $user->id)
                 ->whereIn('status', ['pending_manager_approval','manager_approved','auditor_approved']);
-        } elseif ($roleName === 'Trưởng phòng Thu Mua') {
+        } elseif ($roleName === 'Trưởng phòng') {
             $pendingReportsQuery = $pendingReportsQuery->where('manager_id', $user->id)
                 ->where('status', 'pending_manager_approval');
         } elseif ($roleName === 'Nhân viên Kiểm Soát') {

@@ -51,7 +51,7 @@ class SupplierSelectionReportController extends Controller
             ->orderBy('id', 'desc');
 
         $roleName = optional($user->role)->name;
-        if ($roleName === 'Nhân viên Thu Mua') {
+        if ($roleName === 'Nhân viên mua hàng') {
             // Xem tất cả phiếu thuộc phòng ban mình, nhưng với phiếu trạng thái draft thì chỉ xem của mình
             $departmentId = $user->department_id;
             $query->whereHas('creator', function($q) use ($departmentId) {
@@ -61,7 +61,7 @@ class SupplierSelectionReportController extends Controller
                 $q->where('status', '!=', ReportStatus::DRAFT)
                   ->orWhere('creator_id', $user->id);
             });
-        } elseif ($roleName === 'Trưởng phòng Thu Mua') {
+        } elseif ($roleName === 'Trưởng phòng') {
             // Xem tất cả phiếu thuộc phòng ban mình, trừ những phiếu ở trạng thái draft
             $departmentId = $user->department_id;
             $query->whereHas('creator', function($q) use ($departmentId) {
@@ -81,8 +81,8 @@ class SupplierSelectionReportController extends Controller
         $reports = SupplierSelectionReportResource::collection($query->get());
 
         $canCreate = $user->can('create', SupplierSelectionReport::class);
-        $canUpdate = in_array($roleName, ['Quản trị', 'Nhân viên Thu Mua', 'Trưởng phòng Thu Mua']);
-        $canDelete = in_array($roleName, ['Quản trị', 'Nhân viên Thu Mua', 'Trưởng phòng Thu Mua']);
+        $canUpdate = in_array($roleName, ['Quản trị', 'Nhân viên mua hàng', 'Trưởng phòng']);
+        $canDelete = in_array($roleName, ['Quản trị', 'Nhân viên mua hàng', 'Trưởng phòng']);
         $canExport = true;//Always can export
 
         $can = [
@@ -93,7 +93,7 @@ class SupplierSelectionReportController extends Controller
         ];
 
         $managers = User::whereHas('role', function($q) {
-                $q->where('name', 'Trưởng phòng Thu Mua');
+                $q->where('name', 'Trưởng phòng');
             })
             ->select('id', 'name', 'email')
             ->orderBy('name')
@@ -271,8 +271,8 @@ class SupplierSelectionReportController extends Controller
                     $proposalFile->save();
                 }
 
-                // Nếu người tạo là Trưởng phòng Thu Mua -> auto approve & notify
-                if (optional($request->user()->role)->name === 'Trưởng phòng Thu Mua') {
+                // Nếu người tạo là Trưởng phòng -> auto approve & notify
+                if (optional($request->user()->role)->name === 'Trưởng phòng') {
                     $report->update([
                         'status' => ReportStatus::MANAGER_APPROVED,
                         'manager_id' => $request->user()->id,
@@ -638,7 +638,7 @@ class SupplierSelectionReportController extends Controller
         }
 
         $manager = User::whereHas('role', function($q) {
-                $q->where('name', 'Trưởng phòng Thu Mua');
+                $q->where('name', 'Trưởng phòng');
             })->where('id', $managerId)->first();
         if (!$manager) {
             return redirect()->back()->with('flash', [
@@ -667,12 +667,12 @@ class SupplierSelectionReportController extends Controller
     }
 
     /**
-     * Trưởng phòng Thu Mua duyệt phiếu
+     * Trưởng phòng duyệt phiếu
      */
     public function managerApprove(ManagerApproveSupplierSelectionReportRequest $request, SupplierSelectionReport $supplierSelectionReport)
     {
         $user = $request->user();
-        if (optional($user->role)->name !== 'Trưởng phòng Thu Mua') {
+        if (optional($user->role)->name !== 'Trưởng phòng') {
             return redirect()->back()->with('flash', [
                 'type' => 'error',
                 'message' => 'Bạn không có quyền duyệt phiếu này.'
@@ -915,7 +915,7 @@ class SupplierSelectionReportController extends Controller
         return false;
     }
     /**
-     * Lấy danh sách Admin Thu Mua (và thêm user login nếu là Nhân viên Thu Mua)
+     * Lấy danh sách Admin Thu Mua (và thêm user login nếu là Nhân viên mua hàng)
      */
     private function getAdminThuMuaUsers($user)
     {
@@ -925,8 +925,8 @@ class SupplierSelectionReportController extends Controller
         ->select('id', 'name', 'email')
         ->get();
 
-        // Nếu user login là Nhân viên Thu Mua, thêm vào danh sách nếu chưa có
-        if (optional($user->role)->name === 'Nhân viên Thu Mua') {
+        // Nếu user login là Nhân viên mua hàng, thêm vào danh sách nếu chưa có
+        if (optional($user->role)->name === 'Nhân viên mua hàng') {
             $exists = $admins->contains('id', $user->id);
             if (!$exists) {
                 $admins->push($user->only(['id', 'name', 'email']));

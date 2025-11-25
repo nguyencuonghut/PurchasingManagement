@@ -27,7 +27,7 @@
               <div style="width: 50%"><b>Trạng thái:</b> <Tag :value="getStatusLabel(report.status)" :severity="getStatusSeverity(report.status)" /></div>
               <div style="width: 50%" class="ml-6"><b>Người tạo:</b> {{ report.creator_name }} ({{ report.formatted_created_at }})</div>
             </div>
-            <div v-if="'pending' !== report.manager_approved_result" class="mt-2"><b>Trưởng phòng Thu Mua:</b>
+            <div v-if="'pending' !== report.manager_approved_result" class="mt-2"><b>Trưởng phòng:</b>
               <div class="flex ml-6 gap-4">
                 <div style="width: 50%"><b>Người duyệt: </b>{{ report.manager_name }}</div>
                 <div style="width: 50%"><b>Thời gian: </b>{{ report.formatted_manager_approved_at }}</div>
@@ -97,7 +97,7 @@
 
           <div v-if="report.status === 'rejected'
                     && !report.child_report
-                    && (user?.role === 'Nhân viên Thu Mua' || user?.role === 'Trưởng phòng Thu Mua')"
+                    && (user?.role === 'Nhân viên mua hàng' || user?.role === 'Trưởng phòng')"
             class="mt-4 justify-end flex"
           >
             <Button
@@ -209,7 +209,7 @@
   <Toast />
 
   <!-- Manager Approval Modal -->
-  <Dialog v-model:visible="managerModalVisible" :modal="true" header="Trưởng phòng Thu Mua duyệt phiếu" :style="{ width: '500px' }">
+  <Dialog v-model:visible="managerModalVisible" :modal="true" header="Trưởng phòng duyệt phiếu" :style="{ width: '500px' }">
     <div class="flex flex-col gap-4">
       <div>
         <label class="block mb-2 font-semibold">Kết quả duyệt</label>
@@ -375,7 +375,7 @@ const report = computed(() => page.props.report);
 const activityLogs = computed(() => page.props.activity_logs ?? []);
 const user = computed(() => page.props.auth.user);
 const canAudit = computed(() => user.value.role === 'Nhân viên Kiểm Soát');
-const canManagerApprove = computed(() => user.value.role === 'Trưởng phòng Thu Mua');
+const canManagerApprove = computed(() => user.value.role === 'Trưởng phòng');
 const canDirectorApprove = computed(() => user.value.role === 'Giám đốc');
 const manager_approved_result = ref('');
 const manager_approved_notes = ref('');

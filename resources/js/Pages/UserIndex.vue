@@ -461,8 +461,8 @@ const getStatusSeverity = (status) => {
 // Map roles to severity levels
 const roleSeverityMap = {
   'Quản trị': 'success',
-  'Nhân viên Thu Mua': 'info',
-  'Trưởng phòng Thu Mua': 'success',
+  'Nhân viên mua hàng': 'info',
+  'Trưởng phòng': 'success',
   'Nhân viên Kiểm Soát': 'warn',
   'Giám đốc': 'danger',
   'Kế toán': 'secondary',

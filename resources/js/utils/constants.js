@@ -2,8 +2,8 @@
 
 export const Roles = {
   ADMIN: 'Quản trị',
-  PURCHASER: 'Nhân viên Thu Mua',
-  PM_MANAGER: 'Trưởng phòng Thu Mua',
+  PURCHASER: 'Nhân viên mua hàng',
+  PM_MANAGER: 'Trưởng phòng',
   AUDITOR: 'Nhân viên Kiểm Soát',
   DIRECTOR: 'Giám đốc',
 };
