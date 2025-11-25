@@ -19,7 +19,10 @@
           <div class="mb-4">
             <div>
             <div class="flex gap-4">
-              <div style="width: 50%"><b>Mã:</b> {{ report.code }}</div>
+              <div style="width: 50%">
+                <b>Mã:</b> {{ report.code }}
+                <Tag v-if="report.is_urgent" value="KHẨN CẤP" severity="danger" class="ml-2" style="font-size: 0.75rem;" />
+              </div>
               <div style="width: 50%" class="ml-6"><b>Mô tả:</b> {{ report.description }}</div>
             </div>
             </div>
@@ -215,6 +218,12 @@
         <label class="block mb-2 font-semibold">Kết quả duyệt</label>
         <Select v-model="manager_approved_result" :options="[{ label: 'Đồng ý', value: 'approved' }, { label: 'Từ chối', value: 'rejected' }]" optionLabel="label" optionValue="value" placeholder="Chọn kết quả" class="w-full" />
       </div>
+      <div v-if="manager_approved_result === 'approved'" class="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded">
+        <Checkbox v-model="is_urgent" binary inputId="is_urgent" />
+        <label for="is_urgent" class="font-semibold text-orange-700 cursor-pointer">
+          Báo cáo khẩn cấp (bỏ qua Kiểm Soát Nội Bộ)
+        </label>
+      </div>
       <div>
         <label class="block mb-2 font-semibold">Ghi chú</label>
         <textarea v-model="manager_approved_notes" placeholder="Nhập ghi chú (tuỳ chọn)" rows="4" class="w-full p-2 border rounded resize-vertical" />
@@ -311,8 +320,10 @@ const formatAction = (action) => {
     case 'submitted_to_manager': return 'Gửi duyệt Trưởng phòng';
     case 'manager_approved': return 'Trưởng phòng duyệt';
     case 'manager_rejected': return 'Trưởng phòng từ chối';
+    case 'skipped_manager': return 'Bỏ qua Trưởng phòng (Giám đốc)';
     case 'auditor_approved': return 'Kiểm Soát duyệt';
     case 'auditor_rejected': return 'Kiểm Soát từ chối';
+    case 'skipped_auditor': return 'Bỏ qua Kiểm Soát (Khẩn cấp)';
     case 'submitted_to_director': return 'Gửi duyệt Giám đốc';
     case 'director_approved': return 'Giám đốc duyệt';
     case 'director_rejected': return 'Giám đốc từ chối';
@@ -366,6 +377,7 @@ import { ref, computed } from 'vue';
 import Tag from 'primevue/tag';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
+import Checkbox from 'primevue/checkbox';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
@@ -379,6 +391,7 @@ const canManagerApprove = computed(() => user.value.role === 'Trưởng phòng')
 const canDirectorApprove = computed(() => user.value.role === 'Giám đốc');
 const manager_approved_result = ref('');
 const manager_approved_notes = ref('');
+const is_urgent = ref(false);
 const managerProcessing = ref(false);
 const managerModalVisible = ref(false);
 
@@ -387,6 +400,7 @@ const openManagerModal = () => {
   // Reset form values when opening modal
   manager_approved_result.value = '';
   manager_approved_notes.value = '';
+  is_urgent.value = false;
 };
 
 const closeManagerModal = () => {
@@ -401,7 +415,8 @@ const submitManagerApprove = () => {
   managerProcessing.value = true;
   router.post(`/supplier_selection_reports/${report.value.id}/manager-approve`, {
     manager_approved_result: manager_approved_result.value,
-    manager_approved_notes: manager_approved_notes.value
+    manager_approved_notes: manager_approved_notes.value,
+    is_urgent: is_urgent.value
   }, {
     preserveScroll: true,
     onSuccess: () => {

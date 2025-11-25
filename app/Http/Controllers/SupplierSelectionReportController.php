@@ -679,19 +679,19 @@ class SupplierSelectionReportController extends Controller
                    || ($manager->department && $manager->department->code === 'GD');
 
         if ($isDirector) {
-            // Tự động approve bước Manager và chuyển thẳng sang Kiểm Soát
+            // Tự động chuyển sang Kiểm Soát (bỏ qua bước Manager vì đã là Giám đốc)
             $supplierSelectionReport->update([
                 'status' => ReportStatus::MANAGER_APPROVED,
                 'manager_id' => $manager->id,
                 'manager_approved_at' => now(),
-                'manager_approved_result' => 'approved',
-                'manager_approved_notes' => 'Tự động phê duyệt do người duyệt là Giám đốc',
+                // Không set manager_approved_result, để pending (không có kết quả vì đã bỏ qua)
+                'manager_approved_notes' => 'Bỏ qua Trưởng phòng (Giám đốc)',
             ]);
 
-            ActivityLogger::log($request, 'auto_approved_by_director', $supplierSelectionReport, [
+            ActivityLogger::log($request, 'skipped_manager', $supplierSelectionReport, [
                 'manager_id' => $manager->id,
                 'manager_name' => $manager->name,
-                'note' => 'Tự động phê duyệt do người duyệt là Giám đốc',
+                'note' => 'Bỏ qua Trưởng phòng vì người duyệt là Giám đốc',
             ]);
 
             // Gửi email cho Nhân viên Kiểm Soát
@@ -748,10 +748,16 @@ class SupplierSelectionReportController extends Controller
         $supplierSelectionReport->manager_approved_result = $validated['manager_approved_result'];
         $supplierSelectionReport->manager_approved_notes = $validated['manager_approved_notes'] ?? null;
 
+        // Cập nhật is_urgent nếu Manager đánh dấu
+        if (isset($validated['is_urgent'])) {
+            $supplierSelectionReport->is_urgent = $validated['is_urgent'];
+        }
+
         if ('approved' == $validated['manager_approved_result']) {
             $supplierSelectionReport->status = ReportStatus::MANAGER_APPROVED;
             ActivityLogger::log($request, 'manager_approved', $supplierSelectionReport, [
                 'notes' => $supplierSelectionReport->manager_approved_notes,
+                'is_urgent' => $supplierSelectionReport->is_urgent,
             ]);
         } else {
             $supplierSelectionReport->status = ReportStatus::REJECTED;
@@ -765,6 +771,30 @@ class SupplierSelectionReportController extends Controller
         $supplierSelectionReport->save();
 
         if ($supplierSelectionReport->status === ReportStatus::MANAGER_APPROVED) {
+            // Nếu báo cáo khẩn cấp, skip Auditor và gửi thẳng cho Director
+            if ($supplierSelectionReport->is_urgent) {
+                $supplierSelectionReport->update([
+                    'status' => ReportStatus::PENDING_DIRECTOR,
+                    // Không set auditor_audited_result, để pending (không có kết quả vì đã bỏ qua)
+                    'auditor_audited_notes' => 'Bỏ qua kiểm soát (Báo cáo khẩn cấp)',
+                ]);
+
+                ActivityLogger::log($request, 'skipped_auditor', $supplierSelectionReport, [
+                    'reason' => 'urgent_report',
+                ]);
+
+                // Thông báo cho creator
+                Notification::route('mail', $supplierSelectionReport->creator->email)
+                    ->notify(new SupplierSelectionReportApprovedByManager($supplierSelectionReport));
+
+                return redirect()->route('supplier_selection_reports.show', $supplierSelectionReport->id)
+                    ->with('flash', [
+                        'type' => 'success',
+                        'message' => 'Đã duyệt phiếu khẩn cấp thành công! Phiếu đã sẵn sàng để gửi Giám đốc duyệt.'
+                    ]);
+            }
+
+            // Luồng bình thường: gửi cho Auditor
             $auditors = User::whereHas('role', function($q) {
                 $q->where('name', 'Nhân viên Kiểm Soát');
             })->get();

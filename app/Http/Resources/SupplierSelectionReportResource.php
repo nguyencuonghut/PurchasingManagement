@@ -22,6 +22,7 @@ class SupplierSelectionReportResource extends JsonResource
             'file_path' => $this->file_path,
             'image_url' => $this->image_url,
             'status' => $this->status,
+            'is_urgent' => $this->is_urgent ?? false,
             'creator_id' => $this->creator_id,
 
             'manager_approved_result' => $this->manager_approved_result,

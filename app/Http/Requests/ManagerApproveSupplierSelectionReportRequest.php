@@ -16,6 +16,7 @@ class ManagerApproveSupplierSelectionReportRequest extends FormRequest
         return [
             'manager_approved_result' => 'required|in:approved,rejected',
             'manager_approved_notes' => 'nullable|string|max:1000',
+            'is_urgent' => 'nullable|boolean',
         ];
     }
 

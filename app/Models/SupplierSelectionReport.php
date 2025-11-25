@@ -14,6 +14,7 @@ class SupplierSelectionReport extends Model
         'file_path',
         'creator_id',
         'status',
+        'is_urgent',
         'manager_approved_result',
         'manager_approved_notes',
         'manager_id',

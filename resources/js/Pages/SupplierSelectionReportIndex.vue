@@ -49,6 +49,8 @@
                             <a :href="`/supplier_selection_reports/${data.id}`" class="text-primary hover:underline" style="cursor:pointer">
                                 {{ data.code }}
                             </a>
+                            <!-- Badge KHẨN CẤP -->
+                            <Tag v-if="data.is_urgent" value="KHẨN CẤP" severity="danger" class="ml-2" style="font-size: 0.75rem;" />
                             <!-- Nếu có parent -->
                             <span v-if="data.parent_report" class="ml-2" title="Parent">
                                 <i class="pi pi-link text-primary" style="vertical-align: middle; font-size: 1.1em;"></i>
