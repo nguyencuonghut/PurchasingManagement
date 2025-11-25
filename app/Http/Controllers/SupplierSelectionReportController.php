@@ -201,7 +201,14 @@ class SupplierSelectionReportController extends Controller
                             'parent_report_id' => 'Phiếu cha đã có phiếu con, không thể tạo thêm.'
                         ]);
                     }
-                    $data['description'] = '[LẦN 2] - ' . $parentReport->description;
+
+                    // Tính số lần tạo lại (đếm từ phiếu gốc)
+                    $attemptNumber = $this->calculateAttemptNumber($parentReport);
+
+                    // Lấy description gốc (bỏ prefix cũ nếu có)
+                    $originalDescription = $this->getOriginalDescription($parentReport->description);
+
+                    $data['description'] = "[LẦN {$attemptNumber}] - {$originalDescription}";
                     $data['adm_id'] = $parentReport->adm_id;
                     $data['parent_report_id'] = $parentReport->id;
                 }
@@ -1051,5 +1058,38 @@ class SupplierSelectionReportController extends Controller
         }
 
         return $admins;
+    }
+
+    /**
+     * Tính số lần tạo lại phiếu (đệ quy ngược về phiếu gốc)
+     * Phiếu con = LẦN 2, phiếu cháu = LẦN 3, v.v.
+     */
+    private function calculateAttemptNumber(SupplierSelectionReport $report): int
+    {
+        $count = 1;
+        $current = $report;
+
+        // Đếm ngược về phiếu gốc
+        while ($current->parent_report_id !== null) {
+            $count++;
+            $current = SupplierSelectionReport::find($current->parent_report_id);
+
+            // Phòng trường hợp vòng lặp vô hạn
+            if (!$current || $count > 100) {
+                break;
+            }
+        }
+
+        // Phiếu hiện tại là lần thứ $count, phiếu mới sẽ là lần thứ $count + 1
+        return $count + 1;
+    }
+
+    /**
+     * Lấy description gốc (bỏ prefix [LẦN X] nếu có)
+     */
+    private function getOriginalDescription(string $description): string
+    {
+        // Pattern: [LẦN 2] - hoặc [LẦN 3] - etc.
+        return preg_replace('/^\[LẦN\s+\d+\]\s*-\s*/', '', $description);
     }
 }
