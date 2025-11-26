@@ -52,19 +52,19 @@
                             <!-- Badge KHẨN CẤP -->
                             <Tag v-if="data.is_urgent" value="KHẨN CẤP" severity="danger" class="ml-2" style="font-size: 0.75rem;" />
                             <!-- Nếu có parent -->
-                            <span v-if="data.parent_report" class="ml-2" title="Parent">
+                            <div v-if="data.parent_report" class="ml-2" title="Parent">
                                 <i class="pi pi-link text-primary" style="vertical-align: middle; font-size: 1.1em;"></i>
                                 <a :href="`/supplier_selection_reports/${data.parent_report.id}`" class="text-info hover:underline ml-1" style="cursor:pointer">
                                     {{ data.parent_report.code }}
                                 </a>
-                            </span>
+                            </div>
                             <!-- Nếu có child -->
-                            <span v-if="data.child_report" class="ml-2" title="Child">
+                            <div v-if="data.child_report" class="ml-2" title="Child">
                                 <i class="pi pi-share-alt text-primary" style="vertical-align: middle; font-size: 1.1em;"></i>
                                 <a :href="`/supplier_selection_reports/${data.child_report.id}`" class="text-success hover:underline ml-1" style="cursor:pointer">
                                     {{ data.child_report.code }}
                                 </a>
-                            </span>
+                            </div>
                         </div>
                     </template>
                 <template #filter="{ filterModel }">

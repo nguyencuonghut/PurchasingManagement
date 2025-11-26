@@ -190,17 +190,28 @@
 
         <TabPanel value="3">
           <div class="p-4">
-            <DataTable :value="activityLogs" paginator :rows="10" dataKey="id">
+            <DataTable :value="activityLogs" paginator :rows="10" dataKey="id" :rowClass="rowClass">
               <template #empty> Chưa có nhật ký nào. </template>
               <Column field="created_at" header="Thời gian" sortable style="min-width: 12rem" />
               <Column field="action" header="Hành động" sortable style="min-width: 12rem">
-                <template #body="{ data }">{{ formatAction(data.action) }}</template>
+                <template #body="{ data }">
+                  <div class="flex items-center gap-2">
+                    {{ formatAction(data.action) }}
+                    <Tag v-if="data.from_ancestor" :value="`Lần ${data.ancestor_attempt}`" severity="info" class="text-xs" />
+                  </div>
+                </template>
               </Column>
               <Column field="user" header="Người thực hiện" style="min-width: 12rem" />
               <Column field="user_role" header="Vai trò" style="min-width: 10rem" />
               <Column header="Chi tiết" style="min-width: 20rem">
                 <template #body="{ data }">
-                  {{ formatDetails(data) }}
+                  <div v-if="data.from_ancestor || formatDetails(data)">
+                    <p v-if="data.from_ancestor" class="text-sm text-blue-600 font-semibold mb-1">
+                      📋 Từ phiếu: {{ data.ancestor_code }}
+                    </p>
+                    <span v-if="formatDetails(data)">{{ formatDetails(data) }}</span>
+                  </div>
+                  <span v-else class="text-gray-400">—</span>
                 </template>
               </Column>
             </DataTable>
@@ -356,11 +367,16 @@ const formatDetails = (row) => {
   if (row.action === 'deleted') return `Đã xóa bản ghi ${p.code ? `(#${p.code})` : (p.id ? `(#${p.id})` : '')}`.trim();
   if (p.changed && typeof p.changed === 'object') {
     const keys = Object.keys(p.changed);
-    if (keys.length === 0) return '—';
+    if (keys.length === 0) return null;
     const names = keys.map(k => fieldLabels[k] || k);
     return `Thay đổi: ${names.join(', ')}`;
   }
-  return '-';
+  return null;
+};
+
+// Row class để highlight logs từ phiếu cha/ông
+const rowClass = (data) => {
+  return data.from_ancestor ? 'bg-blue-50' : '';
 };
 import Dialog from 'primevue/dialog';
 import Tabs from 'primevue/tabs';

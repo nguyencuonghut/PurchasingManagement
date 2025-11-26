@@ -407,22 +407,8 @@ class SupplierSelectionReportController extends Controller
 
         $report = $supplierSelectionReport->load(['quotationFiles', 'proposalFiles', 'creator','manager','auditor','director', 'childReport']);
 
-        // Gather activity logs for this report
-        $logs = \App\Models\ActivityLog::with('user')
-            ->where('subject_type', SupplierSelectionReport::class)
-            ->where('subject_id', $supplierSelectionReport->id)
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(function ($log) {
-                return [
-                    'id' => $log->id,
-                    'action' => $log->action,
-                    'user' => $log->user?->name,
-                    'user_role' => $log->user?->role?->name,
-                    'properties' => $log->properties,
-                    'created_at' => $log->created_at?->toDateTimeString(),
-                ];
-            });
+        // Gather activity logs - bao gồm cả logs của các phiếu cha/ông nếu là phiếu được tạo từ reject
+        $logs = $this->getActivityLogsWithAncestors($supplierSelectionReport);
 
         $directors = User::where('role_id', Role::where('name', 'Giám đốc')->first()->id)->get(['id', 'name']);
 
@@ -1091,5 +1077,103 @@ class SupplierSelectionReportController extends Controller
     {
         // Pattern: [LẦN 2] - hoặc [LẦN 3] - etc.
         return preg_replace('/^\[LẦN\s+\d+\]\s*-\s*/', '', $description);
+    }
+
+    /**
+     * Lấy activity logs của phiếu hiện tại và tất cả các phiếu tổ tiên (cha, ông, cụ...)
+     * Để Director và các role khác thấy được lịch sử reject và comments từ các lần trước
+     */
+    private function getActivityLogsWithAncestors(SupplierSelectionReport $report): \Illuminate\Support\Collection
+    {
+        $allLogs = collect();
+
+        // Thu thập chain phiếu từ hiện tại về gốc
+        $ancestors = $this->getAncestorReports($report);
+
+        // Duyệt từ phiếu gốc đến phiếu hiện tại (thứ tự thời gian)
+        foreach ($ancestors->reverse() as $ancestorReport) {
+            $logs = \App\Models\ActivityLog::with('user')
+                ->where('subject_type', SupplierSelectionReport::class)
+                ->where('subject_id', $ancestorReport['id'])
+                ->orderBy('created_at', 'asc')
+                ->get()
+                ->map(function ($log) use ($ancestorReport, $report) {
+                    return [
+                        'id' => $log->id,
+                        'action' => $log->action,
+                        'user' => $log->user?->name,
+                        'user_role' => $log->user?->role?->name,
+                        'properties' => $log->properties,
+                        'created_at' => $log->created_at?->toDateTimeString(),
+                        // Đánh dấu log từ phiếu cha/ông
+                        'from_ancestor' => $ancestorReport['id'] !== $report->id,
+                        'ancestor_code' => $ancestorReport['id'] !== $report->id ? $ancestorReport['code'] : null,
+                        'ancestor_attempt' => $ancestorReport['id'] !== $report->id ? $ancestorReport['attempt'] : null,
+                    ];
+                });
+
+            $allLogs = $allLogs->concat($logs);
+        }
+
+        // Sắp xếp lại theo thời gian giảm dần (mới nhất trên cùng)
+        return $allLogs->sortByDesc('created_at')->values();
+    }
+
+    /**
+     * Lấy danh sách các phiếu tổ tiên (từ hiện tại về gốc)
+     * Returns: Collection of ['id' => x, 'code' => 'xxx', 'attempt' => 1]
+     */
+    private function getAncestorReports(SupplierSelectionReport $report): \Illuminate\Support\Collection
+    {
+        $ancestors = collect();
+        $current = $report;
+        $attempt = $this->calculateCurrentAttempt($report);
+
+        // Thêm phiếu hiện tại
+        $ancestors->push([
+            'id' => $current->id,
+            'code' => $current->code,
+            'attempt' => $attempt,
+        ]);
+
+        // Đệ quy về phiếu gốc
+        $loopProtection = 0;
+        while ($current->parent_report_id !== null && $loopProtection < 100) {
+            $current = SupplierSelectionReport::find($current->parent_report_id);
+            if (!$current) {
+                break;
+            }
+
+            $attempt--;
+            $ancestors->push([
+                'id' => $current->id,
+                'code' => $current->code,
+                'attempt' => $attempt,
+            ]);
+
+            $loopProtection++;
+        }
+
+        return $ancestors;
+    }
+
+    /**
+     * Tính số lần thử của phiếu hiện tại (không phải phiếu con sẽ tạo)
+     */
+    private function calculateCurrentAttempt(SupplierSelectionReport $report): int
+    {
+        $count = 1;
+        $current = $report;
+
+        while ($current->parent_report_id !== null) {
+            $count++;
+            $current = SupplierSelectionReport::find($current->parent_report_id);
+
+            if (!$current || $count > 100) {
+                break;
+            }
+        }
+
+        return $count;
     }
 }
