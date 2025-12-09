@@ -48,7 +48,7 @@ class SupplierSelectionReportController extends Controller
         // Lấy quyền của người dùng hiện tại
         $user = $request->user();
 
-        $query = SupplierSelectionReport::with(['creator', 'childReport', 'parentReport'])
+        $query = SupplierSelectionReport::with(['creator', 'childReport', 'parentReport', 'adminThuMua'])
             ->withCount('quotationFiles');
 
         $roleName = optional($user->role)->name;
@@ -77,6 +77,21 @@ class SupplierSelectionReportController extends Controller
             $query->where('status', ReportStatus::DIRECTOR_APPROVED);
         } elseif ($roleName === 'Admin Thu Mua') {
             $query->where('adm_id', $user->id);
+        }
+
+        // Handle search
+        $search = $request->input('search');
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('creator', function($subQ) use ($search) {
+                      $subQ->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('adminThuMua', function($subQ) use ($search) {
+                      $subQ->where('name', 'like', "%{$search}%");
+                  });
+            });
         }
 
         // Handle sorting

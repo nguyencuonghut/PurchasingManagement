@@ -38,12 +38,15 @@
             <template #header>
                 <div class="flex justify-between">
                     <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearFilter()" />
-                    <IconField>
-                        <InputIcon>
-                            <i class="pi pi-search" />
-                        </InputIcon>
-                        <InputText v-model="filters['global'].value" placeholder="Tìm kiếm" />
-                    </IconField>
+                    <div class="flex gap-2">
+                        <IconField>
+                            <InputIcon>
+                                <i class="pi pi-search" />
+                            </InputIcon>
+                            <InputText v-model="filters['global'].value" placeholder="Tìm kiếm" @keyup.enter="onFilter" />
+                        </IconField>
+                        <Button type="button" icon="pi pi-search" label="Tìm" @click="onFilter" />
+                    </div>
                 </div>
             </template>
 
@@ -463,7 +466,16 @@ const initFilters = () => {
 initFilters();
 
 const selectedReports = ref([]);
-const clearFilter = () => { initFilters(); };
+const clearFilter = () => {
+    initFilters();
+    // Reload data without search parameter
+    router.get('/supplier_selection_reports', {
+        page: 1
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+    });
+};
 
 const exportCSV = () => {
     dt.value.exportCSV();
@@ -522,8 +534,15 @@ const onSort = (event) => {
 
 const onFilter = (event) => {
     // event: { filters: {...} }
-    // Có thể implement sau nếu cần filter phía server
-    // Hiện tại filter vẫn hoạt động phía client
+    const globalFilter = filters.value?.global?.value;
+
+    router.get('/supplier_selection_reports', {
+        search: globalFilter || undefined,
+        page: 1  // Reset to first page when searching
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+    });
 };
 </script>
 
