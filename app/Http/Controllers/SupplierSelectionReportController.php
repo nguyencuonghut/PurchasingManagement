@@ -48,8 +48,7 @@ class SupplierSelectionReportController extends Controller
         $user = $request->user();
 
         $query = SupplierSelectionReport::with(['creator', 'childReport', 'parentReport'])
-            ->withCount('quotationFiles')
-            ->orderBy('id', 'desc');
+            ->withCount('quotationFiles');
 
         $roleName = optional($user->role)->name;
         if ($roleName === 'Nhân viên mua hàng') {
@@ -79,7 +78,14 @@ class SupplierSelectionReportController extends Controller
             $query->where('adm_id', $user->id);
         }
 
-        $reports = SupplierSelectionReportResource::collection($query->get());
+        // Handle sorting
+        $sortField = $request->input('sort_field', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
+        $query->orderBy($sortField, $sortOrder);
+
+        // Server-side pagination: chỉ load 15 records mỗi lần thay vì tất cả
+        $perPage = $request->input('per_page', 15);
+        $reports = $query->paginate($perPage)->appends($request->query());
 
         $canCreate = $user->can('create', SupplierSelectionReport::class);
         $canUpdate = in_array($roleName, ['Quản trị', 'Nhân viên mua hàng', 'Trưởng phòng']);

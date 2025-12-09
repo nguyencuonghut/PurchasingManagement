@@ -18,8 +18,14 @@
             v-model:filters="filters"
             v-model:selection="selectedReports"
             :value="reports && reports.data ? reports.data : []"
+            lazy
             paginator
-            :rows="10"
+            :rows="reports.per_page || 15"
+            :totalRecords="reports.total || 0"
+            :first="(reports.current_page - 1) * reports.per_page"
+            @page="onPage"
+            @sort="onSort"
+            @filter="onFilter"
             dataKey="id"
             filterDisplay="menu"
             :globalFilterFields="['code', 'description', 'image_url', 'formatted_created_at', 'creator_name', 'admin_thu_mua_name']"
@@ -255,6 +261,7 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Tag from 'primevue/tag';
 import Select from 'primevue/select';
+import vTooltip from 'primevue/tooltip';
 import { Roles, Statuses, getStatusSeverity as statusSeverity, statusToVietnamese } from '@/utils/constants';
 
 // Đảm bảo statusToVietnamese khả dụng trong template
@@ -488,6 +495,35 @@ const canDelete = (row) => {
 // Tạo lại từ phiếu bị rejected
 const createFromRejected = (report) => {
     router.get('/supplier_selection_reports/create', { parent_report_id: report.id });
+};
+
+// ==== Server-side pagination, sort, filter handlers ====
+const onPage = (event) => {
+    // event: { first: 0, rows: 15, page: 0, pageCount: 10 }
+    router.get('/supplier_selection_reports', {
+        page: event.page + 1,
+        per_page: event.rows
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+    });
+};
+
+const onSort = (event) => {
+    // event: { sortField: 'created_at', sortOrder: -1 }
+    router.get('/supplier_selection_reports', {
+        sort_field: event.sortField,
+        sort_order: event.sortOrder === 1 ? 'asc' : 'desc'
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+    });
+};
+
+const onFilter = (event) => {
+    // event: { filters: {...} }
+    // Có thể implement sau nếu cần filter phía server
+    // Hiện tại filter vẫn hoạt động phía client
 };
 </script>
 

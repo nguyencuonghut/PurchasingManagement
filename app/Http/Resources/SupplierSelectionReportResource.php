@@ -56,11 +56,23 @@ class SupplierSelectionReportResource extends JsonResource
             'formatted_auditor_audited_at' => $this->auditor_audited_at ? Carbon::parse($this->auditor_audited_at)->format('d/m/Y H:i') : '',
             'formatted_director_approved_at' => $this->director_approved_at ? Carbon::parse($this->director_approved_at)->format('d/m/Y H:i') : '',
 
-            'quotation_files' => QuotationFileResource::collection($this->quotationFiles ?? collect()),
-            'proposal_files' => ProposalFileResource::collection($this->proposalFiles ?? collect()),
+            // Chỉ load files khi được eager load (ở trang detail), không load ở index để tránh N+1
+            'quotation_files' => QuotationFileResource::collection($this->whenLoaded('quotationFiles')),
+            'proposal_files' => ProposalFileResource::collection($this->whenLoaded('proposalFiles')),
 
-            'child_report' => $this->childReport ? $this->childReport->toArray() : null,
-            'parent_report' => $this->parentReport ? $this->parentReport->toArray() : null,
+            // Chỉ trả về id và code để tránh đệ quy và load thừa data
+            'child_report' => $this->whenLoaded('childReport', function() {
+                return $this->childReport ? [
+                    'id' => $this->childReport->id,
+                    'code' => $this->childReport->code,
+                ] : null;
+            }),
+            'parent_report' => $this->whenLoaded('parentReport', function() {
+                return $this->parentReport ? [
+                    'id' => $this->parentReport->id,
+                    'code' => $this->parentReport->code,
+                ] : null;
+            }),
         ];
     }
 }
