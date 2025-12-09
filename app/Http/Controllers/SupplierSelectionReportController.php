@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreSupplierSelectionReportRequest;
 use App\Http\Requests\UpdateSupplierSelectionReportRequest;
 use App\Models\QuotationFile;
+use App\Models\ProposalFile;
 use App\Models\Role;
 use App\Models\SupplierSelectionReport;
 use App\Models\User;
@@ -223,17 +224,22 @@ class SupplierSelectionReportController extends Controller
             $year = now()->year;
             $user = $request->user();
             $departmentCode = optional($user->department)->code ?? 'N/A';
-            // Tìm index lớn nhất đã dùng cho năm hiện tại
-            $maxIndex = SupplierSelectionReport::whereYear('created_at', $year)
-                ->where('code', 'like', "$year/%/%")
-                ->get()
-                ->map(function($r) use ($year) {
-                    $parts = explode('/', $r->code);
-                    return isset($parts[2]) ? intval($parts[2]) : 0;
-                })->max();
-            $index = $maxIndex ? $maxIndex + 1 : 1;
+
+            // Tối ưu: Sử dụng raw query để tìm max index trực tiếp trong DB
+            // Tránh load tất cả records vào memory
+            $maxIndexResult = DB::select("
+                SELECT MAX(CAST(SUBSTRING_INDEX(code, '/', -1) AS UNSIGNED)) as max_index
+                FROM supplier_selection_reports
+                WHERE YEAR(created_at) = ?
+                AND code LIKE ?
+            ", [$year, "$year/%/%"]);
+
+            $maxIndex = $maxIndexResult[0]->max_index ?? 0;
+            $index = $maxIndex + 1;
             $code = sprintf('%d/%s/%d', $year, $departmentCode, $index);
-            if (SupplierSelectionReport::where('code', $code)->exists()) {
+
+            // Lock để tránh race condition khi nhiều user tạo đồng thời
+            if (SupplierSelectionReport::where('code', $code)->lockForUpdate()->exists()) {
                 throw new \Exception('Không thể sinh mã báo cáo duy nhất, vui lòng thử lại.');
             }
             $data['code'] = $code;
@@ -432,6 +438,9 @@ class SupplierSelectionReportController extends Controller
     {
         $this->authorize('update', $supplierSelectionReport);
 
+        // Eager load relationships cần thiết để tránh N+1 queries
+        $supplierSelectionReport->load(['quotationFiles', 'proposalFiles']);
+
         // Nếu người dùng upload ảnh mới, kiểm tra kích thước <= 10MB
         if ($request->hasFile('file_path')) {
             $request->validate([
@@ -496,15 +505,19 @@ class SupplierSelectionReportController extends Controller
             ->map('intval')
             ->values();
         if ($deletedQuotationIds->isNotEmpty()) {
-            $filesToDelete = $supplierSelectionReport->quotationFiles()
-                ->whereIn('id', $deletedQuotationIds)
-                ->get();
+            // Lọc từ relationship đã eager load để tránh query thêm
+            $filesToDelete = $supplierSelectionReport->quotationFiles
+                ->whereIn('id', $deletedQuotationIds);
+
+            // Xóa files từ storage
             foreach ($filesToDelete as $qf) {
                 if ($qf->file_path && Storage::disk('public')->exists($qf->file_path)) {
                     Storage::disk('public')->delete($qf->file_path);
                 }
-                $qf->delete();
             }
+
+            // Bulk delete từ database (nhanh hơn xóa từng cái)
+            QuotationFile::whereIn('id', $deletedQuotationIds)->delete();
         }
 
         // ---- 2b) Xử lý xoá file đề nghị/BOQ cũ (nếu người dùng đánh dấu)
@@ -513,39 +526,59 @@ class SupplierSelectionReportController extends Controller
             ->map('intval')
             ->values();
         if ($deletedProposalIds->isNotEmpty()) {
-            $proposalFilesToDelete = $supplierSelectionReport->proposalFiles()
-                ->whereIn('id', $deletedProposalIds)
-                ->get();
+            // Lọc từ relationship đã eager load để tránh query thêm
+            $proposalFilesToDelete = $supplierSelectionReport->proposalFiles
+                ->whereIn('id', $deletedProposalIds);
+
+            // Xóa files từ storage
             foreach ($proposalFilesToDelete as $pf) {
                 if ($pf->file_path && Storage::disk('public')->exists($pf->file_path)) {
                     Storage::disk('public')->delete($pf->file_path);
                 }
-                $pf->delete();
             }
+
+            // Bulk delete từ database (nhanh hơn xóa từng cái)
+            \App\Models\ProposalFile::whereIn('id', $deletedProposalIds)->delete();
         }
         // File đề nghị/BOQ không bắt buộc, có thể có hoặc không
 
         // ---- 3) Thêm file báo giá mới (nếu có)
         if ($request->hasFile('quotation_files')) {
+            $quotationFilesData = [];
             foreach ($request->file('quotation_files') as $file) {
-                $supplierSelectionReport->quotationFiles()->create([
+                $quotationFilesData[] = [
                     'file_name' => $file->getClientOriginalName(),
                     'file_path' => $this->uploadFile($file),
                     'file_type' => $file->getClientMimeType(),
                     'file_size' => $file->getSize(),
-                ]);
+                    'supplier_selection_report_id' => $supplierSelectionReport->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+            // Bulk insert thay vì insert từng cái
+            if (!empty($quotationFilesData)) {
+                QuotationFile::insert($quotationFilesData);
             }
         }
 
         // ---- 3b) Thêm file đề nghị/BOQ mới (nếu có, không bắt buộc)
         if ($request->hasFile('proposal_files')) {
+            $proposalFilesData = [];
             foreach ($request->file('proposal_files') as $file) {
-                $supplierSelectionReport->proposalFiles()->create([
+                $proposalFilesData[] = [
                     'file_name' => $file->getClientOriginalName(),
-                    'file_path' => $this->uploadFile($file), // Sử dụng helper function để upload
+                    'file_path' => $this->uploadFile($file),
                     'file_type' => $file->getClientMimeType(),
                     'file_size' => $file->getSize(),
-                ]);
+                    'supplier_selection_report_id' => $supplierSelectionReport->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+            // Bulk insert thay vì insert từng cái
+            if (!empty($proposalFilesData)) {
+                \App\Models\ProposalFile::insert($proposalFilesData);
             }
         }
         // Lưu ý: File đề nghị/BOQ không bắt buộc, không cần kiểm tra số lượng
@@ -565,7 +598,8 @@ class SupplierSelectionReportController extends Controller
         }
 
         // Ví dụ: yêu cầu phải còn ít nhất một file báo giá sau khi xử lý
-        $remainQuotation = $supplierSelectionReport->quotationFiles()
+        // Sử dụng eager loaded collection thay vì query để tránh thêm query
+        $remainQuotation = $supplierSelectionReport->quotationFiles
             ->whereNotIn('id', $deletedQuotationIds)
             ->count();
         $addingQuotation = $request->hasFile('quotation_files') ? count($request->file('quotation_files')) : 0;
