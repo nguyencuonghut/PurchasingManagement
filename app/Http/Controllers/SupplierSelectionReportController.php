@@ -86,7 +86,21 @@ class SupplierSelectionReportController extends Controller
 
         // Server-side pagination: chỉ load 15 records mỗi lần thay vì tất cả
         $perPage = $request->input('per_page', 15);
-        $reports = $query->paginate($perPage)->appends($request->query());
+        $paginatedReports = $query->paginate($perPage)->appends($request->query());
+
+        // Transform through Resource - sử dụng map() cho performance tốt hơn
+        $reports = [
+            'data' => $paginatedReports->getCollection()
+                ->map(fn($report) => (new SupplierSelectionReportResource($report))->toArray($request))
+                ->values()
+                ->all(),
+            'current_page' => $paginatedReports->currentPage(),
+            'per_page' => $paginatedReports->perPage(),
+            'total' => $paginatedReports->total(),
+            'last_page' => $paginatedReports->lastPage(),
+            'from' => $paginatedReports->firstItem(),
+            'to' => $paginatedReports->lastItem(),
+        ];
 
         $canCreate = $user->can('create', SupplierSelectionReport::class);
         $canUpdate = in_array($roleName, ['Quản trị', 'Nhân viên mua hàng', 'Trưởng phòng']);

@@ -57,8 +57,12 @@ class SupplierSelectionReportResource extends JsonResource
             'formatted_director_approved_at' => $this->director_approved_at ? Carbon::parse($this->director_approved_at)->format('d/m/Y H:i') : '',
 
             // Chỉ load files khi được eager load (ở trang detail), không load ở index để tránh N+1
-            'quotation_files' => QuotationFileResource::collection($this->whenLoaded('quotationFiles')),
-            'proposal_files' => ProposalFileResource::collection($this->whenLoaded('proposalFiles')),
+            'quotation_files' => $this->when($this->relationLoaded('quotationFiles'), function() {
+                return QuotationFileResource::collection($this->quotationFiles);
+            }),
+            'proposal_files' => $this->when($this->relationLoaded('proposalFiles'), function() {
+                return ProposalFileResource::collection($this->proposalFiles);
+            }),
 
             // Chỉ trả về id và code để tránh đệ quy và load thừa data
             'child_report' => $this->whenLoaded('childReport', function() {
