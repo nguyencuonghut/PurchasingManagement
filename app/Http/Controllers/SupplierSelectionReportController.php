@@ -94,6 +94,35 @@ class SupplierSelectionReportController extends Controller
             });
         }
 
+        // Handle column filters
+        if ($request->has('code')) {
+            $query->where('code', 'like', "%{$request->input('code')}%");
+        }
+        if ($request->has('description')) {
+            $query->where('description', 'like', "%{$request->input('description')}%");
+        }
+        if ($request->has('creator_name')) {
+            $query->whereHas('creator', function($q) use ($request) {
+                $q->where('name', 'like', "%{$request->input('creator_name')}%");
+            });
+        }
+        if ($request->has('admin_thu_mua_name')) {
+            $query->whereHas('adminThuMua', function($q) use ($request) {
+                $q->where('name', 'like', "%{$request->input('admin_thu_mua_name')}%");
+            });
+        }
+        if ($request->has('formatted_created_at')) {
+            // Search in formatted date/time (dd/mm/yyyy or HH:mm)
+            $dateSearch = $request->input('formatted_created_at');
+            $query->where(function($q) use ($dateSearch) {
+                $q->whereRaw("DATE_FORMAT(created_at, '%d/%m/%Y') LIKE ?", ["%{$dateSearch}%"])
+                  ->orWhereRaw("DATE_FORMAT(created_at, '%H:%i') LIKE ?", ["%{$dateSearch}%"]);
+            });
+        }
+        if ($request->has('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
         // Handle sorting
         $sortField = $request->input('sort_field', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');

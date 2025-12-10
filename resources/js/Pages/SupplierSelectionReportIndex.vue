@@ -512,9 +512,33 @@ const createFromRejected = (report) => {
 // ==== Server-side pagination, sort, filter handlers ====
 const onPage = (event) => {
     // event: { first: 0, rows: 15, page: 0, pageCount: 10 }
+    // Get current filters
+    const globalFilter = filters.value?.global?.value;
+    const columnFilters = {};
+    if (filters.value?.code?.constraints?.[0]?.value) {
+        columnFilters.code = filters.value.code.constraints[0].value;
+    }
+    if (filters.value?.description?.constraints?.[0]?.value) {
+        columnFilters.description = filters.value.description.constraints[0].value;
+    }
+    if (filters.value?.creator_name?.constraints?.[0]?.value) {
+        columnFilters.creator_name = filters.value.creator_name.constraints[0].value;
+    }
+    if (filters.value?.admin_thu_mua_name?.constraints?.[0]?.value) {
+        columnFilters.admin_thu_mua_name = filters.value.admin_thu_mua_name.constraints[0].value;
+    }
+    if (filters.value?.formatted_created_at?.constraints?.[0]?.value) {
+        columnFilters.formatted_created_at = filters.value.formatted_created_at.constraints[0].value;
+    }
+    if (filters.value?.status?.constraints?.[0]?.value) {
+        columnFilters.status = filters.value.status.constraints[0].value;
+    }
+    
     router.get('/supplier_selection_reports', {
         page: event.page + 1,
-        per_page: event.rows
+        per_page: event.rows,
+        search: globalFilter || undefined,
+        ...columnFilters
     }, {
         preserveScroll: true,
         preserveState: true,
@@ -523,9 +547,33 @@ const onPage = (event) => {
 
 const onSort = (event) => {
     // event: { sortField: 'created_at', sortOrder: -1 }
+    // Get current filters
+    const globalFilter = filters.value?.global?.value;
+    const columnFilters = {};
+    if (filters.value?.code?.constraints?.[0]?.value) {
+        columnFilters.code = filters.value.code.constraints[0].value;
+    }
+    if (filters.value?.description?.constraints?.[0]?.value) {
+        columnFilters.description = filters.value.description.constraints[0].value;
+    }
+    if (filters.value?.creator_name?.constraints?.[0]?.value) {
+        columnFilters.creator_name = filters.value.creator_name.constraints[0].value;
+    }
+    if (filters.value?.admin_thu_mua_name?.constraints?.[0]?.value) {
+        columnFilters.admin_thu_mua_name = filters.value.admin_thu_mua_name.constraints[0].value;
+    }
+    if (filters.value?.formatted_created_at?.constraints?.[0]?.value) {
+        columnFilters.formatted_created_at = filters.value.formatted_created_at.constraints[0].value;
+    }
+    if (filters.value?.status?.constraints?.[0]?.value) {
+        columnFilters.status = filters.value.status.constraints[0].value;
+    }
+    
     router.get('/supplier_selection_reports', {
         sort_field: event.sortField,
-        sort_order: event.sortOrder === 1 ? 'asc' : 'desc'
+        sort_order: event.sortOrder === 1 ? 'asc' : 'desc',
+        search: globalFilter || undefined,
+        ...columnFilters
     }, {
         preserveScroll: true,
         preserveState: true,
@@ -535,10 +583,32 @@ const onSort = (event) => {
 const onFilter = (event) => {
     // event: { filters: {...} }
     const globalFilter = filters.value?.global?.value;
+    
+    // Extract column filters
+    const columnFilters = {};
+    if (filters.value?.code?.constraints?.[0]?.value) {
+        columnFilters.code = filters.value.code.constraints[0].value;
+    }
+    if (filters.value?.description?.constraints?.[0]?.value) {
+        columnFilters.description = filters.value.description.constraints[0].value;
+    }
+    if (filters.value?.creator_name?.constraints?.[0]?.value) {
+        columnFilters.creator_name = filters.value.creator_name.constraints[0].value;
+    }
+    if (filters.value?.admin_thu_mua_name?.constraints?.[0]?.value) {
+        columnFilters.admin_thu_mua_name = filters.value.admin_thu_mua_name.constraints[0].value;
+    }
+    if (filters.value?.formatted_created_at?.constraints?.[0]?.value) {
+        columnFilters.formatted_created_at = filters.value.formatted_created_at.constraints[0].value;
+    }
+    if (filters.value?.status?.constraints?.[0]?.value) {
+        columnFilters.status = filters.value.status.constraints[0].value;
+    }
 
     router.get('/supplier_selection_reports', {
         search: globalFilter || undefined,
-        page: 1  // Reset to first page when searching
+        ...columnFilters,
+        page: 1  // Reset to first page when filtering
     }, {
         preserveScroll: true,
         preserveState: true,
