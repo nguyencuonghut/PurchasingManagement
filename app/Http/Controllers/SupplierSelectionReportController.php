@@ -126,7 +126,19 @@ class SupplierSelectionReportController extends Controller
         // Handle sorting
         $sortField = $request->input('sort_field', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
-        $query->orderBy($sortField, $sortOrder);
+
+        // Handle relationship sorting
+        if ($sortField === 'creator.name') {
+            $query->join('users as creator_user', 'supplier_selection_reports.creator_id', '=', 'creator_user.id')
+                  ->orderBy('creator_user.name', $sortOrder)
+                  ->select('supplier_selection_reports.*');
+        } elseif ($sortField === 'adminThuMua.name') {
+            $query->leftJoin('users as admin_user', 'supplier_selection_reports.adm_id', '=', 'admin_user.id')
+                  ->orderBy('admin_user.name', $sortOrder)
+                  ->select('supplier_selection_reports.*');
+        } else {
+            $query->orderBy($sortField, $sortOrder);
+        }
 
         // Server-side pagination: chỉ load 15 records mỗi lần thay vì tất cả
         $perPage = $request->input('per_page', 15);

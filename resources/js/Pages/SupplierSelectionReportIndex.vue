@@ -102,7 +102,7 @@
             -->
 
 
-            <Column field="creator_name" header="Người tạo" sortable style="min-width: 12rem">
+            <Column field="creator_name" sortField="creator.name" header="Người tạo" sortable style="min-width: 12rem">
                 <template #body="{ data }">
                     {{ data.creator_name || 'N/A' }}
                 </template>
@@ -111,7 +111,7 @@
                 </template>
             </Column>
 
-            <Column field="admin_thu_mua_name" header="Admin Thu Mua" sortable style="min-width: 12rem">
+            <Column field="admin_thu_mua_name" sortField="adminThuMua.name" header="Admin Thu Mua" sortable style="min-width: 12rem">
                 <template #body="{ data }">
                     {{ data.admin_thu_mua_name || '-' }}
                 </template>
@@ -533,7 +533,7 @@ const onPage = (event) => {
     if (filters.value?.status?.constraints?.[0]?.value) {
         columnFilters.status = filters.value.status.constraints[0].value;
     }
-    
+
     router.get('/supplier_selection_reports', {
         page: event.page + 1,
         per_page: event.rows,
@@ -568,7 +568,7 @@ const onSort = (event) => {
     if (filters.value?.status?.constraints?.[0]?.value) {
         columnFilters.status = filters.value.status.constraints[0].value;
     }
-    
+
     router.get('/supplier_selection_reports', {
         sort_field: event.sortField,
         sort_order: event.sortOrder === 1 ? 'asc' : 'desc',
@@ -583,7 +583,7 @@ const onSort = (event) => {
 const onFilter = (event) => {
     // event: { filters: {...} }
     const globalFilter = filters.value?.global?.value;
-    
+
     // Extract column filters
     const columnFilters = {};
     if (filters.value?.code?.constraints?.[0]?.value) {
