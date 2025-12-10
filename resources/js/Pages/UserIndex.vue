@@ -93,25 +93,25 @@
                 <div class="flex flex-col gap-6">
                     <div>
                         <label for="name" class="block font-bold mb-3 required-field">Tên</label>
-                        <InputText id="name" v-model.trim="form.name" @blur="v$.name.$touch" :invalid="v$.name.$error || form.errors.name" fluid />
+                        <InputText id="name" v-model="form.name" @blur="v$.name.$touch" :invalid="v$.name.$error || form.errors.name" fluid />
                         <small v-if="v$.name.$error" class="text-red-500">{{ v$.name.$errors[0].$message }}</small>
                         <small v-else-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</small>
                     </div>
                     <div>
                         <label for="email" class="block font-bold mb-3 required-field">Email</label>
-                        <InputText id="email" v-model.trim="form.email" @blur="v$.email.$touch" :invalid="v$.email.$error || form.errors.email" fluid />
+                        <InputText id="email" v-model="form.email" @blur="v$.email.$touch" :invalid="v$.email.$error || form.errors.email" fluid />
                         <small v-if="v$.email.$error" class="text-red-500">{{ v$.email.$errors[0].$message }}</small>
                         <small v-else-if="form.errors.email" class="text-red-500">{{ form.errors.email }}</small>
                     </div>
                     <div v-if="isAddUser">
                         <label for="password" class="block font-bold mb-3 required-field">Mật khẩu</label>
-                        <Password id="password" v-model.trim="form.password" @blur="v$.password.$touch" autocomplete="off" :invalid="v$.password.$error || form.errors.password" fluid toggleMask />
+                        <Password id="password" v-model="form.password" @blur="v$.password.$touch" autocomplete="off" :invalid="v$.password.$error || form.errors.password" fluid toggleMask />
                         <small v-if="v$.password.$error" class="text-red-500">{{ v$.password.$errors[0].$message }}</small>
                         <small v-else-if="form.errors.password" class="text-red-500">{{ form.errors.password }}</small>
                     </div>
                     <div v-if="isAddUser">
                         <label for="password_confirmation" class="block font-bold mb-3 required-field">Xác nhận mật khẩu</label>
-                        <Password id="password_confirmation" v-model.trim="form.password_confirmation" @blur="v$.password_confirmation.$touch" autocomplete="off" :invalid="v$.password_confirmation.$error || form.errors.password_confirmation" fluid toggleMask />
+                        <Password id="password_confirmation" v-model="form.password_confirmation" @blur="v$.password_confirmation.$touch" autocomplete="off" :invalid="v$.password_confirmation.$error || form.errors.password_confirmation" fluid toggleMask />
                         <small v-if="v$.password_confirmation.$error" class="text-red-500">{{ v$.password_confirmation.$errors[0].$message }}</small>
                         <small v-else-if="form.errors.password_confirmation" class="text-red-500">{{ form.errors.password_confirmation }}</small>
                     </div>
@@ -309,6 +309,13 @@ const hideDialog = () => {
 
 const saveUser = async () => {
     submitted.value = true;
+
+    // Trim values before validation
+    if (form.name) form.name = form.name.trim();
+    if (form.email) form.email = form.email.trim();
+    if (form.password) form.password = form.password.trim();
+    if (form.password_confirmation) form.password_confirmation = form.password_confirmation.trim();
+
     const isFormValid = await v$.value.$validate(); // Chạy validation frontend
 
     if (!isFormValid) {

@@ -44,7 +44,7 @@
                 <div class="flex flex-col gap-6">
                     <div>
                         <label for="name" class="block font-bold mb-3 required-field">Tên</label>
-                        <InputText id="name" v-model.trim="form.name" @blur="v$.name.$touch" :invalid="v$.name.$error || form.errors.name" fluid />
+                        <InputText id="name" v-model="form.name" @blur="v$.name.$touch" :invalid="v$.name.$error || form.errors.name" fluid />
                         <small v-if="v$.name.$error" class="text-red-500">{{ v$.name.$errors[0].$message }}</small>
                         <small v-else-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</small>
                     </div>
@@ -160,6 +160,10 @@ const hideDialog = () => {
 
 const saveRole = async () => {
     submitted.value = true;
+
+    // Trim values before validation
+    if (form.name) form.name = form.name.trim();
+
     const isFormValid = await v$.value.$validate();
     if (!isFormValid) {
         toast.add({severity: 'error', summary: 'Lỗi Validation', detail: 'Vui lòng kiểm tra lại các trường có lỗi.', life: 3000});

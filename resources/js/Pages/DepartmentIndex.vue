@@ -52,13 +52,13 @@
                 <div class="flex flex-col gap-6">
                     <div>
                         <label for="code" class="block font-bold mb-3 required-field">Mã</label>
-                        <InputText id="code" v-model.trim="form.code" @blur="v$.code.$touch" :invalid="v$.code.$error || form.errors.code" fluid />
+                        <InputText id="code" v-model="form.code" @blur="v$.code.$touch" :invalid="v$.code.$error || form.errors.code" fluid />
                         <small v-if="v$.code.$error" class="text-red-500">{{ v$.code.$errors[0].$message }}</small>
                         <small v-else-if="form.errors.code" class="text-red-500">{{ form.errors.code }}</small>
                     </div>
                     <div>
                         <label for="name" class="block font-bold mb-3 required-field">Tên</label>
-                        <InputText id="name" v-model.trim="form.name" @blur="v$.name.$touch" :invalid="v$.name.$error || form.errors.name" fluid />
+                        <InputText id="name" v-model="form.name" @blur="v$.name.$touch" :invalid="v$.name.$error || form.errors.name" fluid />
                         <small v-if="v$.name.$error" class="text-red-500">{{ v$.name.$errors[0].$message }}</small>
                         <small v-else-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</small>
                     </div>
@@ -178,6 +178,11 @@ const hideDialog = () => {
 
 const saveDepartment = async () => {
     submitted.value = true;
+
+    // Trim values before validation
+    form.code = form.code?.trim() || '';
+    form.name = form.name?.trim() || '';
+
     const isFormValid = await v$.value.$validate();
     if (!isFormValid) {
         toast.add({severity: 'error', summary: 'Lỗi Validation', detail: 'Vui lòng kiểm tra lại các trường có lỗi.', life: 3000});

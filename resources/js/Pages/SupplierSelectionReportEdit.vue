@@ -16,7 +16,7 @@
       <!-- Description -->
       <div>
         <label for="description" class="block font-bold mb-2 required-field">{{ t('form.description_label') }}</label>
-        <InputText id="description" v-model.trim="v$.description.$model" :invalid="submitted && v$.description.$invalid" fluid />
+        <InputText id="description" v-model="v$.description.$model" :invalid="submitted && v$.description.$invalid" fluid />
         <small v-if="submitted && v$.description.$invalid" class="text-red-500">{{ v$.description.$errors[0]?.$message }}</small>
       </div>
 
@@ -276,6 +276,14 @@ function goBack() { router.visit('/supplier_selection_reports'); }
 async function save() {
   submitted.value = true;
   form.clearErrors();
+
+  // Trim description before validation
+  if (v$.value.description.$model) {
+    v$.value.description.$model = v$.value.description.$model.trim();
+  }
+  if (v$.value.code.$model) {
+    v$.value.code.$model = v$.value.code.$model.trim();
+  }
 
   const ok = await v$.value.$validate();
   if (!ok) {
