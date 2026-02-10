@@ -16,24 +16,6 @@
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       <Card>
-        <template #title>Trạng thái phiếu (Biểu đồ)</template>
-        <template #content>
-      <div class="h-96 p-4">
-        <Chart type="pie" :data="statusChartData" :options="pieChartOptions" style="height:100%;width:100%;" />
-      </div>
-        </template>
-      </Card>
-      <Card>
-        <template #title>Số lượng phiếu theo tháng</template>
-        <template #content>
-      <div class="h-96 p-4">
-        <Chart type="bar" :data="monthlyChartData" :options="barchartOptions" style="height:100%;width:100%;" />
-      </div>
-        </template>
-      </Card>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-      <Card>
         <template #title>Phiếu gần đây</template>
         <template #content>
           <DataTable :value="recentReports" :rows="5" paginator :rowsPerPageOptions="[5,10]">
@@ -77,6 +59,24 @@
               </template>
             </Column>
           </DataTable>
+        </template>
+      </Card>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <Card>
+        <template #title>Trạng thái phiếu (Biểu đồ)</template>
+        <template #content>
+      <div class="h-96 p-4">
+        <Chart type="pie" :data="statusChartData" :options="pieChartOptions" style="height:100%;width:100%;" />
+      </div>
+        </template>
+      </Card>
+      <Card>
+        <template #title>Số lượng phiếu theo tháng</template>
+        <template #content>
+      <div class="h-96 p-4">
+        <Chart type="bar" :data="monthlyChartData" :options="barchartOptions" style="height:100%;width:100%;" />
+      </div>
         </template>
       </Card>
     </div>
